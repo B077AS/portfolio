@@ -1,0 +1,68 @@
+[
+  {
+    "slug": "komm",
+    "name": "Komm",
+    "tagline": "Self-hosted voice, video & text chat",
+    "description": "A self-hosted voice, video, and text chat platform built end-to-end across five repositories. Engineered the WebRTC audio pipeline using AEC3 echo cancellation, RNNoise noise suppression, and Silero VAD for voice activity detection. Designed an mTLS trust model securing communication across every service.",
+    "tech": ["Java", "JavaFX", "Spring Boot", "WebRTC", "mTLS", "Windows", "Linux"],
+    "icon": "mdi-microphone",
+    "primaryLink": { "label": "kommvoice.com", "url": "https://kommvoice.com" },
+    "repos": [
+      { "label": "komm (client)", "url": "https://github.com/B077AS/komm" },
+      { "label": "komm-server", "url": "https://github.com/B077AS/komm-server" },
+      { "label": "komm-server-launcher", "url": "https://github.com/B077AS/komm-server-launcher" },
+      { "label": "komm-hub", "url": "https://github.com/B077AS/komm-hub" },
+      { "label": "komm-launcher", "url": "https://github.com/B077AS/komm-launcher" }
+    ]
+  },
+  {
+    "slug": "query-exe",
+    "name": "QueryExe",
+    "tagline": "Cross-platform SQL client",
+    "description": "A free, cross-platform desktop client for relational databases (MySQL, MariaDB, PostgreSQL, SQL Server, H2, and SQLite). Multi-connection SQL editor with autocomplete, concurrent query execution, and direct result-grid editing, distributed through a self-updating launcher for Windows and Linux, built and released via GitHub Actions.",
+    "tech": ["Java", "JavaFX", "MySQL", "MariaDB", "PostgreSQL", "SQL Server", "H2", "SQLite"],
+    "icon": "mdi-database-search-outline",
+    "primaryLink": { "label": "query-exe", "url": "https://github.com/B077AS/query-exe" },
+    "repos": [
+      { "label": "query-exe", "url": "https://github.com/B077AS/query-exe" },
+      { "label": "query-exe-launcher", "url": "https://github.com/B077AS/query-exe-launcher" }
+    ]
+  },
+  {
+    "slug": "smart-home",
+    "name": "Smart Home",
+    "tagline": "Zigbee smart home, sensor-fused",
+    "description": "An Android app for real-time monitoring and control of a Zigbee-based smart home, integrating multiple sensors over MQTT and WebSocket. The Spring Boot backend fuses power-consumption, tilt, and vibration readings to detect door state and flag stuck conditions automatically, with role-based admin access and activity logging.",
+    "tech": ["Java", "Spring Boot", "Zigbee", "MQTT", "WebSocket", "CapacitorJs"],
+    "icon": "mdi-home-automation",
+    "primaryLink": { "label": "smart-home-mobile", "url": "https://github.com/B077AS/smart-home-mobile" },
+    "repos": [
+      { "label": "smart-home-mobile", "url": "https://github.com/B077AS/smart-home-mobile" },
+      { "label": "smart-home-server", "url": "https://github.com/B077AS/smart-home-server" }
+    ]
+  },
+  {
+    "slug": "marina-labs",
+    "name": "Marina Labs",
+    "tagline": "Singapore Peppol / InvoiceNow validator",
+    "description": "A Singapore Peppol/InvoiceNow document validation platform featuring a two-stage XSD and Schematron pipeline that validates UBL e-invoices against official Singapore Peppol specifications and generates PDFs through the official XSLT stylesheets, packaged as a Java/Spring Boot + Node.js full-stack app with one-command Docker Compose deployment.",
+    "tech": ["Java", "Spring Boot", "Peppol", "Docker"],
+    "icon": "mdi-file-certificate-outline",
+    "primaryLink": { "label": "GitHub", "url": "https://github.com/B077AS/marina-labs" },
+    "repos": [
+      { "label": "marina-labs", "url": "https://github.com/B077AS/marina-labs" }
+    ]
+  },
+  {
+    "slug": "emoji-fx",
+    "name": "EmojiFX",
+    "tagline": "JavaFX emoji rendering library",
+    "description": "A JavaFX library that brings proper emoji rendering to desktop apps, with support for multiple emoji styles. Published on Maven Central for any JavaFX project to pull in directly.",
+    "tech": ["Java", "JavaFX", "Maven Central"],
+    "icon": "mdi-emoticon-outline",
+    "primaryLink": { "label": "Maven Central", "url": "https://central.sonatype.com/artifact/io.github.b077as.emojifx/emoji" },
+    "repos": [
+      { "label": "emoji-fx", "url": "https://github.com/B077AS/emoji-fx" }
+    ]
+  }
+]

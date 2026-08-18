@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://williamsolari.com/sitemap.xml

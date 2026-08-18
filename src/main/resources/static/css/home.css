@@ -1,0 +1,645 @@
+/* Each section claims (roughly) the viewport below the navbar, so scrolling
+   reads as one deliberate screen at a time rather than an arbitrary flow. */
+.hero,
+.section {
+    min-height: calc(100svh - var(--navbar-height));
+    display: flex;
+    align-items: center;
+}
+
+.section-inner {
+    width: 100%;
+    max-width: var(--content-width);
+    margin: 0 auto;
+    padding: 4rem 1.5rem;
+}
+
+.section-alt {
+    background: var(--color-surface);
+    border-top: 1px solid var(--color-border);
+    border-bottom: 1px solid var(--color-border);
+}
+
+/* ---- Hero ---- */
+/* Flat surface color + a bottom border - a plain seam so scrolling into the
+   next section has a clear edge, no gradients or glows involved. */
+.hero {
+    position: relative;
+    background: var(--color-surface);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.hero-inner {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: var(--content-width);
+    margin: 0 auto;
+    padding: 4rem 1.5rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4.5rem;
+    align-items: center;
+}
+
+/* ---- Scroll cue ---- */
+.scroll-cue {
+    position: absolute;
+    left: 50%;
+    bottom: 1.75rem;
+    transform: translateX(-50%);
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.35rem;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-text-dim);
+    opacity: 1;
+    visibility: visible;
+    transition: color 0.15s ease, opacity 0.25s ease, visibility 0.25s ease;
+}
+
+.scroll-cue.is-hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.scroll-cue:hover {
+    color: var(--color-accent);
+}
+
+.scroll-cue i {
+    font-size: 1.15rem;
+    color: var(--color-accent);
+    animation: scroll-cue-bounce 1.8s ease-in-out infinite;
+}
+
+@keyframes scroll-cue-bounce {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(6px);
+    }
+}
+
+@media (max-height: 640px), (max-width: 760px) {
+    .scroll-cue {
+        display: none;
+    }
+}
+
+.hero-lede {
+    color: var(--color-text-dim);
+    font-size: 1.08rem;
+    max-width: 52ch;
+    margin-top: 1.25rem;
+}
+
+.hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-top: 2.25rem;
+}
+
+/* ---- Hero terminal panel ---- */
+/* Sits on --color-bg (the page base) so it still pops against the hero's
+   surface-tinted background, same trick .contact-form uses on section-alt. */
+.hero-panel {
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+}
+
+.hero-panel-bar {
+    padding: 0.5rem 0.5rem 0.5rem 1rem;
+    border-bottom: 1px solid var(--color-border);
+    font-size: 0.72rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--color-text-dim);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.65rem;
+}
+
+/* Windows/KDE-style window controls, right-aligned. */
+.hero-panel-controls {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.15rem;
+}
+
+.hero-panel-controls i {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 22px;
+    font-size: 0.8rem;
+    border-radius: var(--radius-sm);
+    color: var(--color-text-dim);
+}
+
+.hero-panel-controls .mdi-window-close:hover {
+    background: var(--color-error);
+    color: var(--color-on-accent);
+}
+
+.hero-panel-controls .mdi-window-minimize:hover,
+.hero-panel-controls .mdi-window-maximize:hover {
+    background: var(--color-border);
+    color: var(--color-text);
+}
+
+.hero-panel-body {
+    padding: 1.5rem 1.35rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+}
+
+.hero-panel-body p {
+    margin: 0;
+    line-height: 1.5;
+    white-space: nowrap;
+    overflow-x: auto;
+}
+
+.hero-panel-body .prompt {
+    color: var(--color-accent);
+    font-weight: 600;
+    margin-right: 0.6rem;
+}
+
+.hero-panel-body .out {
+    color: var(--color-text-dim);
+    padding-left: 1.25rem;
+}
+
+.hero-panel-body .cursor .blink {
+    color: var(--color-accent);
+    font-weight: 600;
+    animation: hero-cursor-blink 1.1s steps(1) infinite;
+}
+
+@keyframes hero-cursor-blink {
+    50% {
+        opacity: 0;
+    }
+}
+
+@media (max-width: 900px) {
+    .hero-inner {
+        grid-template-columns: 1fr;
+        gap: 2.5rem;
+    }
+}
+
+@media (max-width: 760px) {
+    .hero-panel-body p {
+        white-space: normal;
+        overflow-x: visible;
+        word-break: break-word;
+    }
+}
+
+/* ---- About ---- */
+.about-layout {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    grid-template-areas:
+        "intro bio"
+        "intro skills";
+    column-gap: 3.5rem;
+    row-gap: 2.75rem;
+    align-items: start;
+    max-width: 1120px;
+    margin: 0 auto;
+}
+
+.about-intro {
+    grid-area: intro;
+    display: flex;
+    flex-direction: column;
+    gap: 1.75rem;
+}
+
+.about-bio {
+    grid-area: bio;
+}
+
+.about-skills {
+    grid-area: skills;
+    display: flex;
+    flex-direction: column;
+    gap: 1.35rem;
+}
+
+.about-photo-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: 1.5rem 1.25rem;
+    text-align: center;
+}
+
+.about-photo {
+    width: 96px;
+    height: 96px;
+    margin: 0 auto 1rem;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1px solid var(--color-border);
+}
+
+.about-name {
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.about-role {
+    font-family: var(--font-mono);
+    font-size: 0.76rem;
+    color: var(--color-text-dim);
+    margin-top: 0.3rem;
+}
+
+.about-bio p {
+    color: var(--color-text-dim);
+    margin-top: 1rem;
+    max-width: 62ch;
+}
+
+.about-bio > h2 {
+    margin-top: 0.25rem;
+}
+
+.skill-group-title {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    letter-spacing: 0.03em;
+    color: var(--color-text);
+    margin-bottom: 0.65rem;
+}
+
+/* ---- Spoken languages: a stack of tabbed cards, each with its own accent
+   edge - a deck, not a grid of boxes. */
+.lang-deck {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+}
+
+.lang-deck-item {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 0.7rem 1rem;
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-left: 3px solid var(--color-accent);
+    border-radius: var(--radius-sm);
+    transition: border-color 0.15s ease;
+}
+
+.lang-deck-item:hover {
+    border-left-color: var(--color-accent-dark);
+}
+
+.lang-deck-code {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: var(--color-accent);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    padding: 0.15rem 0.4rem;
+}
+
+.lang-deck-name {
+    font-size: 0.9rem;
+    font-weight: 500;
+    flex: 1;
+}
+
+.lang-deck-level {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--color-text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+@media (max-width: 900px) {
+    .about-layout {
+        grid-template-columns: 1fr;
+        grid-template-areas:
+            "intro"
+            "bio"
+            "skills";
+    }
+
+    .about-photo-card {
+        max-width: 260px;
+        margin: 0 auto;
+    }
+}
+
+/* ---- Experience timeline ---- */
+.timeline {
+    margin-top: 2.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 2.5rem;
+    border-left: 2px solid var(--color-border);
+}
+
+.timeline-item {
+    padding-left: 1.75rem;
+    position: relative;
+}
+
+.timeline-item::before {
+    content: "";
+    position: absolute;
+    left: -7px;
+    top: 0.4rem;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--color-accent);
+    border: 2px solid var(--color-surface);
+}
+
+.timeline-heading {
+    margin-bottom: 0.75rem;
+}
+
+.timeline-meta {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--color-text-dim);
+    margin-top: 0.3rem;
+}
+
+.timeline-item ul {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.timeline-item li {
+    color: var(--color-text-dim);
+    padding-left: 1.1rem;
+    position: relative;
+}
+
+.timeline-item li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0.6em;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--color-text-dim);
+}
+
+/* ---- Projects ---- */
+/* Flexbox, not grid: an incomplete last row (grid keeps it pinned to the
+   leading columns) needs to center on its own, which only flex-wrap does. */
+.project-grid {
+    margin-top: 2.5rem;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1.5rem;
+}
+
+/* The border/background/shadow live here, on the static (never-rotated) wrapper,
+   not on the rotating faces below - at the edge-on midpoint of the flip both
+   faces are invisible (backface-visibility: hidden on both simultaneously), so
+   a frame drawn only on the faces would flash away to bare page background for
+   an instant. Keeping it here means there's always a card-shaped frame present. */
+.project-card {
+    flex: 1 1 320px;
+    max-width: 380px;
+    height: 445px;
+    perspective: 1800px;
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    transition: box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.project-card:hover,
+.project-card:focus-within,
+.project-card.is-flipped {
+    border-color: var(--color-accent);
+    box-shadow: var(--shadow-md);
+}
+
+/* The card's real content lives on two absolutely-positioned faces inside
+   this rotating layer, so its own box never resizes - only orientation changes. */
+.project-card-flip {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transition: transform 0.7s cubic-bezier(0.4, 0.2, 0.2, 1);
+    transform-style: preserve-3d;
+    will-change: transform;
+}
+
+.project-card:hover .project-card-flip,
+.project-card:focus-within .project-card-flip,
+.project-card.is-flipped .project-card-flip {
+    transform: rotateY(180deg);
+}
+
+.project-card-face {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    background: var(--color-bg);
+    border-radius: var(--radius-md);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    /* Forces each face onto its own compositor layer so the browser doesn't
+       have to repaint them (and risk a blank frame) mid-rotation. */
+    transform: translateZ(0.01px);
+}
+
+.project-card-face-front {
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 0.9rem;
+    padding: 2.25rem 1.75rem 3.25rem;
+}
+
+.project-card-face-front h3 {
+    font-size: 1.3rem;
+}
+
+.project-card-face-front .tag-list {
+    justify-content: center;
+}
+
+.project-card-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 3.25rem;
+    height: 3.25rem;
+    border-radius: var(--radius-md);
+    background: var(--color-accent-soft);
+}
+
+.project-card-icon i {
+    font-size: 1.6rem;
+    color: var(--color-accent);
+}
+
+/* Pinned to the bottom independently of the centered content above it, so it
+   doesn't shift as tag-list length varies card to card. */
+.project-card-hint {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 1.15rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--color-text-dim);
+    opacity: 0.7;
+    transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.project-card:hover .project-card-hint,
+.project-card:focus-within .project-card-hint,
+.project-card.is-flipped .project-card-hint {
+    opacity: 0;
+    transform: translateY(4px);
+}
+
+.project-card-hint i {
+    font-size: 0.95rem;
+    color: var(--color-accent);
+}
+
+.project-card-face-back {
+    transform: rotateY(180deg) translateZ(0.01px);
+    padding: 1.5rem 1.75rem;
+    gap: 0.9rem;
+    overflow-y: auto;
+}
+
+.project-card-head {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.9rem;
+}
+
+.project-card-head i {
+    font-size: 1.7rem;
+    color: var(--color-accent);
+    margin-top: 0.1rem;
+}
+
+.project-tagline {
+    font-size: 0.85rem;
+    color: var(--color-text-dim);
+    margin-top: 0.15rem;
+}
+
+.project-description {
+    color: var(--color-text-dim);
+    font-size: 0.92rem;
+    line-height: 1.45;
+}
+
+.project-links {
+    margin-top: auto;
+    padding-top: 0.5rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem 1rem;
+    border-top: 1px solid var(--color-border);
+}
+
+.repo-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.8rem;
+    color: var(--color-text-dim);
+}
+
+.repo-link:hover {
+    color: var(--color-accent);
+}
+
+/* ---- Contact ---- */
+.contact-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.1fr;
+    gap: 3rem;
+}
+
+.contact-direct {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+    margin-top: 1.75rem;
+}
+
+.contact-direct a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: 0.92rem;
+    color: var(--color-text-dim);
+}
+
+.contact-direct a:hover {
+    color: var(--color-accent);
+}
+
+.contact-form {
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: 1.75rem;
+}
+
+@media (max-width: 760px) {
+    .contact-grid {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+    }
+}

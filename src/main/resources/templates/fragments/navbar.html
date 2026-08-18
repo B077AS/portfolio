@@ -1,0 +1,21 @@
+<nav th:fragment="navbar" class="navbar">
+    <div class="navbar-inner">
+        <a class="navbar-logo" th:href="@{/}">
+            <span class="navbar-logo-mark">WS</span>
+            <span class="navbar-logo-text">William Solari</span>
+        </a>
+
+        <button type="button" class="navbar-toggle" id="navbar-toggle" aria-label="Toggle navigation" aria-expanded="false" aria-controls="navbar-links">
+            <i class="mdi mdi-menu"></i>
+        </button>
+
+        <div class="navbar-links" id="navbar-links">
+            <a href="#about">About</a>
+            <a href="#experience">Experience</a>
+            <a href="#projects">Projects</a>
+            <a href="#contact" class="navbar-cta">Contact</a>
+        </div>
+
+        <div class="navbar-backdrop" id="navbar-backdrop"></div>
+    </div>
+</nav>

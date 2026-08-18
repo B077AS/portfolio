@@ -1,0 +1,22 @@
+<footer th:fragment="footer" class="footer">
+    <div class="footer-inner">
+        <div class="footer-brand">
+            <span class="navbar-logo-mark">WS</span>
+            <span>William Solari</span>
+        </div>
+
+        <div class="footer-links">
+            <a href="mailto:contact@williamsolari.com" title="Email">
+                <i class="mdi mdi-email-outline"></i>
+            </a>
+            <a href="https://www.linkedin.com/in/william-solari/" target="_blank" rel="noopener noreferrer" title="LinkedIn">
+                <i class="mdi mdi-linkedin"></i>
+            </a>
+            <a href="https://github.com/B077AS" target="_blank" rel="noopener noreferrer" title="GitHub">
+                <i class="mdi mdi-github"></i>
+            </a>
+        </div>
+
+        <p class="footer-copy" th:text="'© ' + ${#calendars.format(#calendars.createNow(), 'yyyy')} + ' William Solari'">© 2026 William Solari</p>
+    </div>
+</footer>

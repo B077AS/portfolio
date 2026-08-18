@@ -1,0 +1,151 @@
+/* ---- Reset ---- */
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+html, body {
+    height: 100%;
+    overflow: hidden;
+}
+
+html {
+    -webkit-text-size-adjust: 100%;
+}
+
+/* The navbar sits outside the scroll container (below), so it's never
+   overlapped or covered - no sticky positioning or scroll-offset math needed. */
+body {
+    display: flex;
+    flex-direction: column;
+}
+
+.navbar {
+    flex-shrink: 0;
+}
+
+main {
+    flex: 1;
+    min-height: 0; /* flex items default to min-height:auto, which lets a tall child
+                       (5 full-height sections) grow instead of clipping/scrolling */
+    overflow-y: auto;
+    overflow-x: hidden;
+    scroll-behavior: smooth;
+}
+
+body, h1, h2, h3, p, ul, ol, figure {
+    margin: 0;
+}
+
+ul, ol {
+    padding: 0;
+    list-style: none;
+}
+
+img {
+    display: block;
+    max-width: 100%;
+}
+
+a {
+    color: inherit;
+    text-decoration: none;
+}
+
+button {
+    font: inherit;
+    color: inherit;
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+input, textarea {
+    font: inherit;
+    color: inherit;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    main {
+        scroll-behavior: auto;
+    }
+    *:not(.project-card-flip):not(.btn-spinner) {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* ---- Design tokens: Ivory & Bordeaux ---- */
+:root {
+    --color-bg: #faf8f5;
+    --color-surface: #f1ece5;
+    --color-surface-strong: #ece4db;
+    --color-border: #e3dcd1;
+    --color-text: #221f1d;
+    --color-text-dim: #75695f;
+    --color-accent: #6e2c3b;
+    --color-accent-dark: #571f2c;
+    --color-on-accent: #faf8f5;
+    --color-accent-soft: #f3e6e8;
+    --color-success: #3f6b4a;
+    --color-error: #a13c3c;
+
+    --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+
+    --content-width: 1280px;
+    --radius-sm: 4px;
+    --radius-md: 8px;
+    --shadow-sm: 0 1px 2px rgba(34, 31, 29, 0.06);
+    --shadow-md: 0 4px 16px rgba(34, 31, 29, 0.08);
+    --navbar-height: 64px;
+}
+
+body {
+    background: var(--color-bg);
+    color: var(--color-text);
+    font-family: var(--font-sans);
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+    background: var(--color-accent);
+    color: var(--color-on-accent);
+}
+
+:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+}
+
+h1, h2, h3 {
+    font-family: var(--font-sans);
+    font-weight: 600;
+    line-height: 1.15;
+    text-wrap: balance;
+    letter-spacing: -0.01em;
+}
+
+h1 {
+    font-size: clamp(2rem, 1.4rem + 2.4vw, 3.1rem);
+}
+
+h2 {
+    font-size: clamp(1.5rem, 1.2rem + 1.2vw, 2.1rem);
+}
+
+h3 {
+    font-size: 1.15rem;
+    font-weight: 600;
+}
+
+.eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-accent);
+    margin-bottom: 0.75rem;
+}

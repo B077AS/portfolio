@@ -1,0 +1,335 @@
+/* ---- Navbar ---- */
+.navbar {
+    background: var(--color-bg);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.navbar-inner {
+    max-width: var(--content-width);
+    margin: 0 auto;
+    padding: 0.9rem 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.navbar-logo {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-weight: 600;
+}
+
+.navbar-logo-mark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: var(--radius-sm);
+    background: var(--color-accent);
+    color: var(--color-on-accent);
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+}
+
+.navbar-logo-text {
+    font-size: 0.95rem;
+}
+
+.navbar-toggle {
+    display: none;
+    font-size: 1.4rem;
+    padding: 0.25rem;
+}
+
+.navbar-backdrop {
+    display: none;
+}
+
+.navbar-links {
+    display: flex;
+    align-items: center;
+    gap: 1.75rem;
+    font-size: 0.92rem;
+    font-weight: 500;
+}
+
+.navbar-links a {
+    color: var(--color-text-dim);
+    transition: color 0.15s ease;
+}
+
+.navbar-links a:hover,
+.navbar-links a.active {
+    color: var(--color-text);
+}
+
+.navbar-links a.navbar-cta {
+    color: var(--color-on-accent);
+    background: var(--color-accent);
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-sm);
+}
+
+.navbar-links a.navbar-cta:hover {
+    background: var(--color-accent-dark);
+}
+
+@media (max-width: 760px) {
+    .navbar-toggle {
+        display: inline-flex;
+    }
+
+    .navbar-backdrop {
+        display: block;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.45);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.25s ease;
+        z-index: 90;
+    }
+
+    .navbar-backdrop.open {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    .navbar-links {
+        position: fixed;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        width: min(78vw, 300px);
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0;
+        background: var(--color-bg);
+        border-left: 1px solid var(--color-border);
+        overflow-y: auto;
+        transform: translateX(100%);
+        transition: transform 0.25s ease;
+        z-index: 100;
+        box-shadow: -8px 0 24px rgba(0, 0, 0, 0.15);
+    }
+
+    .navbar-links.open {
+        transform: translateX(0);
+    }
+
+    .navbar-links a {
+        padding: 0.9rem 1.5rem;
+        border-top: 1px solid var(--color-border);
+    }
+
+    .navbar-links a.navbar-cta {
+        margin: 0.9rem 1.5rem;
+        text-align: center;
+    }
+}
+
+/* ---- Buttons ---- */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+    padding: 0.75rem 1.4rem;
+    border-radius: var(--radius-sm);
+    transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.btn-sm {
+    padding: 0.5rem 0.9rem;
+    font-size: 0.85rem;
+}
+
+.btn-primary {
+    background: var(--color-accent);
+    color: var(--color-on-accent);
+}
+
+.btn-primary:hover {
+    background: var(--color-accent-dark);
+}
+
+.btn-ghost {
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    color: var(--color-text);
+}
+
+.btn-ghost:hover {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+}
+
+.btn[disabled] {
+    opacity: 0.85;
+    cursor: default;
+}
+
+.btn-spinner {
+    width: 1em;
+    height: 1em;
+    border: 2px solid color-mix(in srgb, var(--color-on-accent) 35%, transparent);
+    border-top-color: var(--color-on-accent);
+    border-radius: 50%;
+    animation: btn-spin 0.6s linear infinite;
+}
+
+@keyframes btn-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ---- Tags ---- */
+.tag-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.tag {
+    font-size: 0.82rem;
+    padding: 0.3rem 0.65rem;
+    border-radius: var(--radius-sm);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    color: var(--color-text-dim);
+}
+
+.tag-mono {
+    font-family: var(--font-mono);
+    font-size: 0.76rem;
+}
+
+/* ---- Forms ---- */
+.form-row {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    margin-bottom: 1.1rem;
+}
+
+.form-row label {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--color-text-dim);
+}
+
+.form-row input,
+.form-row textarea {
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    padding: 0.65rem 0.8rem;
+    font-size: 0.95rem;
+    resize: vertical;
+}
+
+.form-row input:focus,
+.form-row textarea:focus {
+    border-color: var(--color-accent);
+}
+
+.form-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.9rem;
+}
+
+.form-status {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.85rem;
+    opacity: 0;
+    transform: translateX(-0.4rem);
+    transition: opacity 0.25s ease, transform 0.25s ease;
+    pointer-events: none;
+}
+
+.form-status.is-visible {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.form-status-success {
+    color: var(--color-success);
+}
+
+.form-status-error {
+    color: var(--color-error);
+}
+
+/* Honeypot - visually hidden, still in the tab/DOM flow for bots to find */
+.hp-field {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+}
+
+/* ---- Footer ---- */
+.footer {
+    border-top: 1px solid var(--color-border);
+}
+
+.footer-inner {
+    max-width: var(--content-width);
+    margin: 0 auto;
+    padding: 2.5rem 1.5rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.footer-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-weight: 600;
+    font-size: 0.92rem;
+}
+
+.footer-links {
+    display: flex;
+    gap: 1.1rem;
+    font-size: 1.15rem;
+    color: var(--color-text-dim);
+}
+
+.footer-links a:hover {
+    color: var(--color-accent);
+}
+
+.footer-copy {
+    font-size: 0.82rem;
+    color: var(--color-text-dim);
+    width: 100%;
+    order: 3;
+    text-align: center;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--color-border);
+}
+
+@media (min-width: 640px) {
+    .footer-copy {
+        width: auto;
+        order: 0;
+        border-top: none;
+        padding-top: 0;
+    }
+}

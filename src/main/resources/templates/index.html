@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/layout}">
+<head>
+    <link rel="stylesheet" th:href="@{/css/home.css}" th:fragment="styles"/>
+</head>
+<body>
+<div layout:fragment="content">
+
+    <!-- Hero -->
+    <section class="hero" id="top">
+        <div class="hero-inner">
+            <div class="hero-copy">
+                <p class="eyebrow">Full-Stack Developer</p>
+                <h1>Hi, I'm William.</h1>
+                <p class="hero-lede">
+                    I'm a full-stack developer at Italy's largest software house, working on the e-invoicing and
+                    tax-compliance infrastructure that Italy's tax authority and EU businesses rely on. In my spare
+                    time, I design and maintain self-hosted projects of my own, from the backend to the
+                    systems that run them.
+                </p>
+                <div class="hero-actions">
+                    <a href="#projects" class="btn btn-primary">
+                        View my projects <i class="mdi mdi-arrow-down"></i>
+                    </a>
+                    <a href="#contact" class="btn btn-ghost">Get in touch</a>
+                </div>
+            </div>
+
+            <div class="hero-panel" aria-hidden="true">
+                <div class="hero-panel-bar">
+                    <span class="hero-panel-title">william.sh</span>
+                    <span class="hero-panel-controls">
+                        <i class="mdi mdi-window-minimize"></i>
+                        <i class="mdi mdi-window-maximize"></i>
+                        <i class="mdi mdi-window-close"></i>
+                    </span>
+                </div>
+                <div class="hero-panel-body">
+                    <p><span class="prompt">$</span>whoami</p>
+                    <p class="out">William Solari</p>
+                    <p><span class="prompt">$</span>role</p>
+                    <p class="out">Full-Stack Developer at Zucchetti</p>
+                    <p><span class="prompt">$</span>stack</p>
+                    <p class="out">Java, Spring Boot, JavaScript, SQL and more...</p>
+                    <p class="cursor"><span class="prompt">$</span><span class="blink">_</span></p>
+                </div>
+            </div>
+        </div>
+
+        <a href="#about" class="scroll-cue" aria-label="Scroll to About section">
+            <span>Scroll</span>
+            <i class="mdi mdi-chevron-down"></i>
+        </a>
+    </section>
+
+    <!-- About -->
+    <section class="section" id="about">
+        <div class="section-inner about-layout">
+            <div class="about-intro">
+                <div class="about-photo-card">
+                    <img class="about-photo" th:src="@{/images/william.jpg}" alt="Photo of William Solari" width="96" height="96"/>
+                    <p class="about-name">William Solari</p>
+                    <p class="about-role">Full-Stack Developer</p>
+                </div>
+
+                <div class="lang-deck" aria-label="Spoken languages">
+                    <p class="skill-group-title"><i class="mdi mdi-translate"></i> Languages</p>
+                    <div class="lang-deck-item">
+                        <span class="lang-deck-code">IT</span>
+                        <span class="lang-deck-name">Italian</span>
+                        <span class="lang-deck-level">Native</span>
+                    </div>
+                    <div class="lang-deck-item">
+                        <span class="lang-deck-code">EN</span>
+                        <span class="lang-deck-name">English</span>
+                        <span class="lang-deck-level">C1</span>
+                    </div>
+                    <div class="lang-deck-item">
+                        <span class="lang-deck-code">ES</span>
+                        <span class="lang-deck-name">Spanish</span>
+                        <span class="lang-deck-level">B1</span>
+                    </div>
+                    <div class="lang-deck-item">
+                        <span class="lang-deck-code">DE</span>
+                        <span class="lang-deck-name">German</span>
+                        <span class="lang-deck-level">A2</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="about-bio">
+                <p class="eyebrow">About</p>
+                <h2>Intern to product owner in under a year</h2>
+                <p>
+                    At Zucchetti I'm the sole lead developer of <em>corrispettivi telematici</em>, a software
+                    for transmitting daily point-of-sale receipt data to Italy's tax authority, built to its
+                    official technical specification. I also contribute to Peppol-network integrations on
+                    Zucchetti's accredited Peppol Access Point. Separately, I work on digital signatures, including FEA, FES, and FEQ.
+                </p>
+                <p>
+                    I studied Electronic &amp; Computer Engineering at the University of Pavia before trading the
+                    last few exams for a full-time seat at Zucchetti.
+                </p>
+            </div>
+
+            <div class="about-skills">
+                <div class="skill-group">
+                    <p class="skill-group-title"><i class="mdi mdi-code-tags"></i> Languages &amp; Frameworks</p>
+                    <div class="tag-list">
+                        <span class="tag">Java</span>
+                        <span class="tag">Spring Boot</span>
+                        <span class="tag">JavaFX</span>
+                        <span class="tag">JavaScript</span>
+                        <span class="tag">HTML</span>
+                        <span class="tag">CSS</span>
+                        <span class="tag">Node.js</span>
+                    </div>
+                </div>
+                <div class="skill-group">
+                    <p class="skill-group-title"><i class="mdi mdi-database-outline"></i> Data &amp; Infrastructure</p>
+                    <div class="tag-list">
+                        <span class="tag">SQL</span>
+                        <span class="tag">PostgreSQL</span>
+                        <span class="tag">MySQL</span>
+                        <span class="tag">SQL Server</span>
+                        <span class="tag">MariaDB</span>
+                        <span class="tag">H2</span>
+                        <span class="tag">SQLite</span>
+                        <span class="tag">Docker</span>
+                        <span class="tag">Git</span>
+                    </div>
+                </div>
+                <div class="skill-group">
+                    <p class="skill-group-title"><i class="mdi mdi-lan-connect"></i> Integration &amp; Domain</p>
+                    <div class="tag-list">
+                        <span class="tag">Peppol (SMP/SML)</span>
+                        <span class="tag">REST</span>
+                        <span class="tag">SOAP</span>
+                        <span class="tag">WebSocket</span>
+                        <span class="tag">MQTT</span>
+                        <span class="tag">Schema validation</span>
+                        <span class="tag">Digital signatures</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Experience -->
+    <section class="section section-alt" id="experience">
+        <div class="section-inner">
+            <p class="eyebrow">Experience</p>
+            <h2>Where I've worked</h2>
+
+            <ol class="timeline">
+                <li class="timeline-item">
+                    <div class="timeline-heading">
+                        <h3>Full-Stack Developer</h3>
+                        <p class="timeline-meta">Zucchetti - Apr 2025 - Present</p>
+                    </div>
+                    <ul>
+                        <li>Lead developer of "corrispettivi telematici", a software
+                            for transmitting daily point-of-sale receipt data to Italy's tax authority.
+                        </li>
+                        <li>Built Peppol-network integration features for Digital Hub, handling schema validation
+                            and message routing for cross-border invoices between Italian and EU businesses.
+                        </li>
+                        <li>Built REST/SOAP integrations connecting invoicing and signature services to SdI and
+                            NSO, and developed qualified e-signature support (FEA/FES/FEQ,
+                            PAdES/CAdES/XAdES).
+                        </li>
+                    </ul>
+                </li>
+                <li class="timeline-item">
+                    <div class="timeline-heading">
+                        <h3>Java Developer - Internship</h3>
+                        <p class="timeline-meta">Zucchetti - Oct 2024 - Mar 2025</p>
+                    </div>
+                    <ul>
+                        <li>Moved key scheduled jobs from single-threaded to multi-threaded execution, cutting
+                            processing bottlenecks and lock contention.
+                        </li>
+                        <li>Built a JavaFX desktop application to monitor and manage Tomcat deployments across
+                            multiple servers.
+                        </li>
+                        <li>Helped drive adoption of pure-Java tooling for internal Digital Hub utilities.</li>
+                    </ul>
+                </li>
+            </ol>
+        </div>
+    </section>
+
+    <!-- Projects -->
+    <section class="section" id="projects">
+        <div class="section-inner">
+            <p class="eyebrow">Selected projects</p>
+            <h2>Independently maintained, end to end</h2>
+
+            <div class="project-grid">
+                <article class="project-card" th:each="project : ${projects}">
+                    <div class="project-card-flip">
+                        <div class="project-card-face project-card-face-front">
+                            <div class="project-card-icon">
+                                <i th:class="'mdi ' + ${project.icon}"></i>
+                            </div>
+                            <h3 th:text="${project.name}"></h3>
+                            <p class="project-tagline" th:text="${project.tagline}"></p>
+
+                            <div class="tag-list">
+                                <span class="tag" th:each="t : ${project.tech}" th:text="${t}"></span>
+                            </div>
+
+                            <div class="project-card-hint">
+                                <i class="mdi mdi-rotate-3d-variant" aria-hidden="true"></i>
+                                <span>Flip for details</span>
+                            </div>
+                        </div>
+
+                        <div class="project-card-face project-card-face-back">
+                            <div class="project-card-head">
+                                <i th:class="'mdi ' + ${project.icon}"></i>
+                                <div>
+                                    <h3 th:text="${project.name}"></h3>
+                                    <p class="project-tagline" th:text="${project.tagline}"></p>
+                                </div>
+                            </div>
+
+                            <p class="project-description" th:text="${project.description}"></p>
+
+                            <div class="project-links">
+                                <a th:href="${project.primaryLink.url}" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-sm">
+                                    <span th:text="${project.primaryLink.label}"></span>
+                                    <i class="mdi mdi-open-in-new"></i>
+                                </a>
+                                <a th:each="repo : ${project.repos}" th:href="${repo.url}" target="_blank" rel="noopener noreferrer" class="repo-link">
+                                    <i class="mdi mdi-github"></i>
+                                    <span th:text="${repo.label}"></span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact -->
+    <section class="section section-alt" id="contact">
+        <div class="section-inner contact-grid">
+            <div>
+                <p class="eyebrow">Contact</p>
+                <h2>Let's talk</h2>
+                <p>
+                    Whether it's a question about one of the projects above or something new entirely, my inbox
+                    is open.
+                </p>
+                <div class="contact-direct">
+                    <a href="mailto:contact@williamsolari.com"><i class="mdi mdi-email-outline"></i> contact@williamsolari.com</a>
+                    <a href="https://www.linkedin.com/in/william-solari/" target="_blank" rel="noopener noreferrer"><i class="mdi mdi-linkedin"></i> linkedin.com/in/william-solari</a>
+                    <a href="https://github.com/B077AS" target="_blank" rel="noopener noreferrer"><i class="mdi mdi-github"></i> github.com/B077AS</a>
+                </div>
+            </div>
+
+            <form th:action="@{/contact}" method="post" class="contact-form" id="contact-form">
+                <label class="hp-field" aria-hidden="true">
+                    Website
+                    <input type="text" name="website" tabindex="-1" autocomplete="off"/>
+                </label>
+
+                <div class="form-row">
+                    <label for="name">Name</label>
+                    <input type="text" id="name" name="name" required maxlength="100"/>
+                </div>
+                <div class="form-row">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" required maxlength="200"/>
+                </div>
+                <div class="form-row">
+                    <label for="message">Message</label>
+                    <textarea id="message" name="message" required maxlength="2000" rows="5"></textarea>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">
+                        Send message <i class="mdi mdi-send-outline"></i>
+                    </button>
+                    <div class="form-status" id="contact-banner" aria-live="polite"></div>
+                </div>
+            </form>
+        </div>
+    </section>
+
+</div>
+</body>
+</html>

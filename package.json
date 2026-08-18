@@ -1,0 +1,18 @@
+{
+  "name": "portfolio",
+  "version": "1.0.0",
+  "description": "William Solari portfolio frontend dependencies",
+  "scripts": {
+    "purge-icons": "purgecss --css node_modules/@mdi/font/css/materialdesignicons.css --content \"src/main/resources/templates/**/*.html\" \"src/main/resources/static/js/**/*.js\" \"src/main/resources/projects.json\" --output src/main/resources/static/css/icons.css",
+    "copy-mdi-fonts": "node -e \"require('fs').cpSync('node_modules/@mdi/font/fonts', 'src/main/resources/static/fonts', {recursive: true})\"",
+    "copy-brand-fonts": "node scripts/copy-brand-fonts.js"
+  },
+  "dependencies": {
+    "@mdi/font": "^7.4.47",
+    "@fontsource/ibm-plex-sans": "^5.2.5",
+    "@fontsource/ibm-plex-mono": "^5.2.5"
+  },
+  "devDependencies": {
+    "purgecss": "^7.0.2"
+  }
+}
