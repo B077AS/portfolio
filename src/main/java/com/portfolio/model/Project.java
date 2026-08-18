@@ -19,6 +19,7 @@ public class Project {
     private String description;
     private List<String> tech;
     private String icon;
+    private boolean featured;
     private Link primaryLink;
     private List<Link> repos;
 

@@ -199,7 +199,11 @@
             <h2>Independently maintained, end to end</h2>
 
             <div class="project-grid">
-                <article class="project-card" th:each="project : ${projects}">
+                <article class="project-card" th:each="project : ${projects}"
+                         th:classappend="${project.featured} ? 'project-card-featured' : ''">
+                    <span class="project-badge" th:if="${project.featured}">
+                        <i class="mdi mdi-star" aria-hidden="true"></i> Flagship project
+                    </span>
                     <div class="project-card-flip">
                         <div class="project-card-face project-card-face-front">
                             <div class="project-card-icon">
@@ -214,7 +218,8 @@
 
                             <div class="project-card-hint">
                                 <i class="mdi mdi-rotate-3d-variant" aria-hidden="true"></i>
-                                <span>Flip for details</span>
+                                <span class="project-card-hint-hover">Hover for details</span>
+                                <span class="project-card-hint-tap">Flip for details</span>
                             </div>
                         </div>
 

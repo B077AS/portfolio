@@ -440,6 +440,7 @@
    a frame drawn only on the faces would flash away to bare page background for
    an instant. Keeping it here means there's always a card-shaped frame present. */
 .project-card {
+    position: relative;
     flex: 1 1 320px;
     max-width: 380px;
     height: 445px;
@@ -455,6 +456,43 @@
 .project-card.is-flipped {
     border-color: var(--color-accent);
     box-shadow: var(--shadow-md);
+}
+
+/* Marks the single most important project in the list. Sits on the static
+   wrapper (not the rotating faces) so it stays put through the flip. */
+.project-card-featured {
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 1px var(--color-accent-soft);
+}
+
+.project-card-featured:hover,
+.project-card-featured:focus-within,
+.project-card-featured.is-flipped {
+    box-shadow: 0 0 0 1px var(--color-accent-soft), var(--shadow-md);
+}
+
+.project-badge {
+    position: absolute;
+    top: -0.7rem;
+    right: 1.5rem;
+    z-index: 2;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.3rem 0.7rem;
+    border-radius: 999px;
+    background: var(--color-accent);
+    color: var(--color-on-accent);
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    box-shadow: var(--shadow-sm);
+}
+
+.project-badge i {
+    font-size: 0.8rem;
 }
 
 /* The card's real content lives on two absolutely-positioned faces inside
@@ -549,6 +587,22 @@
 .project-card-hint i {
     font-size: 0.95rem;
     color: var(--color-accent);
+}
+
+/* Wording matches the flip trigger for the current input type: devices with a
+   real :hover flip on hover, touch devices flip on tap (see main.js). */
+.project-card-hint-tap {
+    display: none;
+}
+
+@media (hover: none) {
+    .project-card-hint-hover {
+        display: none;
+    }
+
+    .project-card-hint-tap {
+        display: inline;
+    }
 }
 
 .project-card-face-back {

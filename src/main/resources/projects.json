@@ -6,6 +6,7 @@
     "description": "A self-hosted voice, video, and text chat platform built end-to-end across five repositories. Engineered the WebRTC audio pipeline using AEC3 echo cancellation, RNNoise noise suppression, and Silero VAD for voice activity detection. Designed an mTLS trust model securing communication across every service.",
     "tech": ["Java", "JavaFX", "Spring Boot", "WebRTC", "mTLS", "Windows", "Linux"],
     "icon": "mdi-microphone",
+    "featured": true,
     "primaryLink": { "label": "kommvoice.com", "url": "https://kommvoice.com" },
     "repos": [
       { "label": "komm (client)", "url": "https://github.com/B077AS/komm" },
