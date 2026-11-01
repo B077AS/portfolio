@@ -3,10 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title th:text="${title}">Jolt - the Java framework for desktop apps with web UIs</title>
+    <title th:text="${title}">Jolt - The Java framework for desktop apps with web UIs</title>
     <meta name="description" th:content="${description}">
     <meta name="robots" th:content="${noindex} ? 'noindex,follow' : 'index,follow,max-image-preview:large'">
     <meta name="theme-color" content="#0c0d10">
+    <meta name="color-scheme" content="dark">
+    <style>html{background:#0c0d10;color-scheme:dark}</style><!-- dark from the first frame, before jolt.css has loaded -->
     <meta name="author" content="William Solari">
     <link rel="canonical" th:href="${canonicalUrl}">
 
@@ -26,9 +28,12 @@
     <meta name="twitter:description" th:content="${description}">
     <meta name="twitter:image" th:content="${ogImage}">
 
+    <script>document.documentElement.classList.add("js")</script><!-- before first paint, so JS-only layouts do not jump when jolt.js runs -->
     <link rel="icon" type="image/svg+xml" th:href="@{/favicon.svg}">
     <link rel="preload" as="font" type="font/woff2" crossorigin th:href="@{/fonts/ibm-plex-sans-latin-400-normal.woff2}">
     <link rel="preload" as="font" type="font/woff2" crossorigin th:href="@{/fonts/ibm-plex-sans-latin-700-normal.woff2}">
+    <link rel="preload" as="font" type="font/woff2" crossorigin th:href="@{/fonts/ibm-plex-mono-latin-500-normal.woff2}">
+    <link rel="preload" as="font" type="font/woff2" crossorigin th:href="@{/fonts/materialdesignicons-webfont.woff2?v=7.4.47}">
     <link rel="stylesheet" th:href="@{/css/fonts.css}">
     <link rel="stylesheet" th:href="@{/css/icons.css}">
     <link rel="stylesheet" th:href="@{/css/jolt.css}">

@@ -22,10 +22,12 @@
 
             <div class="pn">
                 <a th:if="${prev != null}" th:href="@{${prev.path()}}" rel="prev">
-                    <small><i class="mdi mdi-arrow-left" aria-hidden="true"></i> Previous</small><b th:text="${prev.title()}">Previous page</b>
+                    <span class="ico"><i class="mdi mdi-arrow-left" aria-hidden="true"></i></span>
+                    <span><small>Previous</small><b th:text="${prev.title()}">Previous page</b></span>
                 </a>
                 <a th:if="${next != null}" th:href="@{${next.path()}}" rel="next" class="next">
-                    <small>Next <i class="mdi mdi-arrow-right" aria-hidden="true"></i></small><b th:text="${next.title()}">Next page</b>
+                    <span class="ico"><i class="mdi mdi-arrow-right" aria-hidden="true"></i></span>
+                    <span><small>Next</small><b th:text="${next.title()}">Next page</b></span>
                 </a>
             </div>
         </article>

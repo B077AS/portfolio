@@ -41,8 +41,34 @@
 
 .navbar-toggle {
     display: none;
-    font-size: 1.4rem;
-    padding: 0.25rem;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
+    width: 2.4rem;
+    height: 2.4rem;
+    padding: 0;
+}
+
+.navbar-toggle span {
+    display: block;
+    width: 1.35rem;
+    height: 2px;
+    background: currentColor;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+/* open: the three bars morph into an X (2px bar + 5px gap = 7px to the middle) */
+.navbar-toggle.open span:nth-child(1) {
+    transform: translateY(7px) rotate(45deg);
+}
+
+.navbar-toggle.open span:nth-child(2) {
+    opacity: 0;
+}
+
+.navbar-toggle.open span:nth-child(3) {
+    transform: translateY(-7px) rotate(-45deg);
 }
 
 .navbar-backdrop {
@@ -80,7 +106,9 @@
 
 @media (max-width: 760px) {
     .navbar-toggle {
-        display: inline-flex;
+        display: flex;
+        position: relative;
+        z-index: 110; /* above the sidebar, so the X is its close button */
     }
 
     .navbar-backdrop {
@@ -105,6 +133,7 @@
         right: 0;
         bottom: 0;
         width: min(78vw, 300px);
+        padding-top: 4.4rem; /* the navbar height: links start below the X */
         flex-direction: column;
         align-items: stretch;
         gap: 0;

@@ -3,10 +3,10 @@
 <p><code>jpackage</code> turns your jars into a double-clickable app that bundles its own Java runtime, so your users do not need Java installed.</p>
 
 <h2 id="jpackage">Build an app image</h2>
-<div class="code" data-lang="powershell"><pre><code>mvn -pl examples/notes-app -am install
-jpackage --type app-image --name JoltNotes `
-  --input examples\notes-app\target\package `
-  --main-jar notes-app-0.1.0-SNAPSHOT.jar --main-class io.github.b077as.jolt.examples.notes.NotesApp `
+<p>Collect your app jar and its dependencies in one folder (here <code>target\package</code>), then point <code>jpackage</code> at it:</p>
+<div class="code" data-lang="powershell"><pre><code>jpackage --type app-image --name MyApp `
+  --input target\package `
+  --main-jar my-app.jar --main-class com.example.MyApp `
   --java-options "--enable-native-access=ALL-UNNAMED" `
   --add-modules "java.base,java.logging,jdk.unsupported" `
   --jlink-options "--strip-debug --no-man-pages --no-header-files --compress zip-6" `

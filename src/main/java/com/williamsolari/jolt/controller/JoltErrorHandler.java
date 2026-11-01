@@ -36,7 +36,7 @@ public class JoltErrorHandler implements SiteErrorHandler {
         model.addAttribute("nav", "");
         model.addAttribute("noindex", true);
         model.addAttribute("status", status);
-        model.addAttribute("title", status == 404 ? "Page not found | Jolt" : "Something went wrong | Jolt");
+        model.addAttribute("title", status == 404 ? "Page not found - Jolt" : "Something went wrong - Jolt");
         model.addAttribute("description", "This page of the Jolt site could not be shown.");
         model.addAttribute("canonicalUrl", site.url("/"));
         model.addAttribute("ogType", "website");

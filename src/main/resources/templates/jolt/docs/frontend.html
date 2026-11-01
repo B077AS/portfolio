@@ -14,12 +14,8 @@ window.loadUrl("http://localhost:5173");</code></pre></div>
 <div class="code" data-lang="java"><pre><code>window.loadResources(AppResources.classpath("ui"));</code></pre></div>
 <p>Separate HTML, CSS and JS files work, as do relative URLs and ES modules. The origin is stable, so <code>localStorage</code> survives restarts. A single self-contained HTML file (Vite with <code>vite-plugin-singlefile</code>) can use <code>loadHtml</code> instead.</p>
 
-<h2 id="react">A React example</h2>
-<p><code>examples/notes-app/frontend</code> is the notes app in React, TypeScript, Vite and Tailwind. <code>src/jolt.ts</code> is the typed bridge (<code>call&lt;T&gt;(method, params)</code>) and <code>src/api.ts</code> has one function per Java handler.</p>
-<div class="code" data-lang="powershell"><pre><code>npm install; npm run build
-java ... "-Dui.file=examples/notes-app/frontend/dist/index.html" ...   # built page
-java ... "-Dui.url=http://127.0.0.1:5173" ...                         # against npm run dev</code></pre></div>
-<p>In PowerShell keep the quotes around <code>-D</code> flags, because PowerShell splits them at the dot.</p>
+<h2 id="framework">Any framework</h2>
+<p>React, Vue, Svelte and htmx all work, because to Jolt the page is just a page. A small typed wrapper around <code>jolt.postMessage</code> (for example a <code>call&lt;T&gt;(method, params)</code> function with one function per Java handler) keeps the rest of the frontend free of the bridge. <a th:href="@{/parsel}">Parsel</a> is a complete app built this way: a Vue page for the interface, with Java behind it for IMAP and SMTP.</p>
 
 <h2 id="devtools">Developer tools</h2>
 <p><code>WindowOptions.defaults().withDevTools(true)</code>, then right-click and choose Inspect, or call <code>window.openDevTools()</code>.</p>

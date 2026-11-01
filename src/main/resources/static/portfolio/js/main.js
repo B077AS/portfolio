@@ -70,6 +70,7 @@
     if (toggle && links) {
         var setMenuOpen = function (isOpen) {
             links.classList.toggle("open", isOpen);
+            toggle.classList.toggle("open", isOpen);
             toggle.setAttribute("aria-expanded", isOpen ? "true" : "false");
             if (backdrop) {
                 backdrop.classList.toggle("open", isOpen);

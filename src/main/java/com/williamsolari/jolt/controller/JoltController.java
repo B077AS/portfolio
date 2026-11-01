@@ -30,15 +30,15 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class JoltController {
 
-    private static final String HOME_TITLE = "Jolt - the Java framework for desktop apps with web UIs";
+    private static final String HOME_TITLE = "Jolt - The Java framework for desktop apps with web UIs";
     private static final String HOME_DESCRIPTION =
             "Jolt is an open source Java framework for desktop apps with web UIs. A native window, the web view your OS "
                     + "already has, and Java talking to your page in one process. No Electron, no JNI. Windows and Linux.";
-    private static final String CHANGELOG_TITLE = "Changelog | Jolt";
+    private static final String CHANGELOG_TITLE = "Changelog - Jolt";
     private static final String CHANGELOG_DESCRIPTION =
             "Every released version of Jolt, newest first: what was added, changed and fixed in each release of the Java "
                     + "framework for desktop apps with web UIs.";
-    private static final String PARSEL_TITLE = "Parsel - a desktop mail client built with Jolt";
+    private static final String PARSEL_TITLE = "Parsel - A desktop mail client built with Jolt";
     private static final String PARSEL_DESCRIPTION =
             "Parsel is a clean desktop mail client for your own mailbox, built on the Jolt framework: Java for IMAP and "
                     + "SMTP, a Vue page for the interface, one process, a 33 MB installer. Windows and Linux.";
@@ -92,7 +92,7 @@ public class JoltController {
     @GetMapping("/docs/{slug}")
     String doc(@PathVariable String slug, Model model) {
         DocPage page = docs.find(slug).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        seo(model, "docs", page.title() + " | Jolt documentation", page.description(), page.path(), "article",
+        seo(model, "docs", page.title() + " - Jolt documentation", page.description(), page.path(), "article",
                 jsonLd.doc(page));
         model.addAttribute("doc", page);
         model.addAttribute("prev", docs.previous(page).orElse(null));

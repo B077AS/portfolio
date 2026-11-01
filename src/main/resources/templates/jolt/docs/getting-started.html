@@ -61,13 +61,9 @@ try {
     <li>To end the app, let <code>main</code> return rather than calling <code>System.exit</code>.</li>
 </ul>
 
-<h2 id="notes-example">Try the notes example</h2>
-<p>The repository has a small complete app: a Java data layer, JSON requests between Java and the page, light and dark themes, and an optional React frontend.</p>
-<div class="code" data-lang="powershell"><pre><code>git clone https://github.com/B077AS/jolt.git
-cd jolt
-mvn install -DskipTests
-mvn -pl examples/notes-app -am install -DskipTests
-java --enable-native-access=ALL-UNNAMED -cp "examples/notes-app/target/package/*" io.github.b077as.jolt.examples.notes.NotesApp</code></pre></div>
+<h2 id="complete-app">See a complete app</h2>
+<p><a th:href="@{/parsel}">Parsel</a> is a full desktop mail client built on Jolt, and its source is open: Java for IMAP and SMTP, a Vue page for the interface, one process. It is the reference for how a real Jolt app is put together, from the messaging layer to packaging.</p>
+<p><a th:href="${site.parselGithubUrl}" rel="noopener">Parsel on GitHub</a></p>
 <p>Next: <a th:href="@{/docs/messaging}">messaging between Java and the page</a>.</p>
 
 </th:block>
