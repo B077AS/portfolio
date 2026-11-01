@@ -37,7 +37,7 @@ build/
 /src/main/resources/application-local.properties
 /node/
 /node_modules/
-/src/main/resources/static/fonts/
+/src/main/resources/static/portfolio/fonts/
 /src/main/resources/static/jolt/fonts/
-/src/main/resources/static/css/icons.css
+/src/main/resources/static/portfolio/css/icons.css
 /src/main/resources/static/jolt/css/icons.css

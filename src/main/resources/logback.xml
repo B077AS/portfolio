@@ -2,7 +2,7 @@
 <configuration>
 
     <!-- Console Appender with Custom Color Converter -->
-    <conversionRule conversionWord="customLevel" class="com.portfolio.config.CustomLevelHighlighter" />
+    <conversionRule conversionWord="customLevel" class="com.williamsolari.core.config.CustomLevelHighlighter" />
 
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
@@ -36,7 +36,7 @@
     </appender>
 
     <!-- Package-specific Log Levels -->
-    <logger name="com.portfolio" level="DEBUG" />
+    <logger name="com.williamsolari" level="DEBUG" />
     <logger name="org.springframework.web" level="INFO" />
     <logger name="org.springframework.security" level="INFO" />
 

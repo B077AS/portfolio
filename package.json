@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "description": "William Solari portfolio frontend dependencies",
   "scripts": {
-    "purge-icons": "purgecss --css node_modules/@mdi/font/css/materialdesignicons.css --content \"src/main/resources/templates/**/*.html\" \"src/main/resources/static/js/**/*.js\" \"src/main/resources/projects.json\" --output src/main/resources/static/css/icons.css",
-    "copy-mdi-fonts": "node -e \"for (const d of ['static/fonts', 'static/jolt/fonts']) require('fs').cpSync('node_modules/@mdi/font/fonts', 'src/main/resources/' + d, {recursive: true})\"",
+    "purge-icons": "purgecss --css node_modules/@mdi/font/css/materialdesignicons.css --content \"src/main/resources/templates/portfolio/**/*.html\" \"src/main/resources/static/portfolio/js/**/*.js\" \"src/main/resources/portfolio/projects.json\" --output src/main/resources/static/portfolio/css/icons.css",
+    "copy-mdi-fonts": "node -e \"for (const d of ['static/portfolio/fonts', 'static/jolt/fonts']) require('fs').cpSync('node_modules/@mdi/font/fonts', 'src/main/resources/' + d, {recursive: true})\"",
     "copy-brand-fonts": "node scripts/copy-brand-fonts.js",
     "purge-jolt-icons": "purgecss --css node_modules/@mdi/font/css/materialdesignicons.css --content \"src/main/resources/templates/jolt/**/*.html\" \"src/main/resources/static/jolt/js/*.js\" --output src/main/resources/static/jolt/css/icons.css"
   },

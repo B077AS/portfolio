@@ -1,9 +1,9 @@
 const fs = require("fs");
 const path = require("path");
 
-// The portfolio and the Jolt site (served under /jolt, see JoltHostFilter) each need their own copy.
+// The portfolio (static/portfolio) and the Jolt site (static/jolt), see SiteRoutingFilter, each need their own copy.
 const destDirs = [
-  path.join("src", "main", "resources", "static", "fonts"),
+  path.join("src", "main", "resources", "static", "portfolio", "fonts"),
   path.join("src", "main", "resources", "static", "jolt", "fonts"),
 ];
 
