@@ -1,0 +1,41 @@
+<th:block xmlns:th="http://www.thymeleaf.org" th:fragment="body">
+
+<p>The operating system draws the icon and title bar, so you set them from Java, at creation or later.</p>
+
+<h2 id="options">Window options</h2>
+<div class="code" data-lang="java"><pre><code>WindowOptions options = WindowOptions.defaults()
+        .withSize(1200, 780)
+        .withMinSize(600, 400)                   // smallest size the user can drag to
+        .withIcon(iconBytes)                     // multi-size .ico (best) or PNG
+        .withTitleBarScheme(ColorScheme.DARK)
+        .withBackgroundColor(0x0F1117)           // behind the page until it paints: no white flash
+        .withMaximized(false)
+        .withCentered(true)                      // the default
+        .withVisible(false);                     // call window.show() when the page is ready
+
+window.setTitleBarColors(0xF4F5FA, 0x1A1D29);    // exact colours, Windows 11 only
+window.maximize(); window.restore(); window.isMaximized();</code></pre></div>
+<ul>
+    <li>Use an <code>.ico</code> with 16, 24, 32, 48 and 256 px images: Windows picks the matching size instead of scaling one bitmap. On Linux the largest image is used.</li>
+    <li>Start hidden and call <code>show()</code> when the page sends "ready", so the window appears with its content already drawn.</li>
+    <li>On Wayland the compositor decides placement, so <code>withCentered</code> is ignored and the icon comes from the app's <code>.desktop</code> file. Jolt names the process after your app id, which is what lets the compositor find it.</li>
+    <li><code>AppOptions.of(id).withQuietNativeLogs(true)</code> hides GTK's known harmless warnings on Linux.</li>
+</ul>
+
+<h2 id="frameless">Frameless windows</h2>
+<p>Available since <strong>0.3.0</strong>. <code>WindowOptions.defaults().withFrameless(true)</code> removes the operating system's title bar and border, so the page draws its own:</p>
+<div class="code" data-lang="html"><pre><code>&lt;header data-jolt-drag&gt;                       &lt;!-- drag here to move the window; double-click maximizes or restores --&gt;
+  &lt;span&gt;Parsel&lt;/span&gt;
+  &lt;button onclick="jolt.frame.minimize()"&gt;–&lt;/button&gt;
+  &lt;button onclick="jolt.frame.toggleMaximize()"&gt;☐&lt;/button&gt;
+  &lt;button onclick="jolt.frame.close()"&gt;✕&lt;/button&gt;
+&lt;/header&gt;</code></pre></div>
+<ul>
+    <li><code>data-jolt-drag</code> marks the draggable area. Buttons, links and form fields inside it keep working; add <code>data-jolt-no-drag</code> to exclude anything else. (CSS <code>app-region: drag</code> is not used, because WebKitGTK does not support it.)</li>
+    <li>The window can be resized from thin invisible handles along its edges and corners, which Jolt adds to the page.</li>
+    <li><code>jolt.frame.close()</code> closes the window as the close button would, so <code>setCloseBehavior(HIDE)</code> applies to it too.</li>
+    <li>On Windows the window keeps its sizing frame, which lets Windows draw the shadow and snap it (Win+arrows). Linux snaps as your window manager does.</li>
+    <li>Frame commands only work on windows created <code>frameless</code>, and only for pages the <a th:href="@{/docs/security}">SecurityPolicy</a> trusts.</li>
+</ul>
+
+</th:block>

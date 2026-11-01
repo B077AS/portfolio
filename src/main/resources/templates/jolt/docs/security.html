@@ -1,0 +1,28 @@
+<th:block xmlns:th="http://www.thymeleaf.org" th:fragment="body">
+
+<p>The page can call everything you register with <code>onMessage</code>, so each window has a <code>SecurityPolicy</code>. The default, <code>SecurityPolicy.standard()</code>, trusts your own content plus origins you list, and blocks the rest.</p>
+
+<h2 id="protections">Protections</h2>
+<table>
+    <thead><tr><th scope="col">Protection</th><th scope="col">When on</th><th scope="col">Switch</th></tr></thead>
+    <tbody>
+    <tr><td>Navigation lock</td><td>Links, redirects, frames and <code>loadUrl</code> to an untrusted origin are cancelled</td><td><code>withLockNavigation</code></td></tr>
+    <tr><td>Message check</td><td>Messages from an untrusted page never reach <code>onMessage</code></td><td><code>withRestrictMessages</code></td></tr>
+    <tr><td>New windows</td><td><code>window.open</code> and <code>target=_blank</code> are refused</td><td><code>withBlockNewWindows</code></td></tr>
+    <tr><td>Permissions</td><td>Camera, microphone, location and similar are denied</td><td><code>withDenyPermissions</code></td></tr>
+    <tr><td>Bridge in frames</td><td><code>window.jolt</code> exists only in the top-level page</td><td><code>withBridgeInSubframes</code></td></tr>
+    </tbody>
+</table>
+
+<h2 id="configure">Configure it</h2>
+<div class="code" data-lang="java"><pre><code>WindowOptions.defaults().withSecurity(SecurityPolicy.standard().withTrustedOrigins("http://localhost:5173"));
+window.setSecurity(window.security().withLockNavigation(false));       // change it any time
+window.onBlocked(event -> openInSystemBrowser(event.url()));           // called after something was blocked</code></pre></div>
+<ul>
+    <li><code>loadUrl</code> to another site is blocked unless you trust its origin.</li>
+    <li>Trusting an origin gives that site your handlers. List only sites you control, and still validate every parameter.</li>
+    <li>WebView2 reports which frame sent a message; WebKitGTK does not, so on Linux the check uses the top-level page. If you turn the navigation lock off on Linux, keep the bridge out of frames (the default).</li>
+    <li>In the page, set user-supplied text with <code>textContent</code>, never <code>innerHTML</code>.</li>
+</ul>
+
+</th:block>

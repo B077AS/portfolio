@@ -6,10 +6,10 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>4.1.0</version>
+		<version>4.1.2</version>
 	</parent>
 
-	<groupId>com.portfolio</groupId>
+	<groupId>com.williamsolari</groupId>
 	<artifactId>portfolio</artifactId>
 	<version>0.0.1</version>
 
@@ -123,6 +123,16 @@
 						</goals>
 						<configuration>
 							<arguments>run purge-icons</arguments>
+						</configuration>
+					</execution>
+					<execution>
+						<id>purge jolt css</id>
+						<phase>generate-resources</phase>
+						<goals>
+							<goal>npm</goal>
+						</goals>
+						<configuration>
+							<arguments>run purge-jolt-icons</arguments>
 						</configuration>
 					</execution>
 					<execution>

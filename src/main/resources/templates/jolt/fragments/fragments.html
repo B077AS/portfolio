@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<nav th:fragment="navbar" aria-label="Main">
+    <div class="nav-content">
+        <a class="brand" th:href="@{/}" aria-label="Jolt home">
+            <img th:src="@{/favicon.svg}" alt="" width="26" height="26">
+            <span>Jolt</span>
+        </a>
+        <div class="links" id="navlinks">
+            <a th:href="@{/docs/getting-started}" th:classappend="${nav == 'docs'} ? 'on'">Docs</a>
+            <a th:href="@{/parsel}" th:classappend="${nav == 'parsel'} ? 'on'">Parsel</a>
+            <a th:href="@{/changelog}" th:classappend="${nav == 'changelog'} ? 'on'">Changelog</a>
+            <a class="drawer-only" th:href="${site.githubUrl}" target="_blank" rel="noopener">
+                <i class="mdi mdi-github" aria-hidden="true"></i>GitHub
+                <small th:if="${site.versionKnown}" th:text="'v' + ${site.version}">v0.3.1</small>
+            </a>
+        </div>
+        <div class="right">
+            <span class="chip" th:if="${site.versionKnown}" th:text="'v' + ${site.version}">v0.3.1</span>
+            <a class="gh" th:href="${site.githubUrl}" target="_blank" rel="noopener" aria-label="Jolt on GitHub">
+                <i class="mdi mdi-github" aria-hidden="true"></i>
+            </a>
+        </div>
+        <button class="nav-toggle" type="button" aria-label="Toggle menu" aria-expanded="false" aria-controls="navlinks">
+            <span></span><span></span><span></span>
+        </button>
+        <div class="nav-backdrop" id="nav-backdrop"></div>
+    </div>
+</nav>
+
+<footer th:fragment="footer">
+    <div class="fcontent">
+        <div class="fgrid">
+            <div class="fbrand">
+                <a class="brand" th:href="@{/}">
+                    <img th:src="@{/favicon.svg}" alt="" width="26" height="26">
+                    <span>Jolt</span>
+                </a>
+                <p>The Java framework for desktop apps with web UIs. Open source, Apache 2.0, built for Windows and Linux.</p>
+            </div>
+            <div>
+                <h4>Learn</h4>
+                <div class="flinks">
+                    <a th:href="@{/docs/getting-started}">Documentation</a>
+                    <a th:href="@{/#features}">Features</a>
+                    <a th:href="@{/#compare}">Compare</a>
+                </div>
+            </div>
+            <div>
+                <h4>Showcase</h4>
+                <div class="flinks">
+                    <a th:href="@{/parsel}">Parsel case study</a>
+                    <a th:href="${site.parselReleasesUrl}" rel="noopener"><i class="mdi mdi-download-outline" aria-hidden="true"></i>Download Parsel</a>
+                </div>
+            </div>
+            <div>
+                <h4>Source</h4>
+                <div class="flinks">
+                    <a th:href="${site.githubUrl}" rel="noopener"><i class="mdi mdi-github" aria-hidden="true"></i>Jolt on GitHub</a>
+                    <a th:href="${site.parselGithubUrl}" rel="noopener"><i class="mdi mdi-github" aria-hidden="true"></i>Parsel on GitHub</a>
+                    <a th:href="${site.mavenCentralUrl}" rel="noopener"><i class="mdi mdi-package-variant-closed" aria-hidden="true"></i>Maven Central</a>
+                    <a th:href="${site.portfolioUrl}">williamsolari.com</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="fline">
+        <div class="fcontent fbottom">
+            <span th:text="'© ' + ${#calendars.format(#calendars.createNow(), 'yyyy')} + ' William Solari. Apache 2.0.'">© 2026 William Solari. Apache 2.0.</span>
+            <span>Windows · Linux X11 · Linux Wayland</span>
+        </div>
+    </div>
+</footer>
+
+
+<div th:fragment="gallery(shots)" class="gallery" data-gallery>
+    <div class="shot">
+        <figure th:each="s : ${shots}">
+            <img th:src="@{'/img/' + ${s.file()}}" width="1440" height="900" th:alt="${s.alt()}" loading="lazy">
+        </figure>
+    </div>
+    <div class="gal-bar">
+        <span class="gal-cap" aria-live="polite"></span>
+        <div class="gal-ctl">
+            <button type="button" data-prev aria-label="Previous screenshot"><i class="mdi mdi-chevron-left" aria-hidden="true"></i></button>
+            <span class="gal-count"></span>
+            <button type="button" data-next aria-label="Next screenshot"><i class="mdi mdi-chevron-right" aria-hidden="true"></i></button>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

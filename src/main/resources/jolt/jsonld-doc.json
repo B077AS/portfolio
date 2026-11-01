@@ -1,0 +1,23 @@
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "TechArticle",
+      "headline": "{{title}}",
+      "description": "{{description}}",
+      "url": "{{url}}",
+      "dateModified": "{{updated}}",
+      "inLanguage": "en",
+      "author": { "@type": "Person", "name": "William Solari", "url": "{{portfolio}}" },
+      "about": { "@type": "SoftwareSourceCode", "name": "Jolt", "codeRepository": "{{github}}" }
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Jolt", "item": "{{home}}" },
+        { "@type": "ListItem", "position": 2, "name": "Documentation", "item": "{{docs}}" },
+        { "@type": "ListItem", "position": 3, "name": "{{title}}", "item": "{{url}}" }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,43 @@
+<th:block xmlns:th="http://www.thymeleaf.org" th:fragment="body">
+
+<p><code>loadResources</code> shows a multi-file page and lets Java answer its requests: <code>fetch</code>, forms, htmx <code>hx-get</code> and <code>hx-post</code>, and JSON APIs. Files are served <strong>inside the web view</strong>, with no socket. The origin is <code>https://jolt.localhost</code> on Windows and <code>jolt://app</code> on Linux, so use relative URLs.</p>
+
+<h2 id="handler">A request handler</h2>
+<div class="code" data-lang="java"><pre><code>window.loadResources(AppResources.classpath("ui"), request -> switch (request.path()) {
+    case "/notes" -> AppResponse.html(renderNotes());
+    case "/notes/add" -> {
+        notes.add(request.formValue("text"));
+        yield AppResponse.html(renderNotes());
+    }
+    default -> null;                                  // null: let the files answer
+});</code></pre></div>
+
+<h2 id="router">The Router</h2>
+<p>For more than a few routes use <code>Router</code>, which is a <code>RequestHandler</code>:</p>
+<div class="code" data-lang="java"><pre><code>Router router = Router.create()
+    .get("/notes/{id}", request -> AppResponse.html(pages.note(request.param("id"))))
+    .post("/notes", request -> { notes.add(request.formValue("text")); return AppResponse.redirect("/notes"); })
+    .group("/admin", admin -> admin
+        .before(request -> loggedIn(request) ? null : AppResponse.redirect("/login"))
+        .get("/users", request -> AppResponse.html(pages.users())))
+    .onError((request, error) -> AppResponse.html(pages.error(error)).withStatus(500));
+window.loadResources(AppResources.classpath("ui"), router);</code></pre></div>
+<ul>
+    <li>Patterns: <code>{id}</code> captures one segment, <code>{*rest}</code> the rest. A plain segment beats <code>{id}</code>, which beats <code>{*rest}</code>.</li>
+    <li>A request no route matches falls through to your files. A wrong method on a known path gets 405 with <code>Allow</code>.</li>
+    <li>Handlers run on worker threads. An exception becomes a bare 500 and the details go to the log, never to the page.</li>
+    <li>Escape anything user-supplied before putting it in HTML, and keep <code>GET</code> handlers free of side effects.</li>
+</ul>
+
+<h2 id="uploads">Uploads</h2>
+<p><code>multipart/form-data</code> works with plain forms, <code>fetch</code> and htmx. Read it with <code>request.parts()</code> or <code>request.part(name)</code>:</p>
+<div class="code" data-lang="java"><pre><code>AppRequest.Part file = request.part("document");
+if (file != null &amp;&amp; !file.filename().isEmpty()) {
+    Files.write(uploads.resolve(UUID.randomUUID() + ".bin"), file.content());   // choose the stored name yourself
+}</code></pre></div>
+<p>Treat uploaded files as untrusted: <code>filename()</code> and <code>contentType()</code> come from the user's machine. Bodies are held in memory, 8 MB by default (413 above that). Raise the limit with <code>ResourceOptions.defaults().withMaxRequestBytes(...)</code>, up to 1 GB.</p>
+
+<h2 id="loopback">Loopback fallback</h2>
+<p>The in-process transport needs WebKitGTK 2.40 or newer on Linux. Older systems fall back automatically to a guarded server on <code>127.0.0.1</code> with a per-run CSRF token and <code>Origin</code>, <code>Host</code> and <code>Sec-Fetch-Site</code> checks. You can also ask for it, for example to open the app in a normal browser: <code>window.loadResources(resources, handler, 48123)</code>.</p>
+
+</th:block>

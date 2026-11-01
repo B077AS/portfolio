@@ -1,0 +1,19 @@
+<th:block xmlns:th="http://www.thymeleaf.org" th:fragment="body">
+
+<p><code>jpackage</code> turns your jars into a double-clickable app that bundles its own Java runtime, so your users do not need Java installed.</p>
+
+<h2 id="jpackage">Build an app image</h2>
+<p>Collect your app jar and its dependencies in one folder (here <code>target\package</code>), then point <code>jpackage</code> at it:</p>
+<div class="code" data-lang="powershell"><pre><code>jpackage --type app-image --name MyApp `
+  --input target\package `
+  --main-jar my-app.jar --main-class com.example.MyApp `
+  --java-options "--enable-native-access=ALL-UNNAMED" `
+  --add-modules "java.base,java.logging,jdk.unsupported" `
+  --jlink-options "--strip-debug --no-man-pages --no-header-files --compress zip-6" `
+  --dest dist</code></pre></div>
+<p>That gives an app of about <strong>32 MB</strong>, compared with about 120 MB without <code>--add-modules</code> and <code>--jlink-options</code>. Add the modules your own dependencies need. Code signing is up to you.</p>
+
+<h2 id="in-practice">In practice</h2>
+<p><a th:href="@{/parsel}">Parsel</a> ships this way: a Windows installer of about 33 MB with its own Java runtime inside, plus a portable zip and Linux packages. There is no bundled browser, because the app uses the web view your system already has.</p>
+
+</th:block>

@@ -1,0 +1,23 @@
+<th:block xmlns:th="http://www.thymeleaf.org" th:fragment="body">
+
+<p>Your page is normal HTML, CSS and JavaScript. The web view is Chromium (WebView2) on Windows and WebKit (WebKitGTK) on Linux, so write for both.</p>
+
+<h2 id="development">Development</h2>
+<p>Point the window at your dev server and let it do hot reload:</p>
+<div class="code" data-lang="java"><pre><code>window.setSecurity(window.security().withTrustedOrigins("http://localhost:5173"));
+window.loadUrl("http://localhost:5173");</code></pre></div>
+<p>Or serve a folder from disk. Files are re-read on every request:</p>
+<div class="code" data-lang="java"><pre><code>window.loadResources(AppResources.directory(Path.of("ui")));</code></pre></div>
+
+<h2 id="release">Release</h2>
+<p>Put the built page in <code>src/main/resources/ui</code> and serve it from the jar:</p>
+<div class="code" data-lang="java"><pre><code>window.loadResources(AppResources.classpath("ui"));</code></pre></div>
+<p>Separate HTML, CSS and JS files work, as do relative URLs and ES modules. The origin is stable, so <code>localStorage</code> survives restarts. A single self-contained HTML file (Vite with <code>vite-plugin-singlefile</code>) can use <code>loadHtml</code> instead.</p>
+
+<h2 id="framework">Any framework</h2>
+<p>React, Vue, Svelte and htmx all work, because to Jolt the page is just a page. A small typed wrapper around <code>jolt.postMessage</code> (for example a <code>call&lt;T&gt;(method, params)</code> function with one function per Java handler) keeps the rest of the frontend free of the bridge. <a th:href="@{/parsel}">Parsel</a> is a complete app built this way: a Vue page for the interface, with Java behind it for IMAP and SMTP.</p>
+
+<h2 id="devtools">Developer tools</h2>
+<p><code>WindowOptions.defaults().withDevTools(true)</code>, then right-click and choose Inspect, or call <code>window.openDevTools()</code>.</p>
+
+</th:block>

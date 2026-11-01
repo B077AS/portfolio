@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{jolt/layouts/layout}">
+<body>
+<th:block layout:fragment="content">
+
+    <div class="hero-group">
+        <section class="hero" aria-labelledby="hero-title">
+            <svg class="hero-mark" viewBox="0 0 256 256" aria-hidden="true"><path d="M105 62H197M180 62L180 100L152 126L152 156A38 38 0 0 1 76 156" fill="none" stroke="#14161a" stroke-width="34" stroke-linejoin="miter" stroke-miterlimit="4"/></svg>
+            <div class="wrap">
+                <div class="hero-head">
+                    <h1 id="hero-title"><em>Jolt</em>, the Java framework for desktop apps with web UIs.</h1>
+                    <p class="sub">A framework in plain Java: open a native window, load a web page, and talk to it from Java. Your code and your page run in one process, with no HTTP server in between. No Electron, no JNI, nothing native to compile.</p>
+
+                    <div class="layer-info" data-i="0">
+                        <b>Your page</b>
+                        <p>Plain HTML, CSS and JavaScript, or React, Vue, Svelte and htmx. Hot reload from your dev server.</p>
+                        <code>window.jolt (injected into every page)</code>
+                    </div>
+                    <div class="layer-info on" data-i="1">
+                        <b>Jolt, the framework</b>
+                        <p>Opens the native window on the web view your OS already has, serves your files, routes requests and enforces the SecurityPolicy.</p>
+                        <code>WebWindow · Router · SecurityPolicy</code>
+                    </div>
+                    <div class="layer-info" data-i="2">
+                        <b>Your Java</b>
+                        <p>Files, databases, native libraries and long-running work: everything a page may not do.</p>
+                        <code>onMessage · Application.notify · dialogs()</code>
+                    </div>
+                </div>
+                <svg id="stack" viewBox="0 0 640 500" role="group" aria-label="The three layers of a Jolt app: your page, the Jolt framework, and your Java code">
+                      <path class="wire" d="M470 107V250M170 107V250"/>
+                      <text class="wl" x="482" y="186.5">jolt.postMessage &#8595;</text>
+                      <text class="wl" x="158" y="186.5" text-anchor="end">&#8593; jolt.onMessage</text>
+                      <path class="wire" d="M470 262V405M170 262V405"/>
+                      <text class="wl" x="482" y="341.5">onMessage &#8595;</text>
+                      <text class="wl" x="158" y="341.5" text-anchor="end">&#8593; window.postMessage</text>
+                      <g class="plate" data-i="2" tabindex="0" role="button" aria-label="Your Java"><g class="lift"><polygon class="sl" points="170,405 320,480 320,492 170,417"/><polygon class="sr" points="320,480 470,405 470,417 320,492"/><polygon class="top" points="320,330 470,405 320,480 170,405"/><g transform="translate(320,405) matrix(.894 .447 -.894 .447 0 0)"><text class="tag" x="-64" y="-8">YOUR JAVA</text><text class="ttl" x="-64" y="16">Files, DBs, libs</text></g></g></g>
+                      <g class="plate on" data-i="1" tabindex="0" role="button" aria-label="Jolt, the framework"><g class="lift"><polygon class="sl" points="170,250 320,325 320,337 170,262"/><polygon class="sr" points="320,325 470,250 470,262 320,337"/><polygon class="top" points="320,175 470,250 320,325 170,250"/><g transform="translate(320,250) matrix(.894 .447 -.894 .447 0 0)"><text class="tag" x="-64" y="-8">JOLT</text><text class="ttl" x="-64" y="16">The framework</text></g></g></g>
+                      <g class="plate" data-i="0" tabindex="0" role="button" aria-label="Your page"><g class="lift"><polygon class="sl" points="170,95 320,170 320,182 170,107"/><polygon class="sr" points="320,170 470,95 470,107 320,182"/><polygon class="top" points="320,20 470,95 320,170 170,95"/><g transform="translate(320,95) matrix(.894 .447 -.894 .447 0 0)"><text class="tag" x="-64" y="-8">YOUR PAGE</text><text class="ttl" x="-64" y="16">HTML, CSS, JS</text></g></g></g>
+                </svg>
+            </div>
+        </section>
+    </div>
+
+    <section id="features">
+        <div class="wrap">
+            <div class="kicker">Why Jolt</div>
+            <h2 class="t">Everything a desktop app needs, nothing it doesn't.</h2>
+            <p class="lead">Java does what a page may not: files, databases, native libraries, long-running work. The page draws the interface.</p>
+            <div class="feat">
+                <div><i class="mdi mdi-feather ic" aria-hidden="true"></i><h3>Tiny</h3><p>No bundled browser. Jolt uses WebView2 on Windows and WebKitGTK on Linux, so a packaged app with its own Java runtime is about 32 MB.</p></div>
+                <div><i class="mdi mdi-hammer-wrench ic" aria-hidden="true"></i><h3>No native build step</h3><p>Built on Java 25's Foreign Function &amp; Memory API. The only binary shipped is Microsoft's WebView2Loader.dll.</p></div>
+                <div><i class="mdi mdi-code-tags ic" aria-hidden="true"></i><h3>Any frontend</h3><p>Plain HTML, React, Vue, Svelte, htmx. Anything a browser can show, with hot reload from your dev server.</p></div>
+                <div><i class="mdi mdi-swap-horizontal ic" aria-hidden="true"></i><h3>Router and requests</h3><p>Serve files from the jar and answer fetch, forms and htmx requests from Java, in-process and without a socket.</p></div>
+                <div><i class="mdi mdi-application-outline ic" aria-hidden="true"></i><h3>Real desktop features</h3><p>File dialogs, notifications, tray icon, pop-out windows, frameless windows, close to tray, autostart.</p></div>
+                <div><i class="mdi mdi-shield-lock-outline ic" aria-hidden="true"></i><h3>Secure by default</h3><p>Only your own pages can reach your Java code. A SecurityPolicy decides which origins are trusted.</p></div>
+            </div>
+        </div>
+    </section>
+
+    <section class="rule pad-top" aria-labelledby="quick-title">
+        <div class="wrap">
+            <div class="kicker">The whole app</div>
+            <h2 class="t" id="quick-title">A native window and a page, in a few lines.</h2>
+            <p class="lead">The page sends a message, Java answers, and the page shows the reply. That is a complete Jolt app.</p>
+            <div class="pair">
+                <div class="code" data-lang="java" data-file="NotesApp.java"><pre><code>Application app = Application.create(AppOptions.of("com.example.notes"));
+try {
+    app.run(() -> {
+        WebWindow window = app.createWindow(
+                WindowOptions.defaults().withTitle("Notes").withSize(900, 600));
+        window.onMessage(text -> window.postMessage("Java received: " + text));
+        window.loadResources(AppResources.classpath("ui"));
+    });
+} finally {
+    app.close();
+}</code></pre></div>
+                <div class="code" data-lang="html" data-file="ui/index.html"><pre><code>&lt;button id="go"&gt;Say hi&lt;/button&gt;
+&lt;p id="out"&gt;&lt;/p&gt;
+
+&lt;script&gt;
+  go.onclick = () => jolt.postMessage("hi");
+  jolt.onMessage(m => out.textContent = m);
+&lt;/script&gt;</code></pre></div>
+            </div>
+            <p class="note">Messages are plain strings, and <code class="i">window.jolt</code> is injected into every page. <a class="textlink" style="margin:0 0 0 6px" th:href="@{/docs/getting-started}">Getting started <i class="mdi mdi-arrow-right" aria-hidden="true"></i></a></p>
+        </div>
+    </section>
+
+    <section class="rule pad-top" aria-labelledby="parsel-title">
+        <div class="wrap">
+            <div class="show">
+                <div>
+                    <div class="kicker">Built with Jolt</div>
+                    <h2 class="t" id="parsel-title">Parsel, a full desktop mail client.</h2>
+                    <p class="lead">IMAP and SMTP, a Vue interface, a SQLite cache, system keystore, notifications, tray and pop-out windows. All of it on Jolt, in a 33 MB installer.</p>
+                    <div class="pills"><span class="pill">Java 25</span><span class="pill">Vue 3</span><span class="pill">SQLite</span><span class="pill">IMAP / SMTP</span></div>
+                    <a class="textlink" th:href="@{/parsel}">Read the case study <i class="mdi mdi-arrow-right" aria-hidden="true"></i></a>
+                </div>
+                <div th:replace="~{jolt/fragments/fragments :: gallery(${homeShots})}"></div>
+            </div>
+        </div>
+    </section>
+
+    <section id="compare" class="rule pad-top" aria-labelledby="compare-title">
+        <div class="wrap">
+            <div class="kicker">Compare</div>
+            <h2 class="t" id="compare-title">Where Jolt fits.</h2>
+            <table>
+                <thead>
+                <tr><th scope="col"><span class="sr-only">Feature</span></th><th scope="col" class="jc">Jolt</th><th scope="col">Electron</th><th scope="col">Tauri</th><th scope="col">Wails</th><th scope="col">JavaFX WebView</th></tr>
+                </thead>
+                <tbody>
+                <tr><th scope="row">Backend language</th><td class="jc">Java</td><td>JavaScript</td><td>Rust</td><td>Go</td><td>Java</td></tr>
+                <tr><th scope="row">Ships its own browser</th><td class="jc">No</td><td>Yes</td><td>No</td><td>No</td><td>Yes (a WebKit build inside JavaFX)</td></tr>
+                <tr><th scope="row">Native toolchain to build</th><td class="jc">None</td><td>None</td><td>Rust</td><td>Go</td><td>None</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="rule pad-top" aria-labelledby="next-title">
+        <div class="wrap">
+            <div class="kicker">Documentation</div>
+            <h2 class="t" id="next-title">Where to start.</h2>
+            <div class="next-row">
+                <a th:each="d : ${firstDocs}" th:href="@{${d.path()}}">
+                    <b th:text="${d.title()}">Getting started</b>
+                    <span th:text="${d.description()}">Description</span>
+                </a>
+            </div>
+        </div>
+    </section>
+
+</th:block>
+</body>
+</html>

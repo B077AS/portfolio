@@ -1,0 +1,34 @@
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebSite",
+      "name": "Jolt",
+      "url": "{{home}}",
+      "description": "{{description}}"
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "name": "Jolt",
+      "description": "{{description}}",
+      "url": "{{home}}",
+      "codeRepository": "{{github}}",
+      "programmingLanguage": "Java",
+      "runtimePlatform": "Java 25",
+      "license": "https://www.apache.org/licenses/LICENSE-2.0",
+      "version": "{{version}}",
+      "author": { "@type": "Person", "name": "William Solari", "url": "{{portfolio}}" }
+    },
+    {
+      "@type": "SoftwareApplication",
+      "name": "Jolt",
+      "applicationCategory": "DeveloperApplication",
+      "operatingSystem": "Windows, Linux",
+      "softwareVersion": "{{version}}",
+      "url": "{{home}}",
+      "description": "{{description}}",
+      "author": { "@type": "Person", "name": "William Solari", "url": "{{portfolio}}" },
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+    }
+  ]
+}

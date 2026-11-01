@@ -1,0 +1,27 @@
+<th:block xmlns:th="http://www.thymeleaf.org" th:fragment="body">
+
+<p>Java and the page run in one process and exchange messages directly. There is no HTTP server and no socket between them.</p>
+
+<h2 id="messages">Plain messages</h2>
+<div class="code" data-lang="java"><pre><code>window.onMessage(text -> window.postMessage("You said: " + text));   // page -> Java -> page</code></pre></div>
+<div class="code" data-lang="js"><pre><code>jolt.postMessage("hi");                       // page -> Java
+jolt.onMessage(message => console.log(message)); // Java -> page</code></pre></div>
+<ul>
+    <li><code>window.eval(script)</code> runs a script in the page and returns a <code>CompletableFuture&lt;String&gt;</code> with the JSON result.</li>
+    <li><code>window.addInitScript(script)</code> runs before the page's own scripts.</li>
+    <li>Every <code>Application</code> and <code>WebWindow</code> method may be called from any thread.</li>
+    <li><code>app.openExternal(URI)</code> opens an <code>http</code>, <code>https</code> or <code>mailto</code> address in the user's browser or mail program (since 0.2.5).</li>
+</ul>
+<div class="callout">Message listeners run on the <strong>UI thread</strong>. Never block there, for example by calling <code>.get()</code> on an <code>eval</code> result. Hand slow work to another thread and post the answer when it is ready.</div>
+
+<h2 id="rpc">Calling Java functions from the page</h2>
+<p>For real apps, add a small request and response layer on top of messages. The page sends <code>{"id": 1, "method": "notes.add", "params": {...}}</code> and Java answers <code>{"id": 1, "result": ...}</code> or <code>{"id": 1, "error": "..."}</code>. The notes example has both halves (<code>Rpc.java</code> and <code>ui/index.html</code>), about 40 lines each, and they work with any JSON library.</p>
+<div class="code" data-lang="java"><pre><code>new Rpc(window)
+    .on("notes.list", params -> store.list())
+    .on("notes.add",  params -> store.add(params.get("text").getAsString()));</code></pre></div>
+<div class="code" data-lang="js"><pre><code>const note = await call('notes.add', { text: 'Buy milk' });</code></pre></div>
+
+<h2 id="origin">Where the messages come from</h2>
+<p>Only pages your <a th:href="@{/docs/security}">SecurityPolicy</a> trusts can reach <code>onMessage</code>, so a page you did not intend to load can never call your Java handlers.</p>
+
+</th:block>

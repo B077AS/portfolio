@@ -1,0 +1,24 @@
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "SoftwareApplication",
+      "name": "Parsel",
+      "applicationCategory": "CommunicationApplication",
+      "operatingSystem": "Windows, Linux",
+      "description": "{{description}}",
+      "url": "{{url}}",
+      "downloadUrl": "{{releases}}",
+      "author": { "@type": "Person", "name": "William Solari", "url": "{{portfolio}}" },
+      "image": "{{image}}",
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Jolt", "item": "{{home}}" },
+        { "@type": "ListItem", "position": 2, "name": "Parsel", "item": "{{url}}" }
+      ]
+    }
+  ]
+}
