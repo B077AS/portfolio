@@ -7,8 +7,9 @@
     <meta name="description" th:content="${description}">
     <meta name="robots" th:content="${noindex} ? 'noindex,follow' : 'index,follow,max-image-preview:large'">
     <meta name="theme-color" content="#0c0d10">
-    <meta name="color-scheme" content="dark">
-    <style>html{background:#0c0d10;color-scheme:dark}</style><!-- dark from the first frame, before jolt.css has loaded -->
+    <meta name="color-scheme" content="dark light">
+    <script>try{var t=localStorage.getItem("jolt-theme");if(t!=="light"&&t!=="dark")t=matchMedia("(prefers-color-scheme: light)").matches?"light":"dark";document.documentElement.dataset.theme=t;if(t==="light")document.querySelector('meta[name=theme-color]').content="#faf8f5"}catch(e){document.documentElement.dataset.theme="dark"}</script>
+    <style>html{background:#0c0d10;color-scheme:dark}html[data-theme=light]{background:#faf8f5;color-scheme:light}</style><!-- right theme from the first frame, before jolt.css has loaded -->
     <meta name="author" content="William Solari">
     <link rel="canonical" th:href="${canonicalUrl}">
 

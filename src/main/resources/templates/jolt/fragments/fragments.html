@@ -18,6 +18,9 @@
             </a>
         </div>
         <div class="right">
+            <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Switch color theme">
+                <i class="mdi mdi-white-balance-sunny" aria-hidden="true"></i><i class="mdi mdi-weather-night" aria-hidden="true"></i>
+            </button>
             <span class="chip" th:if="${site.versionKnown}" th:text="'v' + ${site.version}">v0.3.1</span>
             <a class="gh" th:href="${site.githubUrl}" target="_blank" rel="noopener" aria-label="Jolt on GitHub">
                 <i class="mdi mdi-github" aria-hidden="true"></i>

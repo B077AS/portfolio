@@ -10,10 +10,10 @@
         </button>
 
         <div class="navbar-links" id="navbar-links">
-            <a href="#about">About</a>
-            <a href="#experience">Experience</a>
-            <a href="#projects">Projects</a>
-            <a href="#contact" class="navbar-cta">Contact</a>
+            <a th:href="${subpage} ? @{/#about} : '#about'">About</a>
+            <a th:href="${subpage} ? @{/#experience} : '#experience'">Experience</a>
+            <a th:href="${subpage} ? @{/#projects} : '#projects'">Projects</a>
+            <a th:href="${subpage} ? @{/#contact} : '#contact'" class="navbar-cta">Contact</a>
         </div>
 
         <div class="navbar-backdrop" id="navbar-backdrop"></div>
