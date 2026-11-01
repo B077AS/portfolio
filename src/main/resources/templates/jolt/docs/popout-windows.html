@@ -1,0 +1,28 @@
+<th:block xmlns:th="http://www.thymeleaf.org" th:fragment="body">
+
+<p>Available since <strong>0.3.0</strong>. <code>app.createWindow(...)</code> can be called as often as you like (on the UI thread), and <code>app.windows()</code> lists the windows that are open. A page can ask for another window, for example an email shown in its own window, but it never opens one itself: <strong>your Java code decides</strong>.</p>
+
+<h2 id="opener">Allow the opener</h2>
+<div class="code" data-lang="java"><pre><code>main.enableOpenWindow(app, request -> {                          // UI thread, once per request
+    if (!request.path().startsWith("/message/")) return null;   // null refuses (the page gets false)
+    WebWindow popout = request.createWindow(app);             
+    popout.loadResources(resources, router,
+            ResourceOptions.defaults().withStartPath(request.path()));
+    return popout;
+});</code></pre></div>
+
+<h2 id="page">Ask from the page</h2>
+<div class="code" data-lang="js"><pre><code>const opened = await jolt.openWindow("/message/42", { key: "message-42", title: "Re: lunch", width: 900, height: 700 });
+// true: a window opened, or the one with that key was brought to the front. false: the app refused.</code></pre></div>
+<ul>
+    <li><strong>key</strong> stops duplicates: asking again for the same key focuses the window that is already open (your opener is not called).</li>
+    <li><strong>path</strong> must be an address inside the app (one leading <code>/</code>); <code>//host</code>, <code>https://...</code> and the like are rejected.</li>
+    <li>The window you return gets <code>jolt.openWindow</code> and <code>jolt.broadcast</code> too, with the same opener. Refuse inside the opener (look at <code>request.opener()</code>) if pop-outs must not open more windows. At most 10 requests per window per 10 seconds.</li>
+    <li>The request is yours to check: <code>path</code>, <code>key</code>, <code>title</code> and the sizes come from the page. <code>request.options()</code> has no owner; use <code>.withOwner(request.opener())</code> if the pop-out should stay in front of its window and close with it.</li>
+</ul>
+
+<h2 id="broadcast">Talking between windows</h2>
+<p><code>jolt.broadcast(text)</code> goes to every other window that has called <code>enableOpenWindow</code>, and <code>const stop = jolt.onBroadcast(text => ...)</code> receives it. A window never gets its own broadcasts, and <code>text</code> is limited to 16 K characters. To refresh a message list after a reply, broadcast a short event such as <code>"message-42:read"</code> and let each window fetch what it needs.</p>
+<p>From Java: <code>window.isFocused()</code> tells whether the window is the one the user is working in, <code>window.focus()</code> brings a window to the front, and <code>WindowOptions.withOwner(window)</code> makes a window belong to another one.</p>
+
+</th:block>

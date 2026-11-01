@@ -1,0 +1,28 @@
+<th:block xmlns:th="http://www.thymeleaf.org" th:fragment="body">
+
+<p>Show a toast from Java. It uses WinRT on Windows and the desktop's notification service on Linux. Available since <strong>0.3.0</strong>.</p>
+
+<h2 id="java">From Java</h2>
+<div class="code" data-lang="java"><pre><code>app.notify(Notification.of("Export finished", "report.pdf is ready")
+        .withOnClick(() -> window.focus())
+        .withButton("Open", () -> open())               // up to 5 buttons
+        .withReply("Send", "Reply", text -> send(text)))  // a text field: Windows only
+    .thenAccept(shown -> { /* false: the system did not show it */ });</code></pre></div>
+<p>Callbacks run on the UI thread while the app runs. To skip a toast while the user is already in your window, check <code>window.isFocused()</code> (since 0.3.1).</p>
+
+<h2 id="platforms">Platform notes</h2>
+<ul>
+    <li>On Windows the first call registers your <code>appId</code> as the display name under <code>HKCU\Software\Classes\AppUserModelId</code> (nothing is installed). The future is <code>false</code> if the user turned notifications off.</li>
+    <li>On Linux the future is <code>false</code> when there is no notification service.</li>
+</ul>
+
+<h2 id="page">From the page</h2>
+<p>To let trusted pages do it, call <code>window.enableNotifications(app)</code> before the page loads, then:</p>
+<div class="code" data-lang="js"><pre><code>await jolt.notify(title, body, {
+  onclick,
+  buttons: [{ label, onclick }],
+  reply: { label, placeholder, onreply }
+});</code></pre></div>
+<p>At most 5 notifications per 10 seconds per window.</p>
+
+</th:block>

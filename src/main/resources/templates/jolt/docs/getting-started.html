@@ -1,0 +1,73 @@
+<th:block xmlns:th="http://www.thymeleaf.org" th:fragment="body">
+
+<p>Jolt opens a native window whose contents are a web page, and lets that page talk to Java in the same process. It uses the web view the operating system already has, so there is no bundled browser and no native code to compile.</p>
+
+<h2 id="requirements">Requirements</h2>
+<ul>
+    <li>JDK 25 and Maven 3.9 or newer (Gradle works too).</li>
+    <li><strong>Windows 10 or 11</strong> with the <a href="https://developer.microsoft.com/microsoft-edge/webview2/" rel="noopener">WebView2 Runtime</a> (preinstalled on Windows 11).</li>
+    <li><strong>Linux</strong> (X11 or Wayland) with GTK 3 and WebKitGTK 4.1: <code>sudo apt install libgtk-3-0 libwebkit2gtk-4.1-0</code>.</li>
+</ul>
+
+<h2 id="add-jolt">Add Jolt to your project</h2>
+<p>Add the API and both backends. Each backend only activates on its own operating system, so one jar runs on both.</p>
+<div class="code" data-lang="xml" data-file="pom.xml"><pre><code>&lt;properties&gt;
+  &lt;maven.compiler.release&gt;25&lt;/maven.compiler.release&gt;
+  &lt;jolt.version&gt;<span th:text="${site.version}">0.3.1</span>&lt;/jolt.version&gt;
+&lt;/properties&gt;
+
+&lt;dependencies&gt;
+  &lt;dependency&gt;
+    &lt;groupId&gt;io.github.b077as&lt;/groupId&gt;
+    &lt;artifactId&gt;jolt-core&lt;/artifactId&gt;
+    &lt;version&gt;${jolt.version}&lt;/version&gt;
+  &lt;/dependency&gt;
+  &lt;dependency&gt;
+    &lt;groupId&gt;io.github.b077as&lt;/groupId&gt;
+    &lt;artifactId&gt;jolt-win32&lt;/artifactId&gt;
+    &lt;version&gt;${jolt.version}&lt;/version&gt;
+  &lt;/dependency&gt;
+  &lt;dependency&gt;
+    &lt;groupId&gt;io.github.b077as&lt;/groupId&gt;
+    &lt;artifactId&gt;jolt-linux&lt;/artifactId&gt;
+    &lt;version&gt;${jolt.version}&lt;/version&gt;
+  &lt;/dependency&gt;
+&lt;/dependencies&gt;</code></pre></div>
+<p>Gradle:</p>
+<div class="code" data-lang="java" data-file="build.gradle.kts"><pre><code>implementation("io.github.b077as:jolt-core:<span th:text="${site.version}">0.3.1</span>")
+implementation("io.github.b077as:jolt-win32:<span th:text="${site.version}">0.3.1</span>")
+implementation("io.github.b077as:jolt-linux:<span th:text="${site.version}">0.3.1</span>")</code></pre></div>
+<p>Run Java with <code>--enable-native-access=ALL-UNNAMED</code>, or put <code>Enable-Native-Access: ALL-UNNAMED</code> in your jar manifest (<code>maven-jar-plugin</code>, <code>manifestEntries</code>). Otherwise Java prints a warning on every start.</p>
+
+<h2 id="first-window">Your first window</h2>
+<div class="code" data-lang="java" data-file="HelloApp.java"><pre><code>Application app = Application.create(AppOptions.of("com.example.hello"));
+try {
+    app.run(() -> {
+        WebWindow window = app.createWindow(WindowOptions.defaults().withTitle("Hello").withSize(600, 400));
+        window.onMessage(text -> window.postMessage("Java received: " + text));
+        window.loadHtml("""
+                &lt;button onclick="jolt.postMessage('ping')"&gt;Ping Java&lt;/button&gt;
+                &lt;p id="out"&gt;&lt;/p&gt;
+                &lt;script&gt;jolt.onMessage(m => document.getElementById('out').textContent = m)&lt;/script&gt;
+                """);
+    });
+} finally {
+    app.close();
+}</code></pre></div>
+<ul>
+    <li><code>AppOptions.of(id)</code> names your app and picks a per-user data folder (<code>%LOCALAPPDATA%\&lt;id&gt;</code> or <code>~/.local/share/&lt;id&gt;</code>).</li>
+    <li><code>app.run(onStart)</code> blocks until the app ends: the last window closed, or <code>quit()</code>. Create windows inside <code>onStart</code>.</li>
+    <li><code>window.jolt</code> is injected into every page: <code>jolt.postMessage(text)</code> sends to Java, <code>jolt.onMessage(cb)</code> receives.</li>
+    <li>To end the app, let <code>main</code> return rather than calling <code>System.exit</code>.</li>
+</ul>
+
+<h2 id="notes-example">Try the notes example</h2>
+<p>The repository has a small complete app: a Java data layer, JSON requests between Java and the page, light and dark themes, and an optional React frontend.</p>
+<div class="code" data-lang="powershell"><pre><code>git clone https://github.com/B077AS/jolt.git
+cd jolt
+mvn install -DskipTests
+mvn -pl examples/notes-app -am install -DskipTests
+java --enable-native-access=ALL-UNNAMED -cp "examples/notes-app/target/package/*" io.github.b077as.jolt.examples.notes.NotesApp</code></pre></div>
+<p>Next: <a th:href="@{/docs/messaging}">messaging between Java and the page</a>.</p>
+
+</th:block>

@@ -1,0 +1,27 @@
+<th:block xmlns:th="http://www.thymeleaf.org" th:fragment="body">
+
+<p>Your page is normal HTML, CSS and JavaScript. The web view is Chromium (WebView2) on Windows and WebKit (WebKitGTK) on Linux, so write for both.</p>
+
+<h2 id="development">Development</h2>
+<p>Point the window at your dev server and let it do hot reload:</p>
+<div class="code" data-lang="java"><pre><code>window.setSecurity(window.security().withTrustedOrigins("http://localhost:5173"));
+window.loadUrl("http://localhost:5173");</code></pre></div>
+<p>Or serve a folder from disk. Files are re-read on every request:</p>
+<div class="code" data-lang="java"><pre><code>window.loadResources(AppResources.directory(Path.of("ui")));</code></pre></div>
+
+<h2 id="release">Release</h2>
+<p>Put the built page in <code>src/main/resources/ui</code> and serve it from the jar:</p>
+<div class="code" data-lang="java"><pre><code>window.loadResources(AppResources.classpath("ui"));</code></pre></div>
+<p>Separate HTML, CSS and JS files work, as do relative URLs and ES modules. The origin is stable, so <code>localStorage</code> survives restarts. A single self-contained HTML file (Vite with <code>vite-plugin-singlefile</code>) can use <code>loadHtml</code> instead.</p>
+
+<h2 id="react">A React example</h2>
+<p><code>examples/notes-app/frontend</code> is the notes app in React, TypeScript, Vite and Tailwind. <code>src/jolt.ts</code> is the typed bridge (<code>call&lt;T&gt;(method, params)</code>) and <code>src/api.ts</code> has one function per Java handler.</p>
+<div class="code" data-lang="powershell"><pre><code>npm install; npm run build
+java ... "-Dui.file=examples/notes-app/frontend/dist/index.html" ...   # built page
+java ... "-Dui.url=http://127.0.0.1:5173" ...                         # against npm run dev</code></pre></div>
+<p>In PowerShell keep the quotes around <code>-D</code> flags, because PowerShell splits them at the dot.</p>
+
+<h2 id="devtools">Developer tools</h2>
+<p><code>WindowOptions.defaults().withDevTools(true)</code>, then right-click and choose Inspect, or call <code>window.openDevTools()</code>.</p>
+
+</th:block>

@@ -1,0 +1,21 @@
+<th:block xmlns:th="http://www.thymeleaf.org" th:fragment="body">
+
+<p>A page never sees a file's path. Use the operating system's dialogs through the window. Available since <strong>0.2.4</strong>.</p>
+
+<h2 id="java">From Java</h2>
+<div class="code" data-lang="java"><pre><code>Dialogs dialogs = window.dialogs();
+dialogs.saveFile(FileDialogOptions.defaults()
+                .withTitle("Export report").withFileName("report.pdf")
+                .withFilters(FileFilter.of("PDF documents", "pdf")))
+        .thenAccept(chosen -> chosen.ifPresent(path -> writeReport(path)));   // empty if cancelled
+
+dialogs.openFile(FileDialogOptions.defaults());      // also openFiles(...) and chooseFolder(...)</code></pre></div>
+<p>Each call returns a <code>CompletableFuture</code> at once. Cancelling gives an empty result, not an error. <code>withSize(w, h)</code> asks for a bigger dialog (a request: the system owns it).</p>
+
+<h2 id="page">From the page</h2>
+<p>To let the <strong>page</strong> save a file, call <code>window.enableSaveAs()</code> in Java and <code>jolt.saveAs</code> in the page:</p>
+<div class="code" data-lang="js"><pre><code>const saved = await jolt.saveAs(blobOrBytesOrText, { name: "report.pdf", filters: [{ name: "PDF", extensions: ["pdf"] }] });
+// { name, size } or null if cancelled; the page never learns the path</code></pre></div>
+<p>The data is written to a temporary file and moved into place when complete. Only trusted origins may use it, and on Linux the page must come from <code>loadResources</code>.</p>
+
+</th:block>

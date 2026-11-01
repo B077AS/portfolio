@@ -1,0 +1,22 @@
+<th:block xmlns:th="http://www.thymeleaf.org" th:fragment="body">
+
+<p>Most start-up problems come from a missing system component. These are the common symptoms and what fixes them.</p>
+
+<h2 id="symptoms">Symptoms</h2>
+<table>
+    <thead><tr><th scope="col">Symptom</th><th scope="col">Likely cause</th></tr></thead>
+    <tbody>
+    <tr><td><code>WebView2 Runtime is not installed</code></td><td>Install the WebView2 Runtime (Windows).</td></tr>
+    <tr><td><code>GTK 3 / WebKitGTK 4.1 could not be loaded</code></td><td>Install <code>libgtk-3-0</code> and <code>libwebkit2gtk-4.1-0</code>.</td></tr>
+    <tr><td><code>GTK could not open a display</code></td><td>No <code>DISPLAY</code> or <code>WAYLAND_DISPLAY</code>: a server or container without a display.</td></tr>
+    <tr><td>Warning about native access at start</td><td>Add <code>--enable-native-access=ALL-UNNAMED</code>.</td></tr>
+    <tr><td><code>Could not find or load main class .url=...</code></td><td>PowerShell split <code>-Dui.url=...</code> at the dot. Quote it.</td></tr>
+    <tr><td>Window stays blank</td><td>Open developer tools and read the console. With <code>loadUrl</code>, check the dev server is running.</td></tr>
+    <tr><td><code>call(...)</code> never resolves</td><td>Your handler never replied, or the page was reloaded.</td></tr>
+    <tr><td>The window freezes</td><td>Something slow ran in a message listener. Move it to a worker thread.</td></tr>
+    <tr><td>Old icon in the taskbar</td><td>Windows caches it. Unpin and re-pin, or restart Explorer.</td></tr>
+    </tbody>
+</table>
+<p>Still stuck? <a th:href="${site.githubUrl + '/issues'}" rel="noopener">Open an issue on GitHub</a>.</p>
+
+</th:block>

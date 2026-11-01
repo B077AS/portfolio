@@ -1,0 +1,51 @@
+<th:block xmlns:th="http://www.thymeleaf.org" th:fragment="body">
+
+<p>Available since <strong>0.3.0</strong>. A mail client or chat app usually lives in the tray, hides instead of quitting when its window is closed, and can start with the computer. These are separate pieces, so you choose which to use, and each can be changed while the app runs.</p>
+
+<h2 id="tray">Tray icon and menu</h2>
+<div class="code" data-lang="java"><pre><code>Application app = ...;
+WebWindow main = ...;
+
+if (app.isTraySupported()) {                                   // Windows: always. Linux: needs a tray host
+    Tray tray = app.createTray(iconBytes, "Parsel");           // call on the UI thread
+    tray.onClick(main::focus);                                 // primary click: bring the window back
+    tray.setMenu(TrayMenu.of(
+            TrayMenu.action("Open Parsel", main::focus),
+            TrayMenu.separator(),
+            TrayMenu.check("Close to tray", closeToTray, on -> setCloseToTray(on)),
+            TrayMenu.check("Start with the computer", autostart, on -> setAutostart(on)),
+            TrayMenu.separator(),
+            TrayMenu.action("Quit", app::quit)));
+}</code></pre></div>
+<ul>
+    <li><strong>Menus are immutable.</strong> To tick a box or change a label, build the menu again and call <code>tray.setMenu(...)</code>. <code>tray.setIcon</code> and <code>tray.setTooltip</code> work the same way, for example for "3 unread". Menu callbacks run on the UI thread.</li>
+    <li><strong>Windows:</strong> the tray menu is a native menu, drawn in dark mode when the system is dark. It supports checks, disabled entries, separators and submenus. If Explorer restarts, the icon is put back.</li>
+    <li><strong>Linux:</strong> the tray is a StatusNotifierItem with a <code>dbusmenu</code> menu, which KDE Plasma, XFCE, Cinnamon, MATE, Budgie and others show. Stock GNOME needs the AppIndicator extension, otherwise <code>isTraySupported()</code> is <code>false</code>.</li>
+</ul>
+
+<h2 id="close-to-tray">Close to tray and autostart</h2>
+<div class="code" data-lang="java"><pre><code>main.setCloseBehavior(closeToTray ? CloseBehavior.HIDE : CloseBehavior.CLOSE);    // takes effect on the next click of the close button
+
+Autostart autostart = app.autostart();
+autostart.enable(List.of(exePath, "--minimized"));     // start with the computer, minimized...
+autostart.enable(List.of(exePath));                    // ...or not: calling it again replaces the entry
+autostart.disable(); autostart.isEnabled();</code></pre></div>
+<ul>
+    <li><strong>Start minimized</strong> is an argument you choose: put <code>--minimized</code> in the autostart command, and in <code>main</code> create the window with <code>withVisible(false)</code> (and a tray) when <code>args</code> contains it. Only hide at startup if <code>app.isTraySupported()</code>.</li>
+    <li><strong>Close to tray needs a tray.</strong> <code>CloseBehavior.HIDE</code> only hides the window; <code>focus()</code> or <code>show()</code> brings it back, while <code>close()</code> and <code>app.quit()</code> still really close it.</li>
+    <li><strong>The command:</strong> give the launcher of your installed or packaged app (on Windows a quoted path in the Run key, on Linux the <code>Exec=</code> line of <code>~/.config/autostart/&lt;appId&gt;.desktop</code>). <code>Autostart.currentCommand(extraArgs)</code> describes the running process, which is fine for <code>java -jar</code> while developing.</li>
+</ul>
+
+<h2 id="single-instance">One copy only</h2>
+<p>A tray app that starts at sign-in should not start twice.</p>
+<div class="code" data-lang="java"><pre><code>public static void main(String[] args) {
+    AppOptions options = AppOptions.of("com.example.parsel");
+    SingleInstance instance = SingleInstance.acquire(options, List.of(args), otherArgs -> app.dispatch(() -> main.focus()));
+    if (!instance.isPrimary()) {
+        return;                       // the running copy was told (and receives this copy's arguments)
+    }
+    ...
+}</code></pre></div>
+<p><code>SingleInstance</code> takes a lock file in the data directory (released by the system if the app dies) and talks to the running copy over a Unix domain socket that only the same user can reach. The callback runs on a thread of its own, so use <code>app.dispatch</code>.</p>
+
+</th:block>

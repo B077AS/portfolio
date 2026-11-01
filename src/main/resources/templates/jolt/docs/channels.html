@@ -1,0 +1,22 @@
+<th:block xmlns:th="http://www.thymeleaf.org" th:fragment="body">
+
+<p>For big or binary data, such as video frames, images and files, open a named two-way channel. No base64 and no JSON. Available since <strong>0.2.3</strong>.</p>
+
+<h2 id="open">Open a channel</h2>
+<div class="code" data-lang="java"><pre><code>BinaryChannel frames = window.openChannel("frames");   // open it before the page loads
+frames.onMessage(bytes -> handle(bytes));
+frames.send(ByteBuffer.wrap(pixels));                  // never blocks; returns false if refused</code></pre></div>
+<div class="code" data-lang="js"><pre><code>const frames = jolt.channel("frames");
+frames.onMessage(data => { /* ArrayBuffer */ });
+frames.send(new Uint8Array([1, 2, 3]));</code></pre></div>
+
+<h2 id="behaviour">Behaviour</h2>
+<ul>
+    <li>The page connects and reconnects by itself. <code>onOpen</code>, <code>onClose</code> and <code>isOpen()</code> tell you the state.</li>
+    <li><code>ChannelOptions.newestOnly()</code> keeps only the latest message for a slow page, which suits live video. <code>withMaxQueuedBytes</code> bounds the queue.</li>
+    <li>Callbacks run on a thread of their own, not the UI thread.</li>
+    <li>A channel is a WebSocket on <code>127.0.0.1</code>, accepted only from origins your <a th:href="@{/docs/security}">SecurityPolicy</a> trusts and with a per-run secret.</li>
+    <li>On Linux, use <code>loadResources</code> (not <code>loadHtml</code>) for pages that open channels.</li>
+</ul>
+
+</th:block>

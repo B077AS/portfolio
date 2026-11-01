@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{jolt/layout}">
+<body>
+<th:block layout:fragment="content">
+    <section class="err">
+        <div class="wrap">
+            <div class="kicker" th:text="${status}">404</div>
+            <h1 th:text="${status == 404} ? 'This page does not exist.' : 'Something went wrong.'">This page does not exist.</h1>
+            <p>The address may have changed. The documentation and the Parsel case study are good places to continue.</p>
+            <a class="btn primary" th:href="@{/docs/getting-started}">Open the docs</a>
+            <a class="textlink" style="margin:0 0 0 18px" th:href="@{/}">Back to Jolt</a>
+        </div>
+    </section>
+</th:block>
+</body>
+</html>
