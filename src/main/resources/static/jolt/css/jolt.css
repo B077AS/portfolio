@@ -535,33 +535,8 @@ html[data-theme="light"] .hero::before {
   font: 400 11px "IBM Plex Mono", monospace;
   fill: var(--faint);
 }
-/* the dotted wires join two plates, so when one lifts 14px the wire stretches (upper plate up) or shrinks (lower plate up)
-   with it instead of leaving a gap; the labels stay where they are */
-#stack .wire {
-  transform-box: fill-box;
-  transition: transform 0.25s ease;
-}
-#stack .w1 {
-  transform-origin: 50% 100%;
-}
-#stack .w2 {
-  transform-origin: 50% 100%;
-}
-#stack:has(.plate[data-i="0"].on) .w1 {
-  transform: scaleY(1.098); /* (143 + 14) / 143, grows upward */
-}
-#stack:has(.plate[data-i="1"].on) .w1 {
-  transform-origin: 50% 0;
-  transform: scaleY(0.902); /* (143 - 14) / 143, shrinks from the top */
-}
-#stack:has(.plate[data-i="1"].on) .w2 {
-  transform: scaleY(1.098);
-}
-#stack:has(.plate[data-i="2"].on) .w2 {
-  transform-origin: 50% 0;
-  transform: scaleY(0.902);
-}
-
+/* the dotted wires stay still. Their ends reach 2px into the plates (the plates are drawn on top), so the plate that lifts
+   14px keeps touching them and no gap opens */
 .cap {
   display: flex;
   justify-content: space-between;
@@ -1378,6 +1353,11 @@ nav .links a[aria-current="page"] {
   }
   .hero > .wrap {
     grid-template-columns: minmax(0, 1fr);
+  }
+  /* one column: text and drawing share the same centred 560px column, so their left edges line up */
+  .hero-head {
+    width: 100%;
+    margin: 0 auto;
   }
   #stack {
     max-height: none;
