@@ -1,6 +1,6 @@
 <th:block xmlns:th="http://www.thymeleaf.org" th:fragment="body">
 
-<p>Most start-up problems come from a missing system component. These are the common symptoms and what fixes them.</p>
+<p>Most start-up problems come from a missing system component, and most later problems from one of three habits: blocking the UI thread, using absolute URLs, or loading a page the security policy does not trust. These are the common symptoms and what fixes them.</p>
 
 <h2 id="symptoms">Symptoms</h2>
 <table>
@@ -11,12 +11,27 @@
     <tr><td><code>GTK could not open a display</code></td><td>No <code>DISPLAY</code> or <code>WAYLAND_DISPLAY</code>: a server or container without a display.</td></tr>
     <tr><td>Warning about native access at start</td><td>Add <code>--enable-native-access=ALL-UNNAMED</code>.</td></tr>
     <tr><td><code>Could not find or load main class .url=...</code></td><td>PowerShell split <code>-Dui.url=...</code> at the dot. Quote it.</td></tr>
-    <tr><td>Window stays blank</td><td>Open developer tools and read the console. With <code>loadUrl</code>, check the dev server is running.</td></tr>
+    <tr><td>Window stays blank</td><td>Open developer tools and read the console. With <code>loadUrl</code>, check the dev server is running and that its origin is trusted.</td></tr>
+    <tr><td>Page loads but its CSS/JS/images are missing (404)</td><td>The folder name in <code>AppResources.classpath("ui")</code> does not match <code>src/main/resources/ui</code>, or the page uses absolute URLs. Use relative ones such as <code>style.css</code>.</td></tr>
+    <tr><td><code>jolt is not defined</code></td><td>The page is not running inside the Jolt window (for example it was opened in a normal browser through a fixed loopback port), or it runs in a frame, where the bridge is off by default.</td></tr>
     <tr><td><code>call(...)</code> never resolves</td><td>Your handler never replied, or the page was reloaded.</td></tr>
+    <tr><td>Nothing arrives in <code>onMessage</code></td><td>The page's origin is not trusted by the <a th:href="@{/docs/security}">SecurityPolicy</a>. Add a <code>window.onBlocked</code> listener and look for <code>MESSAGE</code> or <code>NAVIGATION</code> events.</td></tr>
     <tr><td>The window freezes</td><td>Something slow ran in a message listener. Move it to a worker thread.</td></tr>
+    <tr><td>A link or <code>target=_blank</code> does nothing</td><td>The security policy blocks it. Handle it in <code>onBlocked</code>, for instance with <code>app.openExternal</code>.</td></tr>
+    <tr><td>The tray icon is missing on Linux</td><td>There is no tray host. <code>app.isTraySupported()</code> is <code>false</code> on stock GNOME without the AppIndicator extension.</td></tr>
+    <tr><td>No notification appears</td><td>The future from <code>app.notify</code> says <code>false</code>: notifications are turned off, or on Linux there is no notification service.</td></tr>
     <tr><td>Old icon in the taskbar</td><td>Windows caches it. Unpin and re-pin, or restart Explorer.</td></tr>
     </tbody>
 </table>
+
+<h2 id="debug">Looking inside</h2>
+<ul>
+    <li>Create the window with <code>.withDevTools(true)</code> and use Inspect for the console, network and elements of the page.</li>
+    <li>Handler exceptions never reach the page, only a bare 500; the details are in your application log. For messages, an exception in an <code>Rpc</code> function comes back as the rejected promise's message.</li>
+    <li>On Linux, <code>AppOptions.of(id).withQuietNativeLogs(true)</code> hides GTK's known harmless warnings so real ones stand out.</li>
+</ul>
+
 <p>Still stuck? <a th:href="${site.githubUrl + '/issues'}" rel="noopener">Open an issue on GitHub</a>.</p>
+
 
 </th:block>

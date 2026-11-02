@@ -1,17 +1,33 @@
 <th:block xmlns:th="http://www.thymeleaf.org" th:fragment="body">
 
-<p>Available since <strong>0.3.0</strong>. <code>app.createWindow(...)</code> can be called as often as you like (on the UI thread), and <code>app.windows()</code> lists the windows that are open. A page can ask for another window, for example an email shown in its own window, but it never opens one itself: <strong>your Java code decides</strong>.</p>
+<p>Available since <strong>0.3.0</strong>. Many apps show one thing in a main window and open details in a second window: an email in its own window, a document in a new tab-like window, a settings panel. This page starts with plain multiple windows and then adds the safe way to let the <em>page</em> ask for one.</p>
 
-<h2 id="opener">Allow the opener</h2>
-<div class="code" data-lang="java"><pre><code>main.enableOpenWindow(app, request -> {                          // UI thread, once per request
+<h2 id="windows">1. More than one window</h2>
+<p><code>app.createWindow(...)</code> can be called as often as you like (on the UI thread, for instance from <code>run</code> or a message listener), and <code>app.windows()</code> lists the windows that are open. Each window is independent, with its own page and its own message listeners.</p>
+<div class="code" data-lang="java"><pre><code>WebWindow second = app.createWindow(WindowOptions.defaults()
+        .withTitle("Details")
+        .withSize(700, 500)
+        .withOwner(main));                  // stays in front of main and closes with it
+second.loadResources(AppResources.classpath("ui"), router,
+        ResourceOptions.defaults().withStartPath("/details/42"));</code></pre></div>
+<ul>
+    <li><code>withOwner(window)</code> makes a window belong to another one: it stays in front of it and closes with it.</li>
+    <li><code>ResourceOptions.withStartPath("/details/42")</code> opens the window on that path of your app instead of <code>index.html</code>.</li>
+    <li>The app ends when the last window closes (unless you changed that in <code>AppOptions</code>).</li>
+</ul>
+
+<h2 id="opener">2. Letting the page ask for a window</h2>
+<p>Often it is a click in the page that should open a window. The page never opens one itself: <strong>your Java code decides</strong>. You register an <em>opener</em>, a function that receives the request and either creates a window or refuses:</p>
+<div class="code" data-lang="java"><pre><code>main.enableOpenWindow(app, request -&gt; {                          // UI thread, once per request
     if (!request.path().startsWith("/message/")) return null;   // null refuses (the page gets false)
-    WebWindow popout = request.createWindow(app);             
+    WebWindow popout = request.createWindow(app);
     popout.loadResources(resources, router,
             ResourceOptions.defaults().withStartPath(request.path()));
     return popout;
 });</code></pre></div>
+<p>Use <code>request.createWindow(app)</code> rather than <code>app.createWindow</code>: it turns the pop-out features on <em>before</em> the new page can load, so the new page can use <code>jolt.openWindow</code> and <code>jolt.broadcast</code> from its first line.</p>
 
-<h2 id="page">Ask from the page</h2>
+<h2 id="page">3. Ask from the page</h2>
 <div class="code" data-lang="js"><pre><code>const opened = await jolt.openWindow("/message/42", { key: "message-42", title: "Re: lunch", width: 900, height: 700 });
 // true: a window opened, or the one with that key was brought to the front. false: the app refused.</code></pre></div>
 <ul>
@@ -21,8 +37,22 @@
     <li>The request is yours to check: <code>path</code>, <code>key</code>, <code>title</code> and the sizes come from the page. <code>request.options()</code> has no owner; use <code>.withOwner(request.opener())</code> if the pop-out should stay in front of its window and close with it.</li>
 </ul>
 
-<h2 id="broadcast">Talking between windows</h2>
+<h2 id="broadcast">4. Talking between windows</h2>
 <p><code>jolt.broadcast(text)</code> goes to every other window that has called <code>enableOpenWindow</code>, and <code>const stop = jolt.onBroadcast(text => ...)</code> receives it. A window never gets its own broadcasts, and <code>text</code> is limited to 16 K characters. To refresh a message list after a reply, broadcast a short event such as <code>"message-42:read"</code> and let each window fetch what it needs.</p>
-<p>From Java: <code>window.isFocused()</code> tells whether the window is the one the user is working in, <code>window.focus()</code> brings a window to the front, and <code>WindowOptions.withOwner(window)</code> makes a window belong to another one.</p>
+<div class="code" data-lang="js"><pre><code>// in the pop-out, after marking the message as read
+jolt.broadcast("message-42:read");
+
+// in the main window
+const stop = jolt.onBroadcast(event =&gt; {
+  if (event.endsWith(":read")) refreshList();
+});</code></pre></div>
+
+<h2 id="java">5. Window helpers in Java</h2>
+<ul>
+    <li><code>window.isFocused()</code> tells whether the window is the one the user is working in.</li>
+    <li><code>window.focus()</code> brings a window to the front.</li>
+    <li><code>app.windows()</code> lists all open windows.</li>
+</ul>
+
 
 </th:block>
