@@ -14,17 +14,21 @@ import org.springframework.stereotype.Component;
 @Component
 public class JoltDocs {
 
-    private static final LocalDate UPDATED = LocalDate.of(2026, 10, 31);
+    private static final LocalDate UPDATED = LocalDate.of(2026, 11, 2);
 
     private final List<DocPage> pages = List.of(
             page("getting-started", "Getting started", "Start",
                     "Add Jolt to a Maven or Gradle project and open your first native window with a web page, in plain Java."),
+            page("concepts", "How Jolt works", "Start",
+                    "The few ideas behind every Jolt app in plain terms: application, window, the UI thread, and the ways to show a page and talk to it."),
             page("messaging", "Messaging between Java and the page", "Start",
-                    "Send messages both ways between your Java code and the page, and build a small request and response layer on top."),
+                    "Send messages both ways between Java and the page, step by step from one string to calling Java functions like async functions."),
             page("frontend", "Building the frontend", "Start",
-                    "Use plain HTML or any frontend framework with Jolt: dev server with hot reload while you work, files from the jar for release."),
+                    "Put your page in HTML, CSS and JS files and show it: from a folder or a dev server with hot reload while you work, from the jar for release."),
+            page("tutorial", "Tutorial: a notes app", "Start",
+                    "Build a small notes app step by step: a Java data class, a page of separate files and the bridge between them."),
             page("router", "Serving files and requests", "Serving",
-                    "Serve a multi-file frontend and answer fetch, form and htmx requests from Java with the Router, with no socket."),
+                    "Let the page talk to Java like a website talks to a server: fetch, forms and htmx answered by a handler or the Router, with no socket."),
             page("channels", "Binary channels", "Serving",
                     "Open named two-way channels to move video frames, images and files between Java and the page without base64 or JSON."),
             page("dialogs", "File dialogs", "Desktop",
@@ -43,6 +47,8 @@ public class JoltDocs {
                     "Store secrets in the Windows Credential Manager or the Linux Secret Service with the optional jolt-credentials module."),
             page("packaging", "Packaging your app", "Reference",
                     "Turn your jars into a double-clickable app that bundles its own Java runtime with jpackage, about 32 MB in size."),
+            page("api-overview", "API at a glance", "Reference",
+                    "A quick lookup of the main Jolt types and calls for Java and for the page, with links to the page that explains each."),
             page("troubleshooting", "Troubleshooting", "Reference",
                     "Common symptoms when running Jolt apps, such as a blank window or a missing web view, and what fixes them."));
 

@@ -1,0 +1,193 @@
+<th:block xmlns:th="http://www.thymeleaf.org" th:fragment="body">
+
+<p>In this tutorial you build a small notes app: type a note, add it to a list, delete it. It is tiny on purpose. The point is to see every piece of a Jolt app in one place: a Java class that owns the data, a page made of separate files, and a bridge between them. The code on this page was run on Windows against a real window.</p>
+<p>You should have read <a th:href="@{/docs/getting-started}">Getting started</a> and <a th:href="@{/docs/messaging}">Messaging</a> first. The tutorial uses the <code>Rpc</code> class from the messaging page unchanged.</p>
+
+<h2 id="plan">What we are building</h2>
+<ul>
+    <li>The <strong>page</strong> shows an input, an Add button and the list. It knows nothing about storage.</li>
+    <li>The <strong>Java side</strong> keeps the notes and offers three functions: <code>notes.list</code>, <code>notes.add</code>, <code>notes.remove</code>.</li>
+    <li>The <strong>bridge</strong> is the <code>Rpc</code> class in Java and the <code>call()</code> function in the page.</li>
+</ul>
+<p>This is the same shape as a large app: swap the in-memory list for a database and the plain page for Vue or React, and nothing else changes.</p>
+
+<h2 id="setup">Step 1: the project</h2>
+<p>Use the <code>pom.xml</code> from Getting started, and add Gson, which <code>Rpc</code> uses for JSON:</p>
+<div class="code" data-lang="xml" data-file="pom.xml"><pre><code>&lt;dependency&gt;
+  &lt;groupId&gt;com.google.code.gson&lt;/groupId&gt;
+  &lt;artifactId&gt;gson&lt;/artifactId&gt;
+  &lt;version&gt;2.11.0&lt;/version&gt;
+&lt;/dependency&gt;</code></pre></div>
+<p>The folders:</p>
+<div class="code" data-lang="text"><pre><code>notes/
+  pom.xml
+  src/main/java/com/example/notes/
+    NotesApp.java
+    NoteStore.java
+    Rpc.java            &lt;- copy it from the Messaging page
+  src/main/resources/ui/
+    index.html
+    style.css
+    app.js</code></pre></div>
+
+<h2 id="store">Step 2: the data, in plain Java</h2>
+<p>Start with the part that has nothing to do with windows. A note is a record, and the store keeps a list of them:</p>
+<div class="code" data-lang="java" data-file="NoteStore.java"><pre><code>package com.example.notes;
+
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicInteger;
+
+public final class NoteStore {
+    public record Note(int id, String text) {}
+
+    private final List&lt;Note&gt; notes = new CopyOnWriteArrayList&lt;&gt;();
+    private final AtomicInteger nextId = new AtomicInteger(1);
+
+    public List&lt;Note&gt; list() { return List.copyOf(notes); }
+
+    public Note add(String text) {
+        if (text == null || text.isBlank()) throw new IllegalArgumentException("A note cannot be empty");
+        Note note = new Note(nextId.getAndIncrement(), text.strip());
+        notes.add(note);
+        return note;
+    }
+
+    public void remove(int id) { notes.removeIf(n -&gt; n.id() == id); }
+}</code></pre></div>
+<p>The collections are thread-safe because Rpc runs your functions on worker threads, possibly at the same time. Throwing <code>IllegalArgumentException</code> for an empty note is how we will report a mistake to the page.</p>
+
+<h2 id="window">Step 3: the window and the bridge</h2>
+<div class="code" data-lang="java" data-file="NotesApp.java"><pre><code>package com.example.notes;
+
+import io.github.b077as.jolt.*;
+
+public final class NotesApp {
+    public static void main(String[] args) {
+        NoteStore store = new NoteStore();
+        Application app = Application.create(AppOptions.of("com.example.notes"));
+        try {
+            app.run(() -&gt; {
+                WebWindow window = app.createWindow(WindowOptions.defaults()
+                        .withTitle("Notes").withSize(520, 640).withDevTools(true));
+
+                new Rpc(window)
+                        .on("notes.list", params -&gt; store.list())
+                        .on("notes.add", params -&gt; store.add(params.get("text").getAsString()))
+                        .on("notes.remove", params -&gt; { store.remove(params.get("id").getAsInt()); return true; });
+
+                window.loadResources(AppResources.classpath("ui"));
+            });
+        } finally {
+            app.close();
+        }
+    }
+}</code></pre></div>
+<p>Read it top to bottom: build the store, create the app, in <code>run</code> create a window, register three Java functions on it, then show the files in <code>ui</code>. <code>withDevTools(true)</code> is there so you can inspect the page while learning; remove it for release.</p>
+
+<h2 id="page">Step 4: the page</h2>
+<p>Three small files in <code>src/main/resources/ui</code>.</p>
+<div class="code" data-lang="html" data-file="index.html"><pre><code>&lt;!doctype html&gt;
+&lt;html lang="en"&gt;
+&lt;head&gt;
+  &lt;meta charset="utf-8"&gt;
+  &lt;title&gt;Notes&lt;/title&gt;
+  &lt;link rel="stylesheet" href="style.css"&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;h1&gt;Notes&lt;/h1&gt;
+  &lt;form id="form"&gt;
+    &lt;input id="text" placeholder="Write a note" autocomplete="off"&gt;
+    &lt;button id="add"&gt;Add&lt;/button&gt;
+  &lt;/form&gt;
+  &lt;p id="error" role="alert"&gt;&lt;/p&gt;
+  &lt;ul id="list"&gt;&lt;/ul&gt;
+  &lt;script type="module" src="app.js"&gt;&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre></div>
+<div class="code" data-lang="css" data-file="style.css"><pre><code>body { font-family: system-ui, sans-serif; margin: 2rem auto; max-width: 28rem; }
+form { display: flex; gap: .5rem; }
+input { flex: 1; padding: .5rem; }
+li { display: flex; justify-content: space-between; padding: .4rem 0; border-bottom: 1px solid #ddd; }
+#error { color: #b00020; min-height: 1.2em; }</code></pre></div>
+<div class="code" data-lang="js" data-file="app.js"><pre><code>// --- the bridge: call a Java function and wait for its answer ---
+const pending = new Map();
+let nextId = 1;
+
+jolt.onMessage(raw =&gt; {
+  const reply = JSON.parse(raw);
+  const waiting = pending.get(reply.id);
+  if (!waiting) return;
+  pending.delete(reply.id);
+  if (reply.error) waiting.reject(new Error(reply.error));
+  else waiting.resolve(reply.result);
+});
+
+function call(method, params = {}) {
+  return new Promise((resolve, reject) =&gt; {
+    const id = nextId++;
+    pending.set(id, { resolve, reject });
+    jolt.postMessage(JSON.stringify({ id, method, params }));
+  });
+}
+
+// --- the page ---
+const list = document.getElementById('list');
+const input = document.getElementById('text');
+const error = document.getElementById('error');
+
+function show(note) {
+  const li = document.createElement('li');
+  const span = document.createElement('span');
+  span.textContent = note.text;                 // textContent, never innerHTML
+  const del = document.createElement('button');
+  del.textContent = 'Delete';
+  del.onclick = async () =&gt; { await call('notes.remove', { id: note.id }); li.remove(); };
+  li.append(span, del);
+  list.append(li);
+}
+
+document.getElementById('form').addEventListener('submit', async event =&gt; {
+  event.preventDefault();
+  error.textContent = '';
+  try {
+    show(await call('notes.add', { text: input.value }));
+    input.value = '';
+  } catch (e) {
+    error.textContent = e.message;
+  }
+});
+
+(await call('notes.list')).forEach(show);</code></pre></div>
+<p>The first half of <code>app.js</code> is the bridge you already know. The second half is the app:</p>
+<ul>
+    <li>Adding a note calls Java and shows what Java returns (including the id Java chose). If Java throws, the promise rejects and the message appears in the red paragraph.</li>
+    <li>The last line asks Java for the saved notes when the page starts. It also shows the pattern from the messaging page: the page speaks first, so it is never too early for the answer.</li>
+    <li>Note text goes into the page with <code>textContent</code>. Setting <code>innerHTML</code> with text a user typed is how scripts get injected.</li>
+</ul>
+
+<h2 id="run">Step 5: run it</h2>
+<p>Run <code>NotesApp</code> with <code>--enable-native-access=ALL-UNNAMED</code>, as on the first page. Type a note and press Enter: it appears in the list. Press Add with an empty box: the error from your Java code shows in red. Delete removes a note.</p>
+<p>Notes vanish when you close the window because they live in a list. Replacing <code>NoteStore</code> with one that writes a file in the app's data folder (<code>AppOptions.dataDirectory()</code>) or a database changes nothing in the page.</p>
+
+<h2 id="review">What you used</h2>
+<table>
+    <thead><tr><th scope="col">Piece</th><th scope="col">Where it is explained</th></tr></thead>
+    <tbody>
+    <tr><td><code>Application</code>, <code>createWindow</code>, <code>run</code></td><td><a th:href="@{/docs/getting-started}">Getting started</a></td></tr>
+    <tr><td>Messages and the <code>Rpc</code> layer</td><td><a th:href="@{/docs/messaging}">Messaging</a></td></tr>
+    <tr><td><code>loadResources</code> and the <code>ui</code> folder</td><td><a th:href="@{/docs/frontend}">Building the frontend</a></td></tr>
+    <tr><td>Threads and the UI thread</td><td><a th:href="@{/docs/concepts}">How Jolt works</a></td></tr>
+    </tbody>
+</table>
+
+<h2 id="next">Where to go from here</h2>
+<ul>
+    <li>Prefer a page that works like a small website, with forms and <code>fetch</code>? <a th:href="@{/docs/router}">Serving files and requests</a> builds this same app with a <code>Router</code> and no bridge code.</li>
+    <li>Let the user export notes: <a th:href="@{/docs/dialogs}">file dialogs</a>.</li>
+    <li>Remind the user about something: <a th:href="@{/docs/notifications}">notifications</a>.</li>
+    <li>Make it feel like your own app: <a th:href="@{/docs/window-options}">window look</a>, <a th:href="@{/docs/tray}">tray</a>, and finally <a th:href="@{/docs/packaging}">packaging</a>.</li>
+</ul>
+
+
+</th:block>

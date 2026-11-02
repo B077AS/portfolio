@@ -1,9 +1,12 @@
 <th:block xmlns:th="http://www.thymeleaf.org" th:fragment="body">
 
-<p><code>jpackage</code> turns your jars into a double-clickable app that bundles its own Java runtime, so your users do not need Java installed.</p>
+<p>So far you have run your app from an IDE or the command line, which needs Java installed and a long command. <code>jpackage</code>, a tool that ships with the JDK, turns your jars into a double-clickable app that bundles its own Java runtime, so your users do not need Java installed. Because Jolt uses the web view the system already has, there is no browser to bundle either.</p>
 
-<h2 id="jpackage">Build an app image</h2>
-<p>Collect your app jar and its dependencies in one folder (here <code>target\package</code>), then point <code>jpackage</code> at it:</p>
+<h2 id="collect">1. Collect the jars</h2>
+<p>Build your app jar and gather it together with its dependencies (Jolt's jars and any libraries you use) in one folder, here <code>target\package</code>. With Maven, the <code>maven-dependency-plugin</code>'s <code>copy-dependencies</code> goal does the copying; copy your own jar next to them. Make sure your app jar's manifest has <code>Enable-Native-Access: ALL-UNNAMED</code> or pass the flag as shown below.</p>
+
+<h2 id="jpackage">2. Build an app image</h2>
+<p>Point <code>jpackage</code> at the folder:</p>
 <div class="code" data-lang="powershell"><pre><code>jpackage --type app-image --name MyApp `
   --input target\package `
   --main-jar my-app.jar --main-class com.example.MyApp `
@@ -11,9 +14,19 @@
   --add-modules "java.base,java.logging,jdk.unsupported" `
   --jlink-options "--strip-debug --no-man-pages --no-header-files --compress zip-6" `
   --dest dist</code></pre></div>
-<p>That gives an app of about <strong>32 MB</strong>, compared with about 120 MB without <code>--add-modules</code> and <code>--jlink-options</code>. Add the modules your own dependencies need. Code signing is up to you.</p>
+<ul>
+    <li><code>--type app-image</code> produces a folder you can run or zip. (Installer types such as <code>exe</code>, <code>msi</code>, <code>deb</code> and <code>rpm</code> are other <code>jpackage</code> types, if you need them.)</li>
+    <li><code>--java-options</code> is where the native-access flag goes, so users never see the warning.</li>
+    <li><code>--add-modules</code> lists the Java modules to include. Listing only what you need, instead of the whole JDK, is what keeps the app small.</li>
+    <li><code>--jlink-options</code> shrinks the bundled runtime further.</li>
+</ul>
+<p>That gives an app of about <strong>32 MB</strong>, compared with about 120 MB without <code>--add-modules</code> and <code>--jlink-options</code>. Add the modules your own dependencies need: if the packaged app fails with a missing class that works from the IDE, a module is missing from the list. Code signing is up to you.</p>
 
-<h2 id="in-practice">In practice</h2>
+<h2 id="check">3. Test the packaged app</h2>
+<p>Run the result on a machine, or a clean user account, that does not have your development setup. On Windows it needs the WebView2 Runtime (preinstalled on Windows 11); on Linux it needs GTK 3 and WebKitGTK 4.1 (see <a th:href="@{/docs/getting-started}">Getting started</a>). Also check that your app does not depend on files that only exist in your project folder: serve the page with <code>AppResources.classpath(...)</code>, not <code>directory(...)</code>.</p>
+
+<h2 id="in-practice">4. In practice</h2>
 <p><a th:href="@{/parsel}">Parsel</a> ships this way: a Windows installer of about 33 MB with its own Java runtime inside, plus a portable zip and Linux packages. There is no bundled browser, because the app uses the web view your system already has.</p>
+
 
 </th:block>

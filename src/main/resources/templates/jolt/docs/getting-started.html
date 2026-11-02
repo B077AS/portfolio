@@ -1,69 +1,127 @@
 <th:block xmlns:th="http://www.thymeleaf.org" th:fragment="body">
 
-<p>Jolt opens a native window whose contents are a web page, and lets that page talk to Java in the same process. It uses the web view the operating system already has, so there is no bundled browser and no native code to compile.</p>
+<p>Jolt opens a native window whose contents are a web page, and lets that page talk to your Java code in the same process. You write the interface in HTML, CSS and JavaScript and the logic in Java. It uses the web view the operating system already has, so there is no bundled browser and no native code to compile.</p>
+<p>This page takes you from an empty folder to a running window in about ten minutes. You do not need to know anything about Jolt yet, only basic Java and a little HTML.</p>
 
 <h2 id="requirements">Requirements</h2>
 <ul>
     <li>JDK 25 and Maven 3.9 or newer (Gradle works too).</li>
     <li><strong>Windows 10 or 11</strong> with the <a href="https://developer.microsoft.com/microsoft-edge/webview2/" rel="noopener">WebView2 Runtime</a> (preinstalled on Windows 11).</li>
     <li><strong>Linux</strong> (X11 or Wayland) with GTK 3 and WebKitGTK 4.1: <code>sudo apt install libgtk-3-0 libwebkit2gtk-4.1-0</code>.</li>
+    <li>A desktop session. A window needs a screen, so a plain server or container will not work.</li>
+</ul>
+<p>macOS is not supported.</p>
+
+<h2 id="add-jolt">Step 1: create the project</h2>
+<p>Make a folder with a standard Maven layout:</p>
+<div class="code" data-lang="text"><pre><code>hello/
+  pom.xml
+  src/main/java/com/example/hello/HelloApp.java</code></pre></div>
+<p>In <code>pom.xml</code>, add the API and both backends. Each backend only activates on its own operating system, so one jar runs on both.</p>
+<div class="code" data-lang="xml" data-file="pom.xml"><pre><code>&lt;project xmlns="http://maven.apache.org/POM/4.0.0"&gt;
+  &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
+  &lt;groupId&gt;com.example&lt;/groupId&gt;
+  &lt;artifactId&gt;hello&lt;/artifactId&gt;
+  &lt;version&gt;1.0&lt;/version&gt;
+
+  &lt;properties&gt;
+    &lt;maven.compiler.release&gt;25&lt;/maven.compiler.release&gt;
+    &lt;jolt.version&gt;<span th:text="${site.version}">0.3.2</span>&lt;/jolt.version&gt;
+  &lt;/properties&gt;
+
+  &lt;dependencies&gt;
+    &lt;dependency&gt;
+      &lt;groupId&gt;io.github.b077as&lt;/groupId&gt;
+      &lt;artifactId&gt;jolt-core&lt;/artifactId&gt;
+      &lt;version&gt;${jolt.version}&lt;/version&gt;
+    &lt;/dependency&gt;
+    &lt;dependency&gt;
+      &lt;groupId&gt;io.github.b077as&lt;/groupId&gt;
+      &lt;artifactId&gt;jolt-win32&lt;/artifactId&gt;
+      &lt;version&gt;${jolt.version}&lt;/version&gt;
+    &lt;/dependency&gt;
+    &lt;dependency&gt;
+      &lt;groupId&gt;io.github.b077as&lt;/groupId&gt;
+      &lt;artifactId&gt;jolt-linux&lt;/artifactId&gt;
+      &lt;version&gt;${jolt.version}&lt;/version&gt;
+    &lt;/dependency&gt;
+  &lt;/dependencies&gt;
+&lt;/project&gt;</code></pre></div>
+<p>Gradle:</p>
+<div class="code" data-lang="java" data-file="build.gradle.kts"><pre><code>implementation("io.github.b077as:jolt-core:<span th:text="${site.version}">0.3.2</span>")
+implementation("io.github.b077as:jolt-win32:<span th:text="${site.version}">0.3.2</span>")
+implementation("io.github.b077as:jolt-linux:<span th:text="${site.version}">0.3.2</span>")</code></pre></div>
+<p>What each one is:</p>
+<ul>
+    <li><code>jolt-core</code> is the API you write code against: <code>Application</code>, <code>WebWindow</code> and friends.</li>
+    <li><code>jolt-win32</code> and <code>jolt-linux</code> are the two backends. Jolt picks the one that matches the operating system at start-up and ignores the other.</li>
 </ul>
 
-<h2 id="add-jolt">Add Jolt to your project</h2>
-<p>Add the API and both backends. Each backend only activates on its own operating system, so one jar runs on both.</p>
-<div class="code" data-lang="xml" data-file="pom.xml"><pre><code>&lt;properties&gt;
-  &lt;maven.compiler.release&gt;25&lt;/maven.compiler.release&gt;
-  &lt;jolt.version&gt;<span th:text="${site.version}">0.3.1</span>&lt;/jolt.version&gt;
-&lt;/properties&gt;
+<h2 id="first-window">Step 2: your first window</h2>
+<p>Create <code>HelloApp.java</code>:</p>
+<div class="code" data-lang="java" data-file="HelloApp.java"><pre><code>package com.example.hello;
 
-&lt;dependencies&gt;
-  &lt;dependency&gt;
-    &lt;groupId&gt;io.github.b077as&lt;/groupId&gt;
-    &lt;artifactId&gt;jolt-core&lt;/artifactId&gt;
-    &lt;version&gt;${jolt.version}&lt;/version&gt;
-  &lt;/dependency&gt;
-  &lt;dependency&gt;
-    &lt;groupId&gt;io.github.b077as&lt;/groupId&gt;
-    &lt;artifactId&gt;jolt-win32&lt;/artifactId&gt;
-    &lt;version&gt;${jolt.version}&lt;/version&gt;
-  &lt;/dependency&gt;
-  &lt;dependency&gt;
-    &lt;groupId&gt;io.github.b077as&lt;/groupId&gt;
-    &lt;artifactId&gt;jolt-linux&lt;/artifactId&gt;
-    &lt;version&gt;${jolt.version}&lt;/version&gt;
-  &lt;/dependency&gt;
-&lt;/dependencies&gt;</code></pre></div>
-<p>Gradle:</p>
-<div class="code" data-lang="java" data-file="build.gradle.kts"><pre><code>implementation("io.github.b077as:jolt-core:<span th:text="${site.version}">0.3.1</span>")
-implementation("io.github.b077as:jolt-win32:<span th:text="${site.version}">0.3.1</span>")
-implementation("io.github.b077as:jolt-linux:<span th:text="${site.version}">0.3.1</span>")</code></pre></div>
-<p>Run Java with <code>--enable-native-access=ALL-UNNAMED</code>, or put <code>Enable-Native-Access: ALL-UNNAMED</code> in your jar manifest (<code>maven-jar-plugin</code>, <code>manifestEntries</code>). Otherwise Java prints a warning on every start.</p>
+import io.github.b077as.jolt.*;
 
-<h2 id="first-window">Your first window</h2>
-<div class="code" data-lang="java" data-file="HelloApp.java"><pre><code>Application app = Application.create(AppOptions.of("com.example.hello"));
-try {
-    app.run(() -> {
-        WebWindow window = app.createWindow(WindowOptions.defaults().withTitle("Hello").withSize(600, 400));
-        window.onMessage(text -> window.postMessage("Java received: " + text));
-        window.loadHtml("""
-                &lt;button onclick="jolt.postMessage('ping')"&gt;Ping Java&lt;/button&gt;
-                &lt;p id="out"&gt;&lt;/p&gt;
-                &lt;script&gt;jolt.onMessage(m => document.getElementById('out').textContent = m)&lt;/script&gt;
-                """);
-    });
-} finally {
-    app.close();
+public class HelloApp {
+    public static void main(String[] args) {
+        Application app = Application.create(AppOptions.of("com.example.hello"));
+        try {
+            app.run(() -&gt; {
+                WebWindow window = app.createWindow(WindowOptions.defaults().withTitle("Hello").withSize(600, 400));
+                window.onMessage(text -&gt; window.postMessage("Java received: " + text));
+                window.loadHtml("""
+                        &lt;button onclick="jolt.postMessage('ping')"&gt;Ping Java&lt;/button&gt;
+                        &lt;p id="out"&gt;&lt;/p&gt;
+                        &lt;script&gt;jolt.onMessage(m =&gt; document.getElementById('out').textContent = m)&lt;/script&gt;
+                        """);
+            });
+        } finally {
+            app.close();
+        }
+    }
 }</code></pre></div>
+
+<h2 id="run">Step 3: run it</h2>
+<p>Java must be started with <code>--enable-native-access=ALL-UNNAMED</code>. Jolt talks to the operating system through Java's foreign function API, and Java asks you to allow that explicitly. Without the flag the app still runs, but Java prints a warning on every start.</p>
+<p>In IntelliJ IDEA or Eclipse, add it to the run configuration's VM options. From a terminal, build first, then run (PowerShell shown; on Linux use <code>:</code> instead of <code>;</code> between class path entries):</p>
+<div class="code" data-lang="powershell"><pre><code>mvn -q compile dependency:build-classpath "-Dmdep.outputFile=cp.txt"
+java --enable-native-access=ALL-UNNAMED -cp "target\classes;$(Get-Content cp.txt)" com.example.hello.HelloApp</code></pre></div>
+<p>A 600 by 400 window titled "Hello" appears with one button. Click it: the page sends <code>ping</code> to Java, Java answers, and the answer appears under the button. You just crossed the bridge in both directions.</p>
+<p>When you later package your app as a jar, put <code>Enable-Native-Access: ALL-UNNAMED</code> in the manifest (<code>maven-jar-plugin</code>, <code>manifestEntries</code>) and the flag is no longer needed. See <a th:href="@{/docs/packaging}">Packaging your app</a>.</p>
+
+<h2 id="explained">What each line does</h2>
+<ol>
+    <li><code>AppOptions.of("com.example.hello")</code> names your app. The id is also used for a per-user data folder (<code>%LOCALAPPDATA%\com.example.hello</code> on Windows, <code>~/.local/share/com.example.hello</code> on Linux) where the web view keeps its storage.</li>
+    <li><code>Application.create(...)</code> finds the backend for this operating system.</li>
+    <li><code>app.run(onStart)</code> turns the calling thread into the <strong>UI thread</strong> and runs the window system's event loop. It blocks until the app ends: the last window closed, or <code>app.quit()</code>. The function you pass is called once, at the start, on that thread. Create your windows there.</li>
+    <li><code>app.createWindow(options)</code> opens the native window. <code>WindowOptions.defaults()</code> gives you a 1024 by 720 window; the <code>with...</code> methods return a changed copy (options are immutable, so you chain them).</li>
+    <li><code>window.onMessage(listener)</code> registers the Java side of the bridge. It is called with every message the page sends.</li>
+    <li><code>window.postMessage(text)</code> sends a message to the page.</li>
+    <li><code>window.loadHtml(html)</code> shows an HTML string. It is the quickest way to get something on screen. For real apps you will serve separate files; see <a th:href="@{/docs/frontend}">Building the frontend</a>.</li>
+    <li>In the page, <code>jolt</code> is a global that Jolt adds to every page: <code>jolt.postMessage(text)</code> sends to Java and <code>jolt.onMessage(callback)</code> receives from Java.</li>
+    <li><code>app.close()</code> in <code>finally</code> releases the native resources, even if something threw.</li>
+</ol>
+<p>To end the app, let <code>main</code> return rather than calling <code>System.exit</code>.</p>
+
+<h2 id="stuck">If it does not work</h2>
 <ul>
-    <li><code>AppOptions.of(id)</code> names your app and picks a per-user data folder (<code>%LOCALAPPDATA%\&lt;id&gt;</code> or <code>~/.local/share/&lt;id&gt;</code>).</li>
-    <li><code>app.run(onStart)</code> blocks until the app ends: the last window closed, or <code>quit()</code>. Create windows inside <code>onStart</code>.</li>
-    <li><code>window.jolt</code> is injected into every page: <code>jolt.postMessage(text)</code> sends to Java, <code>jolt.onMessage(cb)</code> receives.</li>
-    <li>To end the app, let <code>main</code> return rather than calling <code>System.exit</code>.</li>
+    <li>An error about the WebView2 runtime or GTK means a system component is missing; the <a th:href="@{/docs/troubleshooting}">troubleshooting page</a> lists the messages and their fixes.</li>
+    <li>A window that opens but stays empty: developer tools are off by default, so create the window with <code>.withDevTools(true)</code>, right-click and choose Inspect, then read the console.</li>
 </ul>
 
 <h2 id="complete-app">See a complete app</h2>
 <p><a th:href="@{/parsel}">Parsel</a> is a full desktop mail client built on Jolt, and its source is open: Java for IMAP and SMTP, a Vue page for the interface, one process. It is the reference for how a real Jolt app is put together, from the messaging layer to packaging.</p>
 <p><a th:href="${site.parselGithubUrl}" rel="noopener">Parsel on GitHub</a></p>
-<p>Next: <a th:href="@{/docs/messaging}">messaging between Java and the page</a>.</p>
+
+<h2 id="path">The path through these docs</h2>
+<p>The pages are in order of difficulty. Read down the sidebar and stop when you have what you need.</p>
+<ol>
+    <li><a th:href="@{/docs/concepts}">How Jolt works</a>: the few ideas everything else builds on.</li>
+    <li><a th:href="@{/docs/messaging}">Messaging</a> and <a th:href="@{/docs/frontend}">the frontend</a>: the bridge, then real HTML, CSS and JS files.</li>
+    <li><a th:href="@{/docs/tutorial}">Tutorial: a notes app</a>: everything so far in one small working app.</li>
+    <li><a th:href="@{/docs/router}">Serving files and requests</a> for forms and fetch, then the desktop features (dialogs, notifications, windows, tray).</li>
+</ol>
+
 
 </th:block>

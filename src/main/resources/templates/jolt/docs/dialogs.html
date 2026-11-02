@@ -1,21 +1,56 @@
 <th:block xmlns:th="http://www.thymeleaf.org" th:fragment="body">
 
-<p>A page never sees a file's path. Use the operating system's dialogs through the window. Available since <strong>0.2.4</strong>.</p>
+<p>A web page cannot open a native "Save as" dialog and never learns a file's path, which is a good thing for security. Jolt lets <strong>Java</strong> open the operating system's own dialogs, and lets a trusted page ask for a save dialog without ever seeing the path. Available since <strong>0.2.4</strong>.</p>
 
-<h2 id="java">From Java</h2>
+<h2 id="java">1. From Java</h2>
+<p>Get the dialogs from the window and ask for what you need:</p>
 <div class="code" data-lang="java"><pre><code>Dialogs dialogs = window.dialogs();
 dialogs.saveFile(FileDialogOptions.defaults()
                 .withTitle("Export report").withFileName("report.pdf")
                 .withFilters(FileFilter.of("PDF documents", "pdf")))
-        .thenAccept(chosen -> chosen.ifPresent(path -> writeReport(path)));   // empty if cancelled
+        .thenAccept(chosen -&gt; chosen.ifPresent(path -&gt; writeReport(path)));   // empty if cancelled
 
 dialogs.openFile(FileDialogOptions.defaults());      // also openFiles(...) and chooseFolder(...)</code></pre></div>
-<p>Each call returns a <code>CompletableFuture</code> at once. Cancelling gives an empty result, not an error. <code>withSize(w, h)</code> asks for a bigger dialog (a request: the system owns it).</p>
+<table>
+    <thead><tr><th scope="col">Call</th><th scope="col">Result</th></tr></thead>
+    <tbody>
+    <tr><td><code>openFile</code></td><td><code>CompletableFuture&lt;Optional&lt;Path&gt;&gt;</code>: one file.</td></tr>
+    <tr><td><code>openFiles</code></td><td><code>CompletableFuture&lt;List&lt;Path&gt;&gt;</code>: several files (empty list if cancelled).</td></tr>
+    <tr><td><code>saveFile</code></td><td><code>CompletableFuture&lt;Optional&lt;Path&gt;&gt;</code>: where to write.</td></tr>
+    <tr><td><code>chooseFolder</code></td><td><code>CompletableFuture&lt;Optional&lt;Path&gt;&gt;</code>: a folder.</td></tr>
+    </tbody>
+</table>
+<p>Each call returns a <code>CompletableFuture</code> at once, so your code keeps running while the dialog is open. Cancelling gives an empty result, not an error. <code>FileDialogOptions</code> can set the title, the folder it opens in (<code>withInitialDirectory</code>), the suggested file name, and filters. <code>withSize(w, h)</code> asks for a bigger dialog (a request: the system owns it).</p>
 
-<h2 id="page">From the page</h2>
-<p>To let the <strong>page</strong> save a file, call <code>window.enableSaveAs()</code> in Java and <code>jolt.saveAs</code> in the page:</p>
+<h2 id="flow">2. A button in the page that opens a dialog</h2>
+<p>The usual way to connect a page button to a dialog is a message. The page asks, Java opens the dialog, writes the file and tells the page what happened:</p>
+<div class="code" data-lang="js"><pre><code>document.getElementById('export').onclick = () =&gt; jolt.postMessage('export');
+jolt.onMessage(m =&gt; { if (m.startsWith('exported:')) status.textContent = 'Saved ' + m.slice(9); });</code></pre></div>
+<div class="code" data-lang="java"><pre><code>window.onMessage(message -&gt; {
+    if (!message.equals("export")) return;
+    window.dialogs().saveFile(FileDialogOptions.defaults()
+                    .withTitle("Export notes").withFileName("notes.txt")
+                    .withFilters(FileFilter.of("Text files", "txt")))
+            .thenAccept(chosen -&gt; chosen.ifPresent(path -&gt; {
+                try {
+                    Files.writeString(path, notesAsText());
+                    window.postMessage("exported:" + path.getFileName());
+                } catch (IOException e) {
+                    window.postMessage("error:" + e.getMessage());
+                }
+            }));
+});</code></pre></div>
+<p>The future completes on the UI thread, so keep the work in <code>thenAccept</code> short, or move bigger writes onto another thread as shown on the <a th:href="@{/docs/messaging}">messaging page</a>. Only the file <em>name</em> goes back to the page, never the full path.</p>
+
+<h2 id="page">3. Straight from the page</h2>
+<p>To let the <strong>page</strong> save a file itself, call <code>window.enableSaveAs()</code> in Java and <code>jolt.saveAs</code> in the page:</p>
 <div class="code" data-lang="js"><pre><code>const saved = await jolt.saveAs(blobOrBytesOrText, { name: "report.pdf", filters: [{ name: "PDF", extensions: ["pdf"] }] });
 // { name, size } or null if cancelled; the page never learns the path</code></pre></div>
-<p>The data is written to a temporary file and moved into place when complete. Only trusted origins may use it, and on Linux the page must come from <code>loadResources</code>.</p>
+<ul>
+    <li>The data is written to a temporary file and moved into place when complete.</li>
+    <li>Only trusted origins may use it, and on Linux the page must come from <code>loadResources</code>.</li>
+    <li><code>enableSaveAs(Path)</code> sets the folder the dialog opens in.</li>
+</ul>
+
 
 </th:block>

@@ -1,0 +1,77 @@
+<th:block xmlns:th="http://www.thymeleaf.org" th:fragment="body">
+
+<p>You can build a lot with Jolt knowing only five ideas. This page explains them in plain terms, with no code you have to type. Later pages go deep on each one.</p>
+
+<h2 id="picture">The big picture</h2>
+<div class="code" data-lang="text"><pre><code> one process (your Java app)
++---------------------------------------------------+
+|  Your Java code                                   |
+|    Application  -&gt;  WebWindow  &lt;---- messages ----+--+
+|                        |                          |  |
+|                  native window                    |  |
+|                +----------------+                 |  |
+|                |    web view    |  your page      |  |
+|                | (WebView2 or   | (HTML/CSS/JS) &lt;-+--+
+|                |  WebKitGTK)    |                 |
+|                +----------------+                 |
++---------------------------------------------------+</code></pre></div>
+<p>Your Java code, the window and the page all live in <strong>one process</strong>. There is no separate server to start and no ports to pick. The page is drawn by the web view that comes with the operating system: WebView2 (Chromium) on Windows and WebKitGTK on Linux.</p>
+
+<h2 id="application">Application: the program</h2>
+<p>An <code>Application</code> is your running program. You create one, call <code>run</code>, and it stays in that call until the app ends. Only one application can run per process.</p>
+<ul>
+    <li><code>Application.create(AppOptions.of("com.example.app"))</code> builds it. The id should be unique to your app; Jolt uses it for the data folder, notifications and the autostart entry.</li>
+    <li><code>app.run(() -> { ... })</code> runs the event loop. The function runs once at the start: create your windows there.</li>
+    <li>The app ends when the last window closes (the default) or when something calls <code>app.quit()</code>.</li>
+</ul>
+
+<h2 id="window">WebWindow: one window with one page</h2>
+<p>Each <code>app.createWindow(options)</code> gives you a <code>WebWindow</code>. You configure it with <code>WindowOptions</code> (title, size, icon and more), tell it what to show, and exchange messages with its page. You can open as many windows as you like.</p>
+
+<h2 id="show">Three ways to show a page</h2>
+<table>
+    <thead><tr><th scope="col">Method</th><th scope="col">Use it when</th></tr></thead>
+    <tbody>
+    <tr><td><code>loadHtml(String)</code></td><td>You have a small page as a string. Good for first experiments and tiny tools.</td></tr>
+    <tr><td><code>loadResources(AppResources)</code></td><td>Your page is real files: <code>index.html</code>, CSS, JavaScript, images. This is the normal choice, both while developing (files from a folder) and when shipping (files inside your jar).</td></tr>
+    <tr><td><code>loadUrl(String)</code></td><td>You want to show a web address, most often your frontend's dev server (such as Vite) while you work. Other sites are blocked unless you trust them.</td></tr>
+    </tbody>
+</table>
+
+<h2 id="talking">Three ways for Java and the page to talk</h2>
+<table>
+    <thead><tr><th scope="col">Way</th><th scope="col">What it is</th><th scope="col">Good for</th></tr></thead>
+    <tbody>
+    <tr><td><strong>Messages</strong></td><td><code>jolt.postMessage</code> / <code>window.onMessage</code> and back. Text in both directions, either side can start.</td><td>Almost everything: calling Java functions, pushing updates to the page.</td></tr>
+    <tr><td><strong>Requests</strong></td><td>The page makes normal <code>fetch</code> calls, form posts or htmx requests; a Java handler answers them.</td><td>Apps built like a small website; server-style pages and JSON APIs.</td></tr>
+    <tr><td><strong>Channels</strong></td><td>A named two-way pipe for bytes.</td><td>Large or binary data: images, video frames, files.</td></tr>
+    </tbody>
+</table>
+<p>Start with messages. They are enough for most apps, and the other two are there when you need them.</p>
+
+<h2 id="ui-thread">The UI thread</h2>
+<p>A window system works on one thread, called the <strong>UI thread</strong>. <code>app.run</code> makes the thread that calls it the UI thread. Two rules cover nearly everything:</p>
+<ol>
+    <li><strong>Every method of <code>Application</code> and <code>WebWindow</code> is safe to call from any thread.</strong> Jolt moves the call to the UI thread for you.</li>
+    <li><strong>Never block the UI thread.</strong> Message listeners and the <code>run</code> callback run on it. If one of them waits (a slow query, a network call, <code>.get()</code> on a future), the whole window freezes. Do slow work on another thread and send the answer when it is ready.</li>
+</ol>
+<p>When you need to run something on the UI thread yourself, use <code>app.dispatch(Runnable)</code>, or <code>app.submit(supplier)</code> to get the result back as a future. <code>app.isUiThread()</code> tells you where you are.</p>
+
+<h2 id="trust">Trust</h2>
+<p>Whatever your page can do, it can ask your Java code to do through messages. So every window has a <code>SecurityPolicy</code>: by default the window only shows your own content and origins you list, and only those can send messages to Java. You do not have to configure anything to be safe in the common case; <a th:href="@{/docs/security}">the security page</a> explains the switches.</p>
+
+<h2 id="vocab">Words used in these docs</h2>
+<table>
+    <thead><tr><th scope="col">Term</th><th scope="col">Meaning</th></tr></thead>
+    <tbody>
+    <tr><td>Web view</td><td>The part of the window that draws a web page, supplied by the operating system.</td></tr>
+    <tr><td>Backend</td><td>The Jolt module for one operating system (<code>jolt-win32</code>, <code>jolt-linux</code>).</td></tr>
+    <tr><td>Bridge</td><td>The <code>jolt</code> object in the page together with <code>onMessage</code>/<code>postMessage</code> in Java.</td></tr>
+    <tr><td>Origin</td><td>The scheme, host and port of a page address, such as <code>http://localhost:5173</code>. The security policy trusts origins.</td></tr>
+    <tr><td>Handler</td><td>Java code that answers a request the page makes to your app.</td></tr>
+    </tbody>
+</table>
+<p>Next: <a th:href="@{/docs/messaging}">messaging between Java and the page</a>.</p>
+
+
+</th:block>

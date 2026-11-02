@@ -21,12 +21,18 @@
   function span(c, s) { return '<span class="' + c + '">' + esc(s) + '</span>'; }
 
   function hlCode(src) {
-    var re = /(\/\/[^\n]*|\/\*[\s\S]*?\*\/)|("(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])*'|`(?:\\.|[^`\\])*`)|(\b\d[\d_.]*\b)|(@?[A-Za-z_$][\w$]*)(\s*\()?/g;
+    var re = /(\/\/[^\n]*|\/\*[\s\S]*?\*\/)|("""[\s\S]*?"""|"(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])*'|`(?:\\.|[^`\\])*`)|(\b\d[\d_.]*\b)|(@?[A-Za-z_$][\w$]*)(\s*\()?/g;
     var out = '', last = 0, m;
     while ((m = re.exec(src))) {
       out += esc(src.slice(last, m.index));
       if (m[1]) out += span('c', m[1]);
-      else if (m[2]) out += span('s', m[2]);
+      else if (m[2]) {
+        if (m[2].slice(0, 3) === '"""') {
+          // a Java text block: the quotes are a string, the HTML inside gets markup colours
+          var body = m[2].slice(3, -3);
+          out += span('s', '"""') + (body.indexOf('<') >= 0 ? hlMarkup(body) : span('s', body)) + span('s', '"""');
+        } else out += span('s', m[2]);
+      }
       else if (m[3]) out += span('n', m[3]);
       else if (m[4]) {
         if (KW.test(m[4])) out += span('k', m[4]);

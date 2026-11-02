@@ -1,23 +1,73 @@
 <th:block xmlns:th="http://www.thymeleaf.org" th:fragment="body">
 
-<p>Your page is normal HTML, CSS and JavaScript. The web view is Chromium (WebView2) on Windows and WebKit (WebKitGTK) on Linux, so write for both.</p>
+<p>Your page is normal HTML, CSS and JavaScript. The web view is Chromium (WebView2) on Windows and WebKit (WebKitGTK) on Linux, so write for both and, if you ship on both systems, try your app on both.</p>
+<p>The <code>loadHtml</code> string from the first page is fine for experiments. Real apps keep the page as separate files, and this page shows how to serve them while you develop and when you ship.</p>
 
-<h2 id="development">Development</h2>
-<p>Point the window at your dev server and let it do hot reload:</p>
+<h2 id="files">Put the page in files</h2>
+<p>Create a folder of web files under <code>src/main/resources</code>, called <code>ui</code> here:</p>
+<div class="code" data-lang="text"><pre><code>src/main/
+  java/com/example/app/MyApp.java
+  resources/
+    ui/
+      index.html
+      style.css
+      app.js</code></pre></div>
+<p>Then serve the folder from the jar:</p>
+<div class="code" data-lang="java"><pre><code>window.loadResources(AppResources.classpath("ui"));</code></pre></div>
+<p>Jolt shows <code>ui/index.html</code>. Inside it, use ordinary <strong>relative</strong> links; they just work:</p>
+<div class="code" data-lang="html" data-file="index.html"><pre><code>&lt;link rel="stylesheet" href="style.css"&gt;
+&lt;script type="module" src="app.js"&gt;&lt;/script&gt;</code></pre></div>
+<ul>
+    <li>Separate CSS and JS files, images, fonts and ES modules (<code>import</code>) all work.</li>
+    <li>Use relative URLs (<code>style.css</code>, <code>img/logo.png</code>), not ones starting with a host name. Files are served from the web view itself under an address that is the same on every run (<code>https://jolt.localhost</code> on Windows, <code>jolt://app</code> on Linux), and relative URLs are the way to stay independent of it.</li>
+    <li>Because that address is stable, <code>localStorage</code> and IndexedDB keep their contents between runs.</li>
+    <li>No server and no port are involved. Files are read from your jar and handed to the web view.</li>
+</ul>
+
+<h2 id="development">While you develop</h2>
+<p>You do not want to rebuild a jar to see a CSS change. There are two ways to avoid that.</p>
+<h3>Serve a folder from disk</h3>
+<p>Files are re-read on every request, so reload the page (or restart the window) after you edit:</p>
+<div class="code" data-lang="java"><pre><code>window.loadResources(AppResources.directory(Path.of("src/main/resources/ui")));</code></pre></div>
+<h3>Use your frontend's dev server</h3>
+<p>If you use a tool such as Vite, point the window at its dev server to get hot reload. The server's address is an origin Jolt does not know yet, so trust it first; otherwise the navigation is blocked:</p>
 <div class="code" data-lang="java"><pre><code>window.setSecurity(window.security().withTrustedOrigins("http://localhost:5173"));
 window.loadUrl("http://localhost:5173");</code></pre></div>
-<p>Or serve a folder from disk. Files are re-read on every request:</p>
-<div class="code" data-lang="java"><pre><code>window.loadResources(AppResources.directory(Path.of("ui")));</code></pre></div>
+<p>A convenient pattern is to choose by a system property, so the same code does both:</p>
+<div class="code" data-lang="java"><pre><code>String devUrl = System.getProperty("ui.url");        // run with -Dui.url=http://localhost:5173
+if (devUrl != null) {
+    window.setSecurity(window.security().withTrustedOrigins(devUrl));
+    window.loadUrl(devUrl);
+} else {
+    window.loadResources(AppResources.classpath("ui"));
+}</code></pre></div>
+<div class="callout">PowerShell splits <code>-Dui.url=...</code> at the dot. Put the whole argument in quotes: <code>"-Dui.url=http://localhost:5173"</code>.</div>
 
-<h2 id="release">Release</h2>
+<h2 id="release">For release</h2>
 <p>Put the built page in <code>src/main/resources/ui</code> and serve it from the jar:</p>
 <div class="code" data-lang="java"><pre><code>window.loadResources(AppResources.classpath("ui"));</code></pre></div>
-<p>Separate HTML, CSS and JS files work, as do relative URLs and ES modules. The origin is stable, so <code>localStorage</code> survives restarts. A single self-contained HTML file (Vite with <code>vite-plugin-singlefile</code>) can use <code>loadHtml</code> instead.</p>
+<ul>
+    <li>If you use a bundler such as Vite, make it emit relative asset URLs (in Vite that is <code>base: './'</code>) and send its output folder to <code>src/main/resources/ui</code>.</li>
+    <li>A single self-contained HTML file (Vite with <code>vite-plugin-singlefile</code>) can use <code>loadHtml</code> instead.</li>
+</ul>
 
 <h2 id="framework">Any framework</h2>
-<p>React, Vue, Svelte and htmx all work, because to Jolt the page is just a page. A small typed wrapper around <code>jolt.postMessage</code> (for example a <code>call&lt;T&gt;(method, params)</code> function with one function per Java handler) keeps the rest of the frontend free of the bridge. <a th:href="@{/parsel}">Parsel</a> is a complete app built this way: a Vue page for the interface, with Java behind it for IMAP and SMTP.</p>
+<p>React, Vue, Svelte and htmx all work, because to Jolt the page is just a page. A small typed wrapper around <code>jolt.postMessage</code> (for example a <code>call&lt;T&gt;(method, params)</code> function with one function per Java handler) keeps the rest of the frontend free of the bridge; the <code>call</code> function on the <a th:href="@{/docs/messaging}">messaging page</a> is the starting point. <a th:href="@{/parsel}">Parsel</a> is a complete app built this way: a Vue page for the interface, with Java behind it for IMAP and SMTP.</p>
+
+<h2 id="background">Avoiding the white flash</h2>
+<p>A new window shows its background colour until the page paints. Match your page's colour so there is no white flash on a dark app, and optionally start the window hidden and show it when the page says it is ready:</p>
+<div class="code" data-lang="java"><pre><code>WindowOptions options = WindowOptions.defaults()
+        .withBackgroundColor(0x0F1117)      // same as your page's background
+        .withVisible(false);                // do not show until the page is ready
+WebWindow window = app.createWindow(options);
+window.onMessage(m -&gt; { if (m.equals("ready")) window.show(); });</code></pre></div>
+<div class="code" data-lang="js"><pre><code>// last line of your start-up code
+jolt.postMessage("ready");</code></pre></div>
+<p>If you use the <a th:href="@{/docs/messaging}"><code>Rpc</code> class</a>, you could also call <code>show()</code> from the handler of your first call.</p>
 
 <h2 id="devtools">Developer tools</h2>
-<p><code>WindowOptions.defaults().withDevTools(true)</code>, then right-click and choose Inspect, or call <code>window.openDevTools()</code>.</p>
+<p><code>WindowOptions.defaults().withDevTools(true)</code>, then right-click and choose Inspect, or call <code>window.openDevTools()</code>. You get the console, network and elements panels of the underlying browser. Turn them off for release builds if you do not want users poking around.</p>
+<p>Next: <a th:href="@{/docs/tutorial}">a small app that puts it all together</a>.</p>
+
 
 </th:block>

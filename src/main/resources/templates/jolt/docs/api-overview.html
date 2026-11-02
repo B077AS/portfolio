@@ -1,0 +1,94 @@
+<th:block xmlns:th="http://www.thymeleaf.org" th:fragment="body">
+
+<p>A quick lookup of the main types and calls, with a link to the page that explains each. Everything here is in the package <code>io.github.b077as.jolt</code> unless noted.</p>
+
+<h2 id="app">Application and options</h2>
+<table>
+    <thead><tr><th scope="col">Call</th><th scope="col">What it does</th></tr></thead>
+    <tbody>
+    <tr><td><code>Application.create(AppOptions)</code></td><td>Builds the app on the matching backend.</td></tr>
+    <tr><td><code>AppOptions.of(id)</code></td><td>App id, data folder. <code>withDataDirectory</code>, <code>withQuitWhenLastWindowClosed</code>, <code>withQuietNativeLogs</code>.</td></tr>
+    <tr><td><code>app.run(onStart)</code> / <code>app.quit()</code></td><td>Run the event loop (blocks) / stop it.</td></tr>
+    <tr><td><code>app.createWindow(WindowOptions)</code> / <code>app.windows()</code></td><td>Open a window / list open windows.</td></tr>
+    <tr><td><code>app.dispatch</code>, <code>app.submit</code>, <code>app.isUiThread</code></td><td>Run on the UI thread; check the thread.</td></tr>
+    <tr><td><code>app.openExternal(URI)</code></td><td>Open an http, https or mailto address in the user's program.</td></tr>
+    <tr><td><code>app.notify(Notification)</code></td><td>System notification. <a th:href="@{/docs/notifications}">Notifications</a></td></tr>
+    <tr><td><code>app.isTraySupported()</code>, <code>app.createTray(icon, tooltip)</code>, <code>app.autostart()</code></td><td><a th:href="@{/docs/tray}">Tray and autostart</a></td></tr>
+    <tr><td><code>SingleInstance.acquire(...)</code></td><td>Allow one copy per user. <a th:href="@{/docs/tray}">Tray</a></td></tr>
+    </tbody>
+</table>
+
+<h2 id="window">WebWindow: showing a page</h2>
+<table>
+    <thead><tr><th scope="col">Call</th><th scope="col">What it does</th></tr></thead>
+    <tbody>
+    <tr><td><code>loadHtml(html)</code></td><td>Show an HTML string.</td></tr>
+    <tr><td><code>loadResources(AppResources, [handler], [ResourceOptions])</code></td><td>Show a multi-file page; optional Java request handler. <a th:href="@{/docs/router}">Serving files</a></td></tr>
+    <tr><td><code>AppResources.classpath(base)</code> / <code>directory(path)</code></td><td>Files from the jar / from a folder.</td></tr>
+    <tr><td><code>loadUrl(url)</code></td><td>Show an address (trusted origins only).</td></tr>
+    <tr><td><code>ready()</code></td><td>Future that completes when the web view has started.</td></tr>
+    </tbody>
+</table>
+
+<h2 id="talking">WebWindow: talking to the page</h2>
+<table>
+    <thead><tr><th scope="col">Java</th><th scope="col">Page</th><th scope="col">Notes</th></tr></thead>
+    <tbody>
+    <tr><td><code>window.onMessage(Consumer&lt;String&gt;)</code></td><td><code>jolt.postMessage(text)</code></td><td>Page to Java. <a th:href="@{/docs/messaging}">Messaging</a></td></tr>
+    <tr><td><code>window.postMessage(text)</code></td><td><code>jolt.onMessage(cb)</code></td><td>Java to page.</td></tr>
+    <tr><td><code>window.eval(script)</code></td><td></td><td>Run a script; JSON result as a future.</td></tr>
+    <tr><td><code>window.addInitScript(script)</code></td><td></td><td>Runs before the page's scripts.</td></tr>
+    <tr><td><code>window.openChannel(name, [ChannelOptions])</code></td><td><code>jolt.channel(name)</code></td><td>Binary pipe. <a th:href="@{/docs/channels}">Channels</a></td></tr>
+    <tr><td><code>window.dialogs()</code>, <code>enableSaveAs()</code></td><td><code>jolt.saveAs(...)</code></td><td><a th:href="@{/docs/dialogs}">Dialogs</a></td></tr>
+    <tr><td><code>window.enableNotifications(app)</code></td><td><code>jolt.notify(...)</code></td><td><a th:href="@{/docs/notifications}">Notifications</a></td></tr>
+    <tr><td><code>window.enableOpenWindow(app, opener)</code></td><td><code>jolt.openWindow</code>, <code>jolt.broadcast</code>, <code>jolt.onBroadcast</code></td><td><a th:href="@{/docs/popout-windows}">Pop-out windows</a></td></tr>
+    <tr><td>(frameless windows)</td><td><code>jolt.frame.minimize/toggleMaximize/close</code></td><td><a th:href="@{/docs/window-options}">Window look</a></td></tr>
+    </tbody>
+</table>
+
+<h2 id="control">WebWindow: controlling the window</h2>
+<table>
+    <thead><tr><th scope="col">Call</th><th scope="col">What it does</th></tr></thead>
+    <tbody>
+    <tr><td><code>setTitle</code>, <code>setSize</code>, <code>setIcon</code></td><td>Title, size, icon.</td></tr>
+    <tr><td><code>setTitleBarScheme</code>, <code>setTitleBarColors</code>, <code>setBackgroundColor</code></td><td>Colours.</td></tr>
+    <tr><td><code>show</code>, <code>hide</code>, <code>focus</code>, <code>minimize</code>, <code>maximize</code>, <code>restore</code>, <code>close</code></td><td>State changes.</td></tr>
+    <tr><td><code>isVisible</code>, <code>isFocused</code>, <code>isMinimized</code>, <code>isMaximized</code></td><td>State queries.</td></tr>
+    <tr><td><code>setCloseBehavior(CloseBehavior)</code></td><td><code>CLOSE</code> (default) or <code>HIDE</code>.</td></tr>
+    <tr><td><code>onClosed(Runnable)</code></td><td>Called when the window has closed.</td></tr>
+    <tr><td><code>openDevTools()</code></td><td>Developer tools (create with <code>withDevTools(true)</code>).</td></tr>
+    <tr><td><code>security()</code>, <code>setSecurity(...)</code>, <code>onBlocked(...)</code></td><td><a th:href="@{/docs/security}">Security</a></td></tr>
+    </tbody>
+</table>
+
+<h2 id="options">WindowOptions</h2>
+<p>Immutable; start from <code>WindowOptions.defaults()</code>. Methods: <code>withTitle</code>, <code>withSize</code>, <code>withMinSize</code>, <code>withIcon</code>, <code>withTitleBarScheme</code>, <code>withBackgroundColor</code>, <code>withMaximized</code>, <code>withCentered</code>, <code>withVisible</code>, <code>withFrameless</code>, <code>withOwner</code>, <code>withDevTools</code>, <code>withSecurity</code>. See <a th:href="@{/docs/window-options}">Window look and placement</a>.</p>
+
+<h2 id="requests">Handling page requests</h2>
+<table>
+    <thead><tr><th scope="col">Type</th><th scope="col">Main members</th></tr></thead>
+    <tbody>
+    <tr><td><code>RequestHandler</code></td><td><code>AppResponse handle(AppRequest)</code>; return <code>null</code> to let files answer.</td></tr>
+    <tr><td><code>Router</code></td><td><code>get/post/put/patch/delete(pattern, route)</code>, <code>group</code>, <code>before</code>, <code>onError</code>.</td></tr>
+    <tr><td><code>AppRequest</code></td><td><code>method</code>, <code>path</code>, <code>param</code>, <code>queryParams</code>, <code>form</code>, <code>formValue</code>, <code>bodyText</code>, <code>header</code>, <code>isHtmx</code>, <code>parts</code>, <code>part</code>.</td></tr>
+    <tr><td><code>AppResponse</code></td><td><code>html</code>, <code>text</code>, <code>status</code>, <code>redirect</code>, <code>withStatus</code>, <code>withHeader</code>.</td></tr>
+    <tr><td><code>ResourceOptions</code></td><td><code>withMaxRequestBytes</code> (default 8 MB, max 1 GB), <code>withStartPath</code>.</td></tr>
+    </tbody>
+</table>
+
+<h2 id="more">Other types</h2>
+<table>
+    <thead><tr><th scope="col">Type</th><th scope="col">Used for</th></tr></thead>
+    <tbody>
+    <tr><td><code>SecurityPolicy</code>, <code>BlockedEvent</code></td><td>What pages are trusted. <a th:href="@{/docs/security}">Security</a></td></tr>
+    <tr><td><code>Dialogs</code>, <code>FileDialogOptions</code>, <code>FileFilter</code></td><td>Native file dialogs. <a th:href="@{/docs/dialogs}">Dialogs</a></td></tr>
+    <tr><td><code>Notification</code></td><td>Toasts with click, buttons and reply.</td></tr>
+    <tr><td><code>Tray</code>, <code>TrayMenu</code>, <code>Autostart</code>, <code>CloseBehavior</code></td><td><a th:href="@{/docs/tray}">Tray</a></td></tr>
+    <tr><td><code>BinaryChannel</code>, <code>ChannelOptions</code></td><td><a th:href="@{/docs/channels}">Channels</a></td></tr>
+    <tr><td><code>OpenWindowRequest</code>, <code>WindowOpener</code></td><td><a th:href="@{/docs/popout-windows}">Pop-out windows</a></td></tr>
+    <tr><td><code>io.github.b077as.jolt.credentials.CredentialStore</code></td><td>OS keystore. <a th:href="@{/docs/credentials}">Saving passwords</a></td></tr>
+    </tbody>
+</table>
+
+
+</th:block>

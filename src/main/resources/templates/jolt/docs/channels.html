@@ -1,22 +1,41 @@
 <th:block xmlns:th="http://www.thymeleaf.org" th:fragment="body">
 
-<p>For big or binary data, such as video frames, images and files, open a named two-way channel. No base64 and no JSON. Available since <strong>0.2.3</strong>.</p>
+<p>Messages are text. To send big or binary data, such as video frames, images and files, you could encode it as base64 inside JSON, but that makes it a third larger and costs time on both ends. A <strong>channel</strong> is a named two-way pipe that carries raw bytes instead: no base64 and no JSON. Available since <strong>0.2.3</strong>.</p>
+<p>Reach for a channel when you move more than a few hundred kilobytes, or many frames per second. For everything else, messages are simpler.</p>
 
-<h2 id="open">Open a channel</h2>
-<div class="code" data-lang="java"><pre><code>BinaryChannel frames = window.openChannel("frames");   // open it before the page loads
-frames.onMessage(bytes -> handle(bytes));
-frames.send(ByteBuffer.wrap(pixels));                  // never blocks; returns false if refused</code></pre></div>
-<div class="code" data-lang="js"><pre><code>const frames = jolt.channel("frames");
-frames.onMessage(data => { /* ArrayBuffer */ });
-frames.send(new Uint8Array([1, 2, 3]));</code></pre></div>
+<h2 id="open">1. Open a channel</h2>
+<p>Give the channel a name on the Java side, <strong>before the page loads</strong>, and use the same name in the page:</p>
+<div class="code" data-lang="java"><pre><code>BinaryChannel bytes = window.openChannel("bytes");
+bytes.onOpen(() -&gt; bytes.send(ByteBuffer.wrap(new byte[] {1, 2, 3, 4, 5})));
+bytes.onMessage(data -&gt; System.out.println("Java got " + data.remaining() + " bytes"));
 
-<h2 id="behaviour">Behaviour</h2>
+window.loadResources(AppResources.classpath("ui"));</code></pre></div>
+<div class="code" data-lang="js"><pre><code>const bytes = jolt.channel("bytes");
+bytes.onMessage(data =&gt; {                          // an ArrayBuffer
+  console.log(data.byteLength, new Uint8Array(data));
+  bytes.send(new Uint8Array([9, 9]));              // back to Java
+});</code></pre></div>
+<p>Run it and the page receives the 5 bytes <code>1,2,3,4,5</code> and Java receives the 2 bytes the page sends back. Channel names starting with <code>jolt.</code> are reserved.</p>
+
+<h2 id="behaviour">2. Behaviour</h2>
 <ul>
-    <li>The page connects and reconnects by itself. <code>onOpen</code>, <code>onClose</code> and <code>isOpen()</code> tell you the state.</li>
-    <li><code>ChannelOptions.newestOnly()</code> keeps only the latest message for a slow page, which suits live video. <code>withMaxQueuedBytes</code> bounds the queue.</li>
+    <li>The page connects and reconnects by itself. <code>onOpen</code>, <code>onClose</code> and <code>isOpen()</code> tell you the state. Send from <code>onOpen</code> (as above) when you want data the moment the page is connected.</li>
+    <li><code>send</code> never blocks and returns <code>false</code> if no page is connected, the channel is closed, or the page is too far behind to take more.</li>
     <li>Callbacks run on a thread of their own, not the UI thread.</li>
+    <li>Messages arrive as <code>ByteBuffer</code> in Java and <code>ArrayBuffer</code> in the page, and the page can send an <code>ArrayBuffer</code>, a typed array such as <code>Uint8Array</code>, or a string. You can also send a <code>byte[]</code> directly from Java.</li>
+</ul>
+
+<h2 id="live">3. Live data: keep only the newest</h2>
+<p>If Java produces frames faster than the page can draw them, a queue would grow and the picture would lag further and further behind. Ask for <code>newestOnly</code> and a slow page just skips old frames:</p>
+<div class="code" data-lang="java"><pre><code>BinaryChannel video = window.openChannel("video", ChannelOptions.newestOnly());
+video.send(ByteBuffer.wrap(jpegBytes));        // call as often as you like</code></pre></div>
+<p><code>ChannelOptions.defaults().withMaxQueuedBytes(...)</code> and <code>withMaxMessageBytes(...)</code> set limits for the normal queueing mode (defaults: 16 MB queued, 64 MB per message).</p>
+
+<h2 id="security">4. How it is protected</h2>
+<ul>
     <li>A channel is a WebSocket on <code>127.0.0.1</code>, accepted only from origins your <a th:href="@{/docs/security}">SecurityPolicy</a> trusts and with a per-run secret.</li>
     <li>On Linux, use <code>loadResources</code> (not <code>loadHtml</code>) for pages that open channels.</li>
 </ul>
+
 
 </th:block>

@@ -1,8 +1,17 @@
 <th:block xmlns:th="http://www.thymeleaf.org" th:fragment="body">
 
-<p>The page can call everything you register with <code>onMessage</code>, so each window has a <code>SecurityPolicy</code>. The default, <code>SecurityPolicy.standard()</code>, trusts your own content plus origins you list, and blocks the rest.</p>
+<p>A window's page can call everything you register with <code>onMessage</code>, and can ask for files, windows and permissions. So each window has a <code>SecurityPolicy</code> that decides which pages are trusted. The default, <code>SecurityPolicy.standard()</code>, trusts your own content plus origins you list, and blocks the rest. For most apps that is exactly right and you never touch it.</p>
 
-<h2 id="protections">Protections</h2>
+<h2 id="idea">1. The idea in one minute</h2>
+<ul>
+    <li>An <strong>origin</strong> is the scheme, host and port of an address: <code>http://localhost:5173</code>, <code>https://example.com</code>.</li>
+    <li>Content you show with <code>loadHtml</code> or <code>loadResources</code> is yours and is trusted automatically.</li>
+    <li>Everything else is untrusted: a link to another website, a redirect, a frame, a page opened with <code>loadUrl</code>. It is blocked unless you add its origin to the trusted list.</li>
+    <li>Only trusted pages can send messages to <code>onMessage</code>.</li>
+</ul>
+<p>That keeps the usual accident from happening: a link in some email or a bug sends your window to a web page you did not write, and that page starts calling your Java functions.</p>
+
+<h2 id="protections">2. Protections</h2>
 <table>
     <thead><tr><th scope="col">Protection</th><th scope="col">When on</th><th scope="col">Switch</th></tr></thead>
     <tbody>
@@ -14,15 +23,29 @@
     </tbody>
 </table>
 
-<h2 id="configure">Configure it</h2>
+<h2 id="configure">3. Configure it</h2>
+<p>The two things you will actually do are trust an origin (a dev server, a site you control) and react to blocked links:</p>
 <div class="code" data-lang="java"><pre><code>WindowOptions.defaults().withSecurity(SecurityPolicy.standard().withTrustedOrigins("http://localhost:5173"));
 window.setSecurity(window.security().withLockNavigation(false));       // change it any time
-window.onBlocked(event -> openInSystemBrowser(event.url()));           // called after something was blocked</code></pre></div>
+window.onBlocked(event -&gt; openInSystemBrowser(event.url()));           // called after something was blocked</code></pre></div>
+<p>A common one is a mail or chat app where clicking a link should open the user's browser, not navigate your window:</p>
+<div class="code" data-lang="java"><pre><code>window.onBlocked(event -&gt; {
+    if (event.kind() == BlockedEvent.Kind.NAVIGATION || event.kind() == BlockedEvent.Kind.NEW_WINDOW) {
+        try {
+            app.openExternal(URI.create(event.url()));   // only http, https and mailto are opened
+        } catch (IllegalArgumentException ignored) { }
+    }
+});</code></pre></div>
+<p><code>BlockedEvent.kind()</code> is one of <code>NAVIGATION</code>, <code>NEW_WINDOW</code>, <code>PERMISSION</code> or <code>MESSAGE</code>, and <code>url()</code> says what was blocked.</p>
+
+<h2 id="rules">4. Rules of thumb</h2>
 <ul>
     <li><code>loadUrl</code> to another site is blocked unless you trust its origin.</li>
     <li>Trusting an origin gives that site your handlers. List only sites you control, and still validate every parameter.</li>
     <li>WebView2 reports which frame sent a message; WebKitGTK does not, so on Linux the check uses the top-level page. If you turn the navigation lock off on Linux, keep the bridge out of frames (the default).</li>
     <li>In the page, set user-supplied text with <code>textContent</code>, never <code>innerHTML</code>.</li>
+    <li>In Java handlers, treat parameters as untrusted input: check types and ranges, and never build file paths or commands from them without validation.</li>
 </ul>
+
 
 </th:block>

@@ -1,35 +1,124 @@
 <th:block xmlns:th="http://www.thymeleaf.org" th:fragment="body">
 
-<p><code>loadResources</code> shows a multi-file page and lets Java answer its requests: <code>fetch</code>, forms, htmx <code>hx-get</code> and <code>hx-post</code>, and JSON APIs. Files are served <strong>inside the web view</strong>, with no socket. The origin is <code>https://jolt.localhost</code> on Windows and <code>jolt://app</code> on Linux, so use relative URLs.</p>
+<p>Messages are one way to connect the page to Java. The other is to let the page talk to Java the way a website talks to a server: with <code>fetch</code>, forms, htmx <code>hx-get</code> and <code>hx-post</code> and JSON APIs, answered by a Java handler. If you have built a web app before, this will feel familiar. Files are served <strong>inside the web view</strong>, with no socket. The origin is <code>https://jolt.localhost</code> on Windows and <code>jolt://app</code> on Linux, so use relative URLs.</p>
+<p>You can mix this with messages in the same window, and you can skip it entirely if messages are enough.</p>
 
-<h2 id="handler">A request handler</h2>
-<div class="code" data-lang="java"><pre><code>window.loadResources(AppResources.classpath("ui"), request -> switch (request.path()) {
-    case "/notes" -> AppResponse.html(renderNotes());
-    case "/notes/add" -> {
-        notes.add(request.formValue("text"));
-        yield AppResponse.html(renderNotes());
-    }
-    default -> null;                                  // null: let the files answer
+<h2 id="handler">1. The smallest handler</h2>
+<p>A <code>RequestHandler</code> gets each request the page makes to its own app and returns an <code>AppResponse</code>, or <code>null</code> to let your files answer:</p>
+<div class="code" data-lang="java"><pre><code>window.loadResources(AppResources.classpath("ui"), request -&gt; switch (request.path()) {
+    case "/hello" -&gt; AppResponse.text("Hello from Java");
+    default -&gt; null;                                  // null: let the files answer
 });</code></pre></div>
+<div class="code" data-lang="js"><pre><code>const text = await (await fetch('/hello')).text();    // "Hello from Java"</code></pre></div>
+<p><code>index.html</code>, <code>app.js</code> and the rest of your folder are still served as before; only requests your handler answers reach Java.</p>
 
-<h2 id="router">The Router</h2>
-<p>For more than a few routes use <code>Router</code>, which is a <code>RequestHandler</code>:</p>
-<div class="code" data-lang="java"><pre><code>Router router = Router.create()
-    .get("/notes/{id}", request -> AppResponse.html(pages.note(request.param("id"))))
-    .post("/notes", request -> { notes.add(request.formValue("text")); return AppResponse.redirect("/notes"); })
-    .group("/admin", admin -> admin
-        .before(request -> loggedIn(request) ? null : AppResponse.redirect("/login"))
-        .get("/users", request -> AppResponse.html(pages.users())))
-    .onError((request, error) -> AppResponse.html(pages.error(error)).withStatus(500));
+<h2 id="request">2. What a request contains</h2>
+<table>
+    <thead><tr><th scope="col">Call</th><th scope="col">Gives you</th></tr></thead>
+    <tbody>
+    <tr><td><code>request.method()</code>, <code>request.path()</code></td><td><code>"POST"</code>, <code>"/notes/7"</code></td></tr>
+    <tr><td><code>request.param("id")</code></td><td>A <code>{id}</code> part of a Router pattern (section 4).</td></tr>
+    <tr><td><code>request.queryParams()</code></td><td>The <code>?a=1&amp;b=2</code> part as a map of lists.</td></tr>
+    <tr><td><code>request.formValue("text")</code></td><td>A field of a form post (also reads multipart text fields). <code>request.form()</code> gives all of them.</td></tr>
+    <tr><td><code>request.bodyText()</code></td><td>The body as UTF-8 text, for example a JSON body you parse yourself.</td></tr>
+    <tr><td><code>request.header("Accept")</code></td><td>One header, or <code>null</code>.</td></tr>
+    <tr><td><code>request.isHtmx()</code></td><td>Whether htmx sent it.</td></tr>
+    </tbody>
+</table>
+<p>Everything in a request is input from the page: validate it like you would a web form.</p>
+
+<h2 id="response">3. What you can answer with</h2>
+<table>
+    <thead><tr><th scope="col">Call</th><th scope="col">Result</th></tr></thead>
+    <tbody>
+    <tr><td><code>AppResponse.html(String)</code></td><td>200 with an HTML body (a whole page or a fragment).</td></tr>
+    <tr><td><code>AppResponse.text(String)</code></td><td>200 with plain text.</td></tr>
+    <tr><td><code>AppResponse.status(204)</code></td><td>An empty answer with that status.</td></tr>
+    <tr><td><code>AppResponse.redirect("/notes")</code></td><td>303: the browser then does a <code>GET</code> of that address.</td></tr>
+    <tr><td><code>.withStatus(500)</code>, <code>.withHeader(name, value)</code></td><td>A copy with a different status or one more header.</td></tr>
+    </tbody>
+</table>
+<p>For JSON, build the response with the constructor. This helper is all you need:</p>
+<div class="code" data-lang="java"><pre><code>static AppResponse json(Object value) {
+    return new AppResponse(200, Map.of("Content-Type", "application/json"),
+            new Gson().toJson(value).getBytes(StandardCharsets.UTF_8));
+}</code></pre></div>
+
+<h2 id="router">4. The Router</h2>
+<p>A <code>switch</code> on the path gets awkward fast. <code>Router</code> is a <code>RequestHandler</code> that matches method and path for you:</p>
+<div class="code" data-lang="java"><pre><code>NoteStore store = new NoteStore();         // the class from the tutorial
+
+Router router = Router.create()
+    .get("/api/notes", request -&gt; json(store.list()))
+    .post("/api/notes", request -&gt; json(store.add(request.formValue("text"))))
+    .delete("/api/notes/{id}", request -&gt; {
+        store.remove(Integer.parseInt(request.param("id")));
+        return AppResponse.status(204);
+    })
+    .onError((request, error) -&gt; AppResponse.text("Oops: " + error.getMessage()).withStatus(400));
+
 window.loadResources(AppResources.classpath("ui"), router);</code></pre></div>
+<p>The page then reads like any web app:</p>
+<div class="code" data-lang="js"><pre><code>const notes = await (await fetch('/api/notes')).json();
+
+const response = await fetch('/api/notes', {
+  method: 'POST',
+  body: new URLSearchParams({ text: 'Buy milk' }),
+});
+if (response.ok) console.log(await response.json());       // { id: 1, text: "Buy milk" }
+else console.log(await response.text());                    // "Oops: A note cannot be empty"
+
+await fetch('/api/notes/1', { method: 'DELETE' });           // 204</code></pre></div>
 <ul>
-    <li>Patterns: <code>{id}</code> captures one segment, <code>{*rest}</code> the rest. A plain segment beats <code>{id}</code>, which beats <code>{*rest}</code>.</li>
+    <li>Patterns: <code>{id}</code> captures one segment, <code>{*rest}</code> the rest. A plain segment beats <code>{id}</code>, which beats <code>{*rest}</code>. A route registered twice with the same shape is rejected when you register it.</li>
+    <li>Methods: <code>get</code>, <code>post</code>, <code>put</code>, <code>patch</code>, <code>delete</code>.</li>
     <li>A request no route matches falls through to your files. A wrong method on a known path gets 405 with <code>Allow</code>.</li>
-    <li>Handlers run on worker threads. An exception becomes a bare 500 and the details go to the log, never to the page.</li>
-    <li>Escape anything user-supplied before putting it in HTML, and keep <code>GET</code> handlers free of side effects.</li>
+    <li><code>onError</code> turns an exception from a route into a response. Without it an exception becomes a bare 500 and the details go to the log, never to the page.</li>
+    <li>Register routes before <code>loadResources</code>.</li>
 </ul>
 
-<h2 id="uploads">Uploads</h2>
+<h2 id="forms">5. Forms and server-rendered pages</h2>
+<p>You do not need JavaScript at all. A route can build the whole page as HTML, and a plain form can post to another route. After a post, answer with a redirect so a reload does not send the form again:</p>
+<div class="code" data-lang="java"><pre><code>Router router = Router.create()
+    .get("/notes", request -&gt; {
+        String items = store.list().stream()
+                .map(n -&gt; "&lt;li&gt;" + escape(n.text()) + "&lt;/li&gt;")
+                .collect(Collectors.joining());
+        return AppResponse.html("""
+                &lt;!doctype html&gt;&lt;meta charset="utf-8"&gt;
+                &lt;ul&gt;%s&lt;/ul&gt;
+                &lt;form method="post" action="/notes"&gt;&lt;input name="text"&gt;&lt;button&gt;Add&lt;/button&gt;&lt;/form&gt;
+                """.formatted(items));
+    })
+    .post("/notes", request -&gt; {
+        store.add(request.formValue("text"));
+        return AppResponse.redirect("/notes");
+    });
+
+window.loadResources(AppResources.classpath("ui"), router,
+        ResourceOptions.defaults().withStartPath("/notes"));       // open on /notes instead of index.html</code></pre></div>
+<div class="callout"><strong>Escape user text</strong> before putting it into HTML; Jolt cannot do it for you. Here <code>escape</code> replaces <code>&amp;</code>, <code>&lt;</code>, <code>&gt;</code> and <code>"</code>. A note typed as <code>&lt;b&gt;Milk&lt;/b&gt; &amp; eggs</code> then shows as typed instead of being treated as markup. Template engines such as Thymeleaf or JTE do this automatically.</div>
+<p>With htmx the idea is the same, but the answer is a fragment that htmx swaps into the page: <code>hx-post="/notes"</code> on a form, a route that returns <code>AppResponse.html(renderList())</code>. <code>request.isHtmx()</code> tells you if it was htmx asking, so one route can answer a full page or a fragment. Add the htmx script to your <code>ui</code> folder yourself; Jolt does not depend on it.</p>
+
+<h2 id="filters">6. Groups, filters and errors</h2>
+<p>When parts of the app need a check before they run, such as a login, use a group with a filter:</p>
+<div class="code" data-lang="java"><pre><code>Router router = Router.create()
+    .get("/notes/{id}", request -&gt; AppResponse.html(pages.note(request.param("id"))))
+    .post("/notes", request -&gt; { notes.add(request.formValue("text")); return AppResponse.redirect("/notes"); })
+    .group("/admin", admin -&gt; admin
+        .before(request -&gt; loggedIn(request) ? null : AppResponse.redirect("/login"))
+        .get("/users", request -&gt; AppResponse.html(pages.users())))
+    .onError((request, error) -&gt; AppResponse.html(pages.error(error)).withStatus(500));</code></pre></div>
+<p>A <code>before</code> filter returns <code>null</code> to let the request go on, or a response to answer it right there.</p>
+
+<h2 id="threads">7. Threads and safety</h2>
+<ul>
+    <li>Handlers run on <strong>worker threads</strong>, possibly several at once. Keep shared data thread-safe, and use <code>app.dispatch(...)</code> if a handler must touch a window.</li>
+    <li>Keep <code>GET</code> handlers free of side effects. Changes belong in <code>POST</code>, <code>PUT</code>, <code>PATCH</code> or <code>DELETE</code>.</li>
+    <li>You do not need CSRF tokens on this transport; it is only reachable from inside your window. (The loopback fallback below adds them for you.)</li>
+</ul>
+
+<h2 id="uploads">8. Uploads</h2>
 <p><code>multipart/form-data</code> works with plain forms, <code>fetch</code> and htmx. Read it with <code>request.parts()</code> or <code>request.part(name)</code>:</p>
 <div class="code" data-lang="java"><pre><code>AppRequest.Part file = request.part("document");
 if (file != null &amp;&amp; !file.filename().isEmpty()) {
@@ -37,7 +126,9 @@ if (file != null &amp;&amp; !file.filename().isEmpty()) {
 }</code></pre></div>
 <p>Treat uploaded files as untrusted: <code>filename()</code> and <code>contentType()</code> come from the user's machine. Bodies are held in memory, 8 MB by default (413 above that). Raise the limit with <code>ResourceOptions.defaults().withMaxRequestBytes(...)</code>, up to 1 GB.</p>
 
-<h2 id="loopback">Loopback fallback</h2>
-<p>The in-process transport needs WebKitGTK 2.40 or newer on Linux. Older systems fall back automatically to a guarded server on <code>127.0.0.1</code> with a per-run CSRF token and <code>Origin</code>, <code>Host</code> and <code>Sec-Fetch-Site</code> checks. You can also ask for it, for example to open the app in a normal browser: <code>window.loadResources(resources, handler, 48123)</code>.</p>
+<h2 id="loopback">9. Loopback fallback</h2>
+<p>The in-process transport needs WebKitGTK 2.40 or newer on Linux. Older systems fall back automatically to a guarded server on <code>127.0.0.1</code> with a per-run CSRF token and <code>Origin</code>, <code>Host</code> and <code>Sec-Fetch-Site</code> checks. You can also ask for it, for example to open the app in a normal browser: <code>window.loadResources(resources, handler, 48123)</code>. A fixed port also keeps <code>localStorage</code> between runs.</p>
+<p>Next: <a th:href="@{/docs/channels}">binary channels</a> for large data.</p>
+
 
 </th:block>

@@ -1,29 +1,48 @@
 <th:block xmlns:th="http://www.thymeleaf.org" th:fragment="body">
 
-<p>The operating system draws the icon and title bar, so you set them from Java, at creation or later.</p>
+<p>The operating system draws the window's frame, title bar and icon, so you set them from Java, either when you create the window or later. This page goes from the options every app sets, to controlling where and when the window appears, to drawing your own title bar.</p>
 
-<h2 id="options">Window options</h2>
-<div class="code" data-lang="java"><pre><code>WindowOptions options = WindowOptions.defaults()
+<h2 id="basics">1. The basics</h2>
+<p><code>WindowOptions</code> is immutable: start from <code>defaults()</code> (title "Jolt", 1024 by 720) and chain <code>with...</code> calls, each of which returns a changed copy.</p>
+<div class="code" data-lang="java"><pre><code>WebWindow window = app.createWindow(WindowOptions.defaults()
+        .withTitle("Parsel")
         .withSize(1200, 780)
-        .withMinSize(600, 400)                   // smallest size the user can drag to
-        .withIcon(iconBytes)                     // multi-size .ico (best) or PNG
-        .withTitleBarScheme(ColorScheme.DARK)
-        .withBackgroundColor(0x0F1117)           // behind the page until it paints: no white flash
+        .withMinSize(600, 400)               // smallest size the user can drag to
+        .withIcon(iconBytes));               // multi-size .ico (best) or PNG</code></pre></div>
+<p>Most of these can also be changed on a live window: <code>window.setTitle(...)</code>, <code>setSize(w, h)</code>, <code>setIcon(bytes)</code>.</p>
+<p>Load the icon from your resources, for example:</p>
+<div class="code" data-lang="java"><pre><code>byte[] iconBytes;
+try (InputStream in = MyApp.class.getResourceAsStream("/icon.ico")) {
+    iconBytes = in.readAllBytes();
+}</code></pre></div>
+<ul>
+    <li>Use an <code>.ico</code> with 16, 24, 32, 48 and 256 px images: Windows picks the matching size instead of scaling one bitmap. On Linux the largest image is used.</li>
+</ul>
+
+<h2 id="options">2. Colours and theme</h2>
+<p>If your app is dark, tell the window, so its title bar matches and nothing flashes white while the page loads:</p>
+<div class="code" data-lang="java"><pre><code>WindowOptions options = WindowOptions.defaults()
+        .withTitleBarScheme(ColorScheme.DARK)    // or LIGHT
+        .withBackgroundColor(0x0F1117);          // behind the page until it paints: no white flash
+
+window.setTitleBarColors(0xF4F5FA, 0x1A1D29);    // exact colours (background, text), Windows 11 only</code></pre></div>
+
+<h2 id="placement">3. Where and when the window appears</h2>
+<div class="code" data-lang="java"><pre><code>WindowOptions options = WindowOptions.defaults()
         .withMaximized(false)
         .withCentered(true)                      // the default
         .withVisible(false);                     // call window.show() when the page is ready
 
-window.setTitleBarColors(0xF4F5FA, 0x1A1D29);    // exact colours, Windows 11 only
-window.maximize(); window.restore(); window.isMaximized();</code></pre></div>
+window.maximize(); window.restore(); window.isMaximized();
+window.hide(); window.show(); window.minimize(); window.isMinimized();</code></pre></div>
 <ul>
-    <li>Use an <code>.ico</code> with 16, 24, 32, 48 and 256 px images: Windows picks the matching size instead of scaling one bitmap. On Linux the largest image is used.</li>
-    <li>Start hidden and call <code>show()</code> when the page sends "ready", so the window appears with its content already drawn.</li>
+    <li>Start hidden and call <code>show()</code> when the page sends "ready", so the window appears with its content already drawn (see <a th:href="@{/docs/frontend}">Building the frontend</a>).</li>
     <li>On Wayland the compositor decides placement, so <code>withCentered</code> is ignored and the icon comes from the app's <code>.desktop</code> file. Jolt names the process after your app id, which is what lets the compositor find it.</li>
     <li><code>AppOptions.of(id).withQuietNativeLogs(true)</code> hides GTK's known harmless warnings on Linux.</li>
 </ul>
 
-<h2 id="frameless">Frameless windows</h2>
-<p>Available since <strong>0.3.0</strong>. <code>WindowOptions.defaults().withFrameless(true)</code> removes the operating system's title bar and border, so the page draws its own:</p>
+<h2 id="frameless">4. Frameless windows</h2>
+<p>Available since <strong>0.3.0</strong>. <code>WindowOptions.defaults().withFrameless(true)</code> removes the operating system's title bar and border, so the page draws its own. That gives you full control of the look, at the price of providing the title bar's behaviour yourself:</p>
 <div class="code" data-lang="html"><pre><code>&lt;header data-jolt-drag&gt;                       &lt;!-- drag here to move the window; double-click maximizes or restores --&gt;
   &lt;span&gt;Parsel&lt;/span&gt;
   &lt;button onclick="jolt.frame.minimize()"&gt;–&lt;/button&gt;
@@ -36,6 +55,8 @@ window.maximize(); window.restore(); window.isMaximized();</code></pre></div>
     <li><code>jolt.frame.close()</code> closes the window as the close button would, so <code>setCloseBehavior(HIDE)</code> applies to it too.</li>
     <li>On Windows the window keeps its sizing frame, which lets Windows draw the shadow and snap it (Win+arrows). Linux snaps as your window manager does.</li>
     <li>Frame commands only work on windows created <code>frameless</code>, and only for pages the <a th:href="@{/docs/security}">SecurityPolicy</a> trusts.</li>
+    <li>This works with <code>loadHtml</code> and <code>loadResources</code> alike.</li>
 </ul>
+
 
 </th:block>

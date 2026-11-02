@@ -1,22 +1,41 @@
 <th:block xmlns:th="http://www.thymeleaf.org" th:fragment="body">
 
-<p>Show a toast from Java. It uses WinRT on Windows and the desktop's notification service on Linux. Available since <strong>0.3.0</strong>.</p>
+<p>A notification is a "toast" the system shows in a corner of the screen, even when your window is hidden or in the background. It uses WinRT on Windows and the desktop's notification service on Linux. Available since <strong>0.3.0</strong>.</p>
 
-<h2 id="java">From Java</h2>
+<h2 id="first">1. Your first notification</h2>
+<p>One call, from anywhere in your code:</p>
+<div class="code" data-lang="java"><pre><code>app.notify(Notification.of("Export finished", "report.pdf is ready"));</code></pre></div>
+<p>The title is required, the body is optional. Both have length limits (256 and 1024 characters).</p>
+
+<h2 id="java">2. Reacting to the user</h2>
+<p>A notification can do something when the user clicks it, offer buttons, and even include a text field:</p>
 <div class="code" data-lang="java"><pre><code>app.notify(Notification.of("Export finished", "report.pdf is ready")
-        .withOnClick(() -> window.focus())
-        .withButton("Open", () -> open())               // up to 5 buttons
-        .withReply("Send", "Reply", text -> send(text)))  // a text field: Windows only
-    .thenAccept(shown -> { /* false: the system did not show it */ });</code></pre></div>
-<p>Callbacks run on the UI thread while the app runs. To skip a toast while the user is already in your window, check <code>window.isFocused()</code> (since 0.3.1).</p>
+        .withOnClick(() -&gt; window.focus())
+        .withButton("Open", () -&gt; open())               // up to 5 buttons
+        .withReply("Send", "Reply", text -&gt; send(text)))  // a text field: Windows only
+    .thenAccept(shown -&gt; { /* false: the system did not show it */ });</code></pre></div>
+<ul>
+    <li><code>withOnClick</code> runs when the user clicks the notification itself. Bringing your window to the front with <code>window.focus()</code> is the usual answer.</li>
+    <li><code>withButton(label, action)</code> adds a button, up to 5.</li>
+    <li><code>withReply(buttonLabel, placeholder, handler)</code> adds a text box with a send button; the handler gets the text. Windows only.</li>
+    <li>The returned future says whether the system showed the notification.</li>
+</ul>
+<p>Callbacks run on the UI thread while the app runs.</p>
 
-<h2 id="platforms">Platform notes</h2>
+<h2 id="when">3. Only when it helps</h2>
+<p>If the user is already looking at your window, a toast is noise. Check <code>window.isFocused()</code> (since 0.3.1):</p>
+<div class="code" data-lang="java"><pre><code>if (!window.isFocused()) {
+    app.notify(Notification.of("New message", "Ada: lunch at noon?").withOnClick(window::focus));
+}</code></pre></div>
+
+<h2 id="platforms">4. Platform notes</h2>
 <ul>
     <li>On Windows the first call registers your <code>appId</code> as the display name under <code>HKCU\Software\Classes\AppUserModelId</code> (nothing is installed). The future is <code>false</code> if the user turned notifications off.</li>
     <li>On Linux the future is <code>false</code> when there is no notification service.</li>
 </ul>
+<p>Treat <code>false</code> as "the user will not see it", and show the information in your own window as well if it matters.</p>
 
-<h2 id="page">From the page</h2>
+<h2 id="page">5. From the page</h2>
 <p>To let trusted pages do it, call <code>window.enableNotifications(app)</code> before the page loads, then:</p>
 <div class="code" data-lang="js"><pre><code>await jolt.notify(title, body, {
   onclick,
@@ -24,5 +43,6 @@
   reply: { label, placeholder, onreply }
 });</code></pre></div>
 <p>At most 5 notifications per 10 seconds per window.</p>
+
 
 </th:block>
