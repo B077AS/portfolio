@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{portfolio/layouts/layout}">
+<head>
+    <link rel="stylesheet" th:href="@{/css/privacy.css}" th:fragment="styles"/>
+</head>
+<body>
+<div layout:fragment="content">
+    <article class="legal">
+        <p class="eyebrow">Privacy</p>
+        <h1>Privacy notice</h1>
+        <p class="legal-lede">
+            This site has no accounts, no analytics, no advertising and no third-party trackers. The only way it
+            receives personal data from you is the contact form.
+        </p>
+
+        <h2>The contact form</h2>
+        <p>
+            If you send a message, I receive your name, your email address and the message text. I use them only to
+            read and reply to you. The message reaches me as an email, and I keep it as long as the conversation
+            needs it, then delete it on request or when it is no longer useful. I do not sell, share or use it for
+            marketing.
+        </p>
+        <p>
+            You can ask me to see, correct or delete what I hold about you at any time by writing to
+            <a href="mailto:contact@williamsolari.com">contact@williamsolari.com</a>.
+        </p>
+
+        <h2>Spam protection</h2>
+        <p>
+            To limit abuse, the form is rate limited per IP address and has a hidden field that catches bots. The
+            rate limiter keeps IP addresses in the server's memory only, for up to an hour, and never writes them to
+            a database. If the hidden field is triggered, the IP address may appear in a server log.
+        </p>
+
+        <h2>Cookies and local storage</h2>
+        <p>
+            The site sets one cookie, <code>XSRF-TOKEN</code>, a security token that protects the contact form from
+            forged requests. It identifies no one and is not used for tracking. Because it is strictly necessary, no
+            consent banner is shown. Nothing else is stored in your browser.
+        </p>
+
+        <h2>Third parties</h2>
+        <p>
+            Fonts and icons are served from this site, so your browser makes no requests to Google or other font
+            providers. Links to LinkedIn and GitHub leave this site, and those services have their own policies.
+            Like any web server, the hosting infrastructure may keep standard access logs (IP address, time,
+            requested page) for security and troubleshooting.
+        </p>
+
+        <h2>Contact</h2>
+        <p>
+            Questions about this notice: <a href="mailto:contact@williamsolari.com">contact@williamsolari.com</a>.
+            Last updated: 1 November 2026.
+        </p>
+    </article>
+</div>
+</body>
+</html>

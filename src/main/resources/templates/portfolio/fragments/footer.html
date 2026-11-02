@@ -17,6 +17,6 @@
             </a>
         </div>
 
-        <p class="footer-copy" th:text="'© ' + ${#calendars.format(#calendars.createNow(), 'yyyy')} + ' William Solari'">© 2026 William Solari</p>
+        <p class="footer-copy"><span th:text="'© ' + ${#calendars.format(#calendars.createNow(), 'yyyy')} + ' William Solari'">© 2026 William Solari</span> · <a th:href="@{/privacy}">Privacy</a></p>
     </div>
 </footer>

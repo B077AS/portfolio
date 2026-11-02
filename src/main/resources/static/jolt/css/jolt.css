@@ -13,6 +13,24 @@
   --b: #ff8a0f;
   --ok: #5fbf8a;
   --code: #0f1013;
+  --on-accent: #1a1209;
+  --a-hover: #c97a30;
+  --code-ink: #ffb08a;
+  --pre-ink: #cfcdca;
+  --doc-ink: #c3c1be;
+  --callout-ink: #d8d4cf;
+  --link-hover: #ffc27a;
+  --syn-k: #ff8a5c;
+  --syn-s: #9ccf8f;
+  --syn-c: #6b6e76;
+  --syn-f: #8fb8ff;
+  --syn-n: #e7c37a;
+  --plate-top: #15171c;
+  --plate-l: #101216;
+  --plate-r: #0c0d10;
+  --plate-hover: #1a1d23;
+  --plate-on: #1c1711;
+  --mark: #14161a;
   --sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
   --mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
 }
@@ -116,6 +134,70 @@ pre::-webkit-scrollbar-corner {
   --raised: #111215;
 }
 
+/* light theme: warm paper greys, orange darkened so text and links keep contrast */
+html[data-theme="light"] {
+  --bg: #faf8f5;
+  --bg2: #f3f0ec;
+  --panel: #f1ede8;
+  --line: #e2ddd6;
+  --border-strong: #cdc6bc;
+  --soft: #ece8e2;
+  --text: #1d1b19;
+  --dim: #5c5a57;
+  --faint: #7b7873;
+  --a: #c2610f;
+  --b: #cc5f00;
+  --ok: #2f8a5c;
+  --code: #f4f1ec;
+  --raised: #ffffff;
+  --on-accent: #ffffff;
+  --a-hover: #a9520a;
+  --code-ink: #a8420f;
+  --pre-ink: #3a3733;
+  --doc-ink: #3f3c38;
+  --callout-ink: #2d2a27;
+  --link-hover: #8f4300;
+  --syn-k: #c2410c;
+  --syn-s: #2f7d3a;
+  --syn-c: #8a867f;
+  --syn-f: #2a62c4;
+  --syn-n: #9a6a00;
+  --plate-top: #ffffff;
+  --plate-l: #ece8e2;
+  --plate-r: #e2ddd6;
+  --plate-hover: #fff7ef;
+  --plate-on: #fff1e2;
+  --mark: #ece7e0;
+  color-scheme: light;
+}
+.hero-mark path {
+  stroke: var(--mark);
+}
+.theme-toggle {
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--faint);
+  background: none;
+  border: 1px solid transparent;
+  cursor: pointer;
+  font-size: 19px;
+}
+.theme-toggle:hover {
+  color: var(--text);
+}
+.theme-toggle .mdi-weather-night {
+  display: none;
+}
+html[data-theme="light"] .theme-toggle .mdi-weather-night {
+  display: inline-block;
+}
+html[data-theme="light"] .theme-toggle .mdi-white-balance-sunny {
+  display: none;
+}
+
 /* navbar + footer: same structure as komm-hub (edge to edge, links centered on the bar) */
 nav {
   flex-shrink: 0;
@@ -199,10 +281,10 @@ nav .right {
 }
 .btn.primary {
   background: var(--a);
-  color: #1a1209;
+  color: var(--on-accent);
 }
 .btn.primary:hover {
-  background: #c97a30;
+  background: var(--a-hover);
 }
 .btn.sm {
   padding: 5px 12px;
@@ -326,6 +408,15 @@ h2.t {
   );
   mask-image: linear-gradient(to bottom, #000 0, #000 35%, transparent 100%);
 }
+html[data-theme="light"] .hero::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28'%3E%3Ccircle cx='1' cy='1' r='1' fill='%23d9d3ca'/%3E%3C/svg%3E");
+}
+/* the J watermark sits behind the stack on wide screens; once the stack grows over it, drop it (also hidden in the one-column hero) */
+@media (max-width: 1279px) {
+  .hero-mark {
+    display: none;
+  }
+}
 .hero-mark {
   position: absolute;
   right: -90px;
@@ -376,7 +467,7 @@ h2.t {
 }
 .layer-info code {
   font: 400 12.5px var(--mono);
-  color: #ffb08a;
+  color: var(--code-ink);
 }
 #stack {
   width: 100%;
@@ -396,54 +487,56 @@ h2.t {
   transform: translateY(-14px);
 }
 #stack .top {
-  fill: #15171c;
-  stroke: #38373f;
+  fill: var(--plate-top);
+  stroke: var(--border-strong);
   stroke-width: 1.5;
 }
 #stack .sl {
-  fill: #101216;
-  stroke: #38373f;
+  fill: var(--plate-l);
+  stroke: var(--border-strong);
   stroke-width: 1.5;
 }
 #stack .sr {
-  fill: #0c0d10;
-  stroke: #38373f;
+  fill: var(--plate-r);
+  stroke: var(--border-strong);
   stroke-width: 1.5;
 }
 #stack .plate:hover .top,
 #stack .plate:focus-visible .top {
-  fill: #1a1d23;
+  fill: var(--plate-hover);
 }
 #stack .plate.on .top {
-  fill: #1c1711;
-  stroke: #ff8a0f;
+  fill: var(--plate-on);
+  stroke: var(--b);
 }
 #stack .plate.on .sl,
 #stack .plate.on .sr {
-  stroke: #ff8a0f;
+  stroke: var(--b);
 }
 #stack .tag {
   font: 500 11px "IBM Plex Mono", monospace;
   letter-spacing: 0.12em;
-  fill: #6b6a73;
+  fill: var(--faint);
 }
 #stack .ttl {
   font: 600 19px "IBM Plex Sans", sans-serif;
-  fill: #e9e7e4;
+  fill: var(--text);
 }
 #stack .plate.on .tag {
-  fill: #ff8a0f;
+  fill: var(--b);
 }
 #stack .wire {
-  stroke: #38373f;
+  stroke: var(--border-strong);
   stroke-width: 1.2;
   stroke-dasharray: 3 4;
   fill: none;
 }
 #stack .wl {
   font: 400 11px "IBM Plex Mono", monospace;
-  fill: #6b6a73;
+  fill: var(--faint);
 }
+/* the dotted wires stay still. Their ends reach 2px into the plates (the plates are drawn on top), so the plate that lifts
+   14px keeps touching them and no gap opens */
 .cap {
   display: flex;
   justify-content: space-between;
@@ -464,24 +557,24 @@ h2.t {
   margin: 0;
   padding: 16px 18px;
   font: 400 13px/1.75 var(--mono);
-  color: #cfcdca;
+  color: var(--pre-ink);
   overflow: auto;
   tab-size: 2;
 }
 .k {
-  color: #ff8a5c;
+  color: var(--syn-k);
 }
 .s {
-  color: #9ccf8f;
+  color: var(--syn-s);
 }
 .c {
-  color: #6b6e76;
+  color: var(--syn-c);
 }
 .f {
-  color: #8fb8ff;
+  color: var(--syn-f);
 }
 .n {
-  color: #e7c37a;
+  color: var(--syn-n);
 }
 .copy {
   font: 500 11.5px var(--sans);
@@ -685,7 +778,7 @@ th.jc {
 }
 .doc p,
 .doc li {
-  color: #c3c1be;
+  color: var(--doc-ink);
 }
 .doc p {
   margin: 10px 0;
@@ -696,14 +789,14 @@ code.i {
   border: 1px solid var(--line);
   padding: 1px 6px;
   border-radius: 3px;
-  color: #ffb08a;
+  color: var(--code-ink);
 }
 .callout {
   border-left: 3px solid var(--b);
   background: rgba(255, 138, 15, 0.07);
   padding: 12px 16px;
   margin: 18px 0;
-  color: #d8d4cf;
+  color: var(--callout-ink);
   font-size: 15px;
 }
 
@@ -720,7 +813,7 @@ code.i {
   left: -9999px;
   top: 0;
   background: var(--b);
-  color: #1a1209;
+  color: var(--on-accent);
   padding: 8px 14px;
   z-index: 50;
 }
@@ -865,7 +958,7 @@ nav .links a[aria-current="page"] {
 }
 .doc ul,
 .doc ol {
-  color: #c3c1be;
+  color: var(--doc-ink);
   padding-left: 22px;
   margin: 10px 0;
 }
@@ -901,7 +994,7 @@ nav .links a[aria-current="page"] {
   border: 1px solid var(--line);
   padding: 1px 6px;
   border-radius: 3px;
-  color: #ffb08a;
+  color: var(--code-ink);
 }
 .since {
   font: 500 12px var(--mono);
@@ -1261,8 +1354,10 @@ nav .links a[aria-current="page"] {
   .hero > .wrap {
     grid-template-columns: minmax(0, 1fr);
   }
-  .hero-mark {
-    display: none; /* the J watermark only works beside the two-column hero */
+  /* one column: text and drawing share the same centred 560px column, so their left edges line up */
+  .hero-head {
+    width: 100%;
+    margin: 0 auto;
   }
   #stack {
     max-height: none;
@@ -1482,8 +1577,8 @@ tbody th {
   transition: transform 0.15s;
 }
 .textlink:hover {
-  color: #ffc27a;
-  border-bottom-color: #ffc27a;
+  color: var(--link-hover);
+  border-bottom-color: var(--link-hover);
 }
 .textlink:hover .mdi {
   transform: translateX(5px);
@@ -1601,7 +1696,7 @@ tbody th {
   color: var(--b);
 }
 .doc .sec h3.k-changed {
-  color: #8fb4ff;
+  color: var(--syn-f);
 }
 .sec ul {
   margin: 6px 0 !important;

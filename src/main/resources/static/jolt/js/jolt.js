@@ -5,6 +5,16 @@
   var $ = function (s, r) { return (r || document).querySelector(s); };
   var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
 
+  /* ---------- theme switch (the early script in the layout already set data-theme) ---------- */
+  var themeBtn = $('#theme-toggle');
+  if (themeBtn) themeBtn.addEventListener('click', function () {
+    var next = document.documentElement.dataset.theme === 'light' ? 'dark' : 'light';
+    document.documentElement.dataset.theme = next;
+    try { localStorage.setItem('jolt-theme', next); } catch (e) {}
+    var m = $('meta[name="theme-color"]');
+    if (m) m.setAttribute('content', next === 'light' ? '#faf8f5' : '#0c0d10');
+  });
+
   /* ---------- tiny syntax highlighter (java, js, html, bash) ---------- */
   var KW = /^(abstract|assert|async|await|boolean|break|byte|case|catch|char|class|const|continue|default|do|double|else|enum|extends|final|finally|float|for|function|if|implements|import|instanceof|int|interface|let|long|new|null|of|package|private|protected|public|record|return|short|static|super|switch|this|throw|throws|try|typeof|var|void|while|yield|true|false)$/;
   function esc(s) { return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }

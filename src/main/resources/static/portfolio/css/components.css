@@ -362,3 +362,20 @@
         padding-top: 0;
     }
 }
+
+.form-note {
+    margin-top: 0.9rem;
+    font-size: 0.82rem;
+    color: var(--color-text-dim);
+}
+
+.form-note a,
+.footer-copy a {
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.form-note a:hover,
+.footer-copy a:hover {
+    color: var(--color-accent);
+}
