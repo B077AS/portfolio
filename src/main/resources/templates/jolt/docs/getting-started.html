@@ -26,7 +26,7 @@
 
   &lt;properties&gt;
     &lt;maven.compiler.release&gt;25&lt;/maven.compiler.release&gt;
-    &lt;jolt.version&gt;<span th:text="${site.version}">0.3.2</span>&lt;/jolt.version&gt;
+    &lt;jolt.version&gt;<span th:text="${site.version}">0.4.1</span>&lt;/jolt.version&gt;
   &lt;/properties&gt;
 
   &lt;dependencies&gt;
@@ -48,9 +48,9 @@
   &lt;/dependencies&gt;
 &lt;/project&gt;</code></pre></div>
 <p>Gradle:</p>
-<div class="code" data-lang="java" data-file="build.gradle.kts"><pre><code>implementation("io.github.b077as:jolt-core:<span th:text="${site.version}">0.3.2</span>")
-implementation("io.github.b077as:jolt-win32:<span th:text="${site.version}">0.3.2</span>")
-implementation("io.github.b077as:jolt-linux:<span th:text="${site.version}">0.3.2</span>")</code></pre></div>
+<div class="code" data-lang="java" data-file="build.gradle.kts"><pre><code>implementation("io.github.b077as:jolt-core:<span th:text="${site.version}">0.4.1</span>")
+implementation("io.github.b077as:jolt-win32:<span th:text="${site.version}">0.4.1</span>")
+implementation("io.github.b077as:jolt-linux:<span th:text="${site.version}">0.4.1</span>")</code></pre></div>
 <p>What each one is:</p>
 <ul>
     <li><code>jolt-core</code> is the API you write code against: <code>Application</code>, <code>WebWindow</code> and friends.</li>

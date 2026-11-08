@@ -1,0 +1,94 @@
+<th:block xmlns:th="http://www.thymeleaf.org" th:fragment="body">
+
+<p>Available since <strong>0.4.1</strong>. Users expect to drop a picture onto an avatar, attach files by dragging them into a message, or drag an attachment out onto the desktop. A web page is never told where a file lives, so on its own a dropped file would be a name and some bytes. Jolt gives the <strong>path</strong> to your Java code instead. This page goes from the simplest drop to several drop areas, then to dragging files out, and ends with how Jolt keeps a page from naming files it should not touch.</p>
+
+<h2 id="drop">1. Drop files onto the window</h2>
+<p>Register a listener with <code>onFileDrop</code>. It receives a <code>FileDrop</code> with the absolute local paths of everything that was dropped, files and folders alike:</p>
+<div class="code" data-lang="java"><pre><code>WebWindow window = app.createWindow(WindowOptions.defaults().withTitle("Importer"));
+window.onFileDrop(drop -&gt; {                      // UI thread. Register before the page loads.
+    for (Path path : drop.files()) {
+        System.out.println("Dropped " + path);
+    }
+});
+window.loadResources(AppResources.classpath("ui"));</code></pre></div>
+<ul>
+    <li>The listener runs on the <strong>UI thread</strong>. For a big import, hand the paths to another thread.</li>
+    <li>Once <code>onFileDrop</code> is registered, the web view <strong>never navigates to a dropped file</strong>. Without it, dropping a PDF on the window would replace your app with the PDF.</li>
+    <li>The page's own <code>drop</code> event handlers still run, so the page can show a preview with <code>FileReader</code> while Java gets the path.</li>
+</ul>
+
+<h2 id="feedback">2. Show where the files will land</h2>
+<p>While files are dragged over the window, Jolt sets attributes you can style:</p>
+<div class="code" data-lang="html"><pre><code>&lt;style&gt;
+  html[data-jolt-drop-active] body { cursor: copy; }   /* files are being dragged over the window */
+&lt;/style&gt;</code></pre></div>
+<ul>
+    <li><code>data-jolt-drop-active</code> is on <code>&lt;html&gt;</code> for as long as a file drag is over the page.</li>
+    <li><code>data-jolt-drop-over</code> is on the drop area under the pointer (next section).</li>
+</ul>
+
+<h2 id="zones">3. Several drop areas</h2>
+<p>Mark an element with <code>data-jolt-drop="name"</code> and the listener learns which one the files landed on. One window can then handle an avatar, an attachment tray and an import area differently:</p>
+<div class="code" data-lang="html"><pre><code>&lt;div class="avatar" data-jolt-drop="avatar"&gt;Drop a picture here&lt;/div&gt;
+&lt;div class="tray"   data-jolt-drop="attachments"&gt;Drop files to attach&lt;/div&gt;
+
+&lt;style&gt;
+  [data-jolt-drop-over] { outline: 2px dashed dodgerblue; }   /* the area under the pointer */
+&lt;/style&gt;</code></pre></div>
+<div class="code" data-lang="java"><pre><code>window.onFileDrop(drop -&gt; {
+    switch (String.valueOf(drop.zone())) {
+        case "avatar"      -&gt; setAvatar(drop.files().get(0));
+        case "attachments" -&gt; addAttachments(drop.files());
+        default            -&gt; { /* dropped somewhere else on the page */ }
+    }
+});</code></pre></div>
+<table>
+    <thead><tr><th scope="col">FileDrop</th><th scope="col">Meaning</th></tr></thead>
+    <tbody>
+    <tr><td><code>files()</code></td><td>Absolute local paths, files or folders.</td></tr>
+    <tr><td><code>zone()</code></td><td>The <code>data-jolt-drop</code> value of the element they landed on, or <code>null</code> outside every such element.</td></tr>
+    <tr><td><code>x()</code>, <code>y()</code></td><td>Where the pointer was, in page pixels.</td></tr>
+    </tbody>
+</table>
+<p>The window accepts a drop anywhere on the page, not only inside zones. Check <code>zone()</code> if drops outside your areas should be ignored.</p>
+
+<h2 id="out">4. Drag files out of the window</h2>
+<p>The other direction: the user drags an item from your page into the file manager, onto the desktop or into another application. The page never names a file. It puts a <strong>token</strong>, a string you made up, on a draggable element, and your Java code says which files that token stands for:</p>
+<div class="code" data-lang="html"><pre><code>&lt;li draggable="true" data-jolt-drag-file="attachment:42"&gt;report.pdf&lt;/li&gt;</code></pre></div>
+<div class="code" data-lang="java"><pre><code>window.setFileDragSource(token -&gt; token.startsWith("attachment:")
+        ? List.of(store.fileOf(token.substring("attachment:".length())))   // absolute paths of files that exist
+        : null);                                                           // null or empty refuses the drag</code></pre></div>
+<ul>
+    <li><strong>You decide.</strong> A page can only hand over a token, so it cannot drag out an arbitrary file of the user's disk.</li>
+    <li><strong>The target can only copy.</strong> Dropping on a folder makes a copy and never moves or deletes your original.</li>
+    <li><strong>It is asked the moment the drag starts</strong>, on the UI thread. Write a file that does not exist yet before the user can start dragging it, or write it inside <code>filesFor</code> if it is small.</li>
+    <li>At most 4096 files per drag. A path that does not exist cancels the drag.</li>
+</ul>
+
+<h2 id="cleanup">5. Clean up after a drag</h2>
+<p>An export you wrote to a temporary file should not stay behind. Implement <code>FileDragSource</code> as a class to also hear how the drag ended:</p>
+<div class="code" data-lang="java"><pre><code>window.setFileDragSource(new FileDragSource() {
+    @Override public List&lt;Path&gt; filesFor(String token) {
+        return List.of(exportToTemp(token));                 // write the file now
+    }
+    @Override public void finished(String token, boolean dropped) {
+        deleteTemp(token);                                   // dropped: a copy was made. false: cancelled or no target.
+    }
+});</code></pre></div>
+<p><code>dropped</code> is <code>true</code> when a target accepted the files and made a copy, and <code>false</code> when the user cancelled or let go over something that takes no files.</p>
+
+<h2 id="safe">6. Why a page cannot make up a file</h2>
+<p>The path of a dropped file is sensitive, and the page is the one sending the message, so Jolt does not trust it:</p>
+<ul>
+    <li><strong>The platform supplies the paths.</strong> On Windows, WebView2 attaches the dropped <code>File</code> objects to the page's message, and Jolt reads their paths from there. On Linux, WebKitGTK reports the drag to the window itself. The page only adds the names and the zone.</li>
+    <li><strong>Names must match.</strong> A message whose names do not match the platform's files is ignored, so a page cannot claim "the user dropped <code>C:\Users\me\secrets.txt</code>".</li>
+    <li><strong>Paths must be absolute and local.</strong> A network path such as <code>\\server\share</code> is refused, because opening it would send the user's credentials to that server.</li>
+    <li><strong>Drag-out goes through your token check.</strong> Nothing leaves the window unless <code>filesFor</code> returns it.</li>
+    <li>As with every bridge feature, only pages the <a th:href="@{/docs/security}">SecurityPolicy</a> trusts get these.</li>
+</ul>
+<ul>
+    <li><strong>Windows</strong> uses the shell's own drag loop and data object, the same thing Explorer offers for the same files. Dropping in needs a current WebView2 Runtime, one that supports <code>postMessageWithAdditionalObjects</code>.</li>
+    <li><strong>Linux</strong> offers a <code>text/uri-list</code> through GTK when dragging out.</li>
+</ul>
+
+</th:block>

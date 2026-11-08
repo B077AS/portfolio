@@ -35,6 +35,8 @@ video.send(ByteBuffer.wrap(jpegBytes));        // call as often as you like</cod
 <ul>
     <li>A channel is a WebSocket on <code>127.0.0.1</code>, accepted only from origins your <a th:href="@{/docs/security}">SecurityPolicy</a> trusts and with a per-run secret.</li>
     <li>On Linux, use <code>loadResources</code> (not <code>loadHtml</code>) for pages that open channels.</li>
+    <li>Closing a channel, or its window, no longer waits for a page that stopped reading. The close frame is given 250 ms and the connection is then closed regardless (fixed in 0.4.1).</li>
+    <li>On Windows, version 0.4.1 also fixed large messages that could stop part way (about 40% of 2 MB messages in tests, caused by a lost wakeup in the JDK's socket poller). If you saw a channel hang on big frames with an older version, update.</li>
 </ul>
 
 

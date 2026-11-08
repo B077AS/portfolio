@@ -1,0 +1,86 @@
+<th:block xmlns:th="http://www.thymeleaf.org" th:fragment="body">
+
+<p>Available since <strong>0.4.1</strong>. Your app's icon in the taskbar (Windows) or launcher (Linux) can do more than start the app. It can show progress, offer buttons under its preview, and list actions when the user right-clicks it. These features need no window to come to the front, which is what makes them useful for background work. This page goes from the simplest, a progress bar, to the one that needs the most setup, the jump list.</p>
+
+<p>Not every feature exists everywhere. Each section says what happens on each system, and the <code>supports...()</code> methods tell you at run time:</p>
+<table>
+    <thead><tr><th scope="col">Feature</th><th scope="col">Windows</th><th scope="col">Linux</th><th scope="col">Check</th></tr></thead>
+    <tbody>
+    <tr><td>Progress on the icon</td><td>Yes</td><td>Best effort</td><td><code>window.supportsTaskbarProgress()</code></td></tr>
+    <tr><td>Buttons in the preview</td><td>Yes</td><td>No</td><td><code>window.supportsTaskbarButtons()</code></td></tr>
+    <tr><td>Jump list / icon menu</td><td>Tasks and categories</td><td>Tasks, best effort</td><td><code>app.supportsJumpList()</code></td></tr>
+    </tbody>
+</table>
+<p>When a feature is not supported the call does nothing, so you can call it without checking. Check only if your UI would otherwise promise something that cannot happen.</p>
+
+<h2 id="progress">1. Progress on the taskbar icon</h2>
+<p>A bar along the icon shows an export, download or upload, so the user can follow it while working in another window.</p>
+<div class="code" data-lang="java"><pre><code>window.setTaskbarProgress(TaskbarProgress.normal(done / (double) total));   // green bar, 0 to 1
+window.setTaskbarProgress(TaskbarProgress.indeterminate());                 // length unknown: a moving marquee
+window.setTaskbarProgress(TaskbarProgress.paused(0.6));                     // yellow: waiting for the user
+window.setTaskbarProgress(TaskbarProgress.error(0.6));                      // red: it failed
+window.setTaskbarProgress(TaskbarProgress.none());                          // finished: clear it</code></pre></div>
+<ul>
+    <li>Call it from <strong>any thread</strong>, with each step, and clear it with <code>none()</code> when the work ends or the bar stays.</li>
+    <li>The value is kept: you can set it before the window is shown, and it is drawn once the window has a taskbar button. It is drawn again if Explorer restarts.</li>
+    <li><strong>On Linux it is best effort.</strong> Jolt sends the Unity launcher signal <code>com.canonical.Unity.LauncherEntry</code>, which KDE Plasma's task manager, Ubuntu's dock and Dash to Dock or Dash to Panel draw. Plain GNOME Shell, XFCE and most others ignore it. The desktop finds your icon through an installed <code>&lt;appId&gt;.desktop</code> file, so an app run from a bare jar shows nothing. Linux has one bar per application, and red and yellow look like a normal bar.</li>
+</ul>
+
+<h2 id="buttons">2. Buttons in the taskbar preview (Windows)</h2>
+<p>When the pointer rests on the taskbar icon, Windows shows a preview of the window. Under it your app can show up to <strong>7 buttons</strong>, the strip chat apps use for mute and leave call. The user acts without opening the window.</p>
+<div class="code" data-lang="java"><pre><code>window.setTaskbarButtons(List.of(
+        TaskbarButton.of("Mute", muteIcon, () -&gt; toggleMute()),                     // icon: PNG or ICO bytes, about 16 px
+        TaskbarButton.of("Leave call", hangupIcon, () -&gt; leave()).withEnabled(inCall)));</code></pre></div>
+<ul>
+    <li><strong>Each button</strong> has a tooltip (up to 259 characters), an icon, an enabled state and a callback on the UI thread. <code>withDismissOnClick(true)</code> closes the preview after the press.</li>
+    <li><strong>Windows lets a program add the buttons only once.</strong> The number is fixed by the first call that has any. Later calls update icons, tooltips and enabled state and may give fewer buttons (the rest are hidden), but giving more throws <code>IllegalArgumentException</code>. So plan the maximum up front.</li>
+    <li><strong>Call it again whenever state changes</strong>: swap the mute icon when muted, disable "Leave call" when the call ends.</li>
+    <li>The buttons appear once the window has been shown, and are added again if Explorer restarts.</li>
+    <li>On other systems <code>supportsTaskbarButtons()</code> is <code>false</code> and the call does nothing. Offer the same actions inside your window or in the <a th:href="@{/docs/tray}">tray menu</a> too.</li>
+</ul>
+
+<h2 id="jumplist">3. Actions on the icon's menu</h2>
+<p>Right-click the icon and the menu can offer <strong>tasks</strong> such as "New incognito window", and on Windows your own <strong>categories</strong> such as "Recent projects". This is the Windows jump list, and on Linux it becomes the launcher's desktop actions.</p>
+<div class="code" data-lang="java"><pre><code>app.setJumpList(JumpList.builder()
+        .task("New incognito window", "--incognito")                      // starts the program with these arguments
+        .task(JumpItem.of("Settings", "--settings").withDescription("Open the settings"))
+        .category("Recent projects", List.of(                             // Windows only
+                JumpItem.of("Parsel", "--open", "42"),
+                JumpItem.of("Notes", "--open", "7")))
+        .build());
+
+app.setJumpList(JumpList.empty());                                        // remove them again</code></pre></div>
+<ul>
+    <li><strong>Choosing an entry starts the program again</strong> with its arguments. A second copy is not what you want, so receive them in the running copy with <code>SingleInstance</code>, as shown in <a th:href="@{/docs/url-schemes#running}">Custom links</a>. The new launch hands its arguments over and exits.</li>
+    <li>Call <code>setJumpList</code> again whenever the entries change, for example when the list of recent projects does.</li>
+    <li>An entry has a title (up to 200 characters, one line), its arguments, and optionally a tooltip and an icon (Windows). A list holds at most 60 entries.</li>
+</ul>
+<h3 id="jumplist-win">On Windows</h3>
+<ul>
+    <li>From the first call on, the windows carry <code>AppOptions.appId</code> as their AppUserModelID. That puts the list on <em>your</em> application's icon and not on the icon of <code>javaw.exe</code>. An id with spaces or over 128 characters gets no list.</li>
+    <li>Categories are hidden if the user turned off "Show recently opened items" in Settings. Tasks always show.</li>
+    <li>The command that starts the program is the process's own. For a plain Java launch Jolt rebuilds it as <code>-jar app.jar</code> (or <code>-cp ... Main</code>); JVM options are not carried over, so put <code>Enable-Native-Access: ALL-UNNAMED</code> in your jar's manifest. To control it, pass your own with <code>builder().command(List.of(...))</code>.</li>
+</ul>
+<h3 id="jumplist-linux">On Linux</h3>
+<ul>
+    <li>Tasks are written as freedesktop <strong>desktop actions</strong> into <code>~/.local/share/applications/&lt;appId&gt;.desktop</code>. GNOME and KDE show them on the launcher icon when the running window is matched to that file.</li>
+    <li>Categories and icons are not used. A <code>.desktop</code> file of your own at that place is never changed.</li>
+    <li>Treat it as best effort, and make sure every task is also reachable inside the app.</li>
+</ul>
+
+<h2 id="together">4. Putting it together</h2>
+<p>A file exporter that keeps working while the window is in the background:</p>
+<div class="code" data-lang="java"><pre><code>void export(List&lt;Path&gt; files) {
+    Thread.startVirtualThread(() -&gt; {
+        for (int i = 0; i &lt; files.size(); i++) {
+            convert(files.get(i));
+            window.setTaskbarProgress(TaskbarProgress.normal((i + 1) / (double) files.size()));
+        }
+        window.setTaskbarProgress(TaskbarProgress.none());
+        app.notify(Notification.of("Export finished", files.size() + " files are ready")
+                .withOnClick(window::focus));
+    });
+}</code></pre></div>
+<p>The bar follows the work, and when it ends a <a th:href="@{/docs/notifications}">notification</a> brings the user back. Failure is the same with <code>TaskbarProgress.error(...)</code>.</p>
+
+</th:block>

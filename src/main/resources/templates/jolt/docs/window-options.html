@@ -1,6 +1,6 @@
 <th:block xmlns:th="http://www.thymeleaf.org" th:fragment="body">
 
-<p>The operating system draws the window's frame, title bar and icon, so you set them from Java, either when you create the window or later. This page goes from the options every app sets, to controlling where and when the window appears, to drawing your own title bar.</p>
+<p>The operating system draws the window's frame, title bar and icon, so you set them from Java, either when you create the window or later. This page goes from the options every app sets, to controlling where and when the window appears, to drawing your own title bar, either from scratch or with the ready-made one, and finally to full screen and Windows 11 snap layouts.</p>
 
 <h2 id="basics">1. The basics</h2>
 <p><code>WindowOptions</code> is immutable: start from <code>defaults()</code> (title "Jolt", 1024 by 720) and chain <code>with...</code> calls, each of which returns a changed copy.</p>
@@ -38,6 +38,7 @@ window.hide(); window.show(); window.minimize(); window.isMinimized();</code></p
 <ul>
     <li>Start hidden and call <code>show()</code> when the page sends "ready", so the window appears with its content already drawn (see <a th:href="@{/docs/frontend}">Building the frontend</a>).</li>
     <li>On Wayland the compositor decides placement, so <code>withCentered</code> is ignored and the icon comes from the app's <code>.desktop</code> file. Jolt names the process after your app id, which is what lets the compositor find it.</li>
+    <li>On Wayland there is no signal when a window is minimized, so Jolt records the minimize itself: <code>isMinimized()</code> is <code>true</code> after <code>minimize()</code> and goes back to <code>false</code> when the window gets the keyboard focus again (fixed in 0.4.1).</li>
     <li><code>AppOptions.of(id).withQuietNativeLogs(true)</code> hides GTK's known harmless warnings on Linux.</li>
 </ul>
 
@@ -57,6 +58,94 @@ window.hide(); window.show(); window.minimize(); window.isMinimized();</code></p
     <li>Frame commands only work on windows created <code>frameless</code>, and only for pages the <a th:href="@{/docs/security}">SecurityPolicy</a> trusts.</li>
     <li>This works with <code>loadHtml</code> and <code>loadResources</code> alike.</li>
 </ul>
+
+<h2 id="titlebar">5. A ready-made title bar</h2>
+<p>Available since <strong>0.4.0</strong>. Writing the buttons yourself (section 4) gives total control, but most apps just want working minimize, maximize and close buttons in their own colours. Mark any element with <code>data-jolt-titlebar</code> and Jolt does the rest:</p>
+<div class="code" data-lang="html"><pre><code>&lt;style&gt;
+  header { display: flex; align-items: center; height: 32px; padding-left: 12px;
+           background: #161616; color: #ddd;
+           --jolt-caption-hover-bg: #2a2a2a;      /* hover colour of minimize and maximize */
+           --jolt-close-hover-bg: #e5484d;        /* the close button; red by default */
+           --jolt-maximize-fg: #7aa2f7; }         /* one button on its own */
+&lt;/style&gt;
+&lt;header data-jolt-titlebar&gt;&lt;span&gt;Parsel&lt;/span&gt;&lt;/header&gt;</code></pre></div>
+<ul>
+    <li>The bar <strong>moves the window</strong>, and the <strong>minimize, maximize/restore and close</strong> buttons are added at its right end. Make the bar <code>display: flex</code> so your own content and the buttons sit side by side.</li>
+    <li>For a dialog that should only have a close button, use <code>data-jolt-titlebar="close"</code>.</li>
+    <li>The buttons live in a <strong>shadow root</strong>, so your page CSS cannot break them by accident. You style them through the custom properties below.</li>
+    <li>Your own markup with <code>jolt.frame.minimize()</code> and friends keeps working as before; the kit is optional.</li>
+</ul>
+<table>
+    <thead><tr><th scope="col">Custom property</th><th scope="col">Sets</th></tr></thead>
+    <tbody>
+    <tr><td><code>--jolt-caption-fg</code>, <code>--jolt-caption-bg</code></td><td>Icon and background colour of all buttons.</td></tr>
+    <tr><td><code>--jolt-caption-hover-fg</code>, <code>--jolt-caption-hover-bg</code></td><td>Colours while the pointer is over a button.</td></tr>
+    <tr><td><code>--jolt-caption-active-fg</code>, <code>--jolt-caption-active-bg</code></td><td>Colours while a button is pressed.</td></tr>
+    <tr><td><code>--jolt-caption-width</code></td><td>Width of each button (default 46px).</td></tr>
+    <tr><td><code>--jolt-caption-icon</code></td><td>Size of the icon (default 10px).</td></tr>
+    <tr><td><code>--jolt-caption-inactive-opacity</code></td><td>How faded the buttons are while the window is not in front (default .55).</td></tr>
+    <tr><td><code>--jolt-minimize-*</code>, <code>--jolt-maximize-*</code>, <code>--jolt-close-*</code></td><td>The same fg, bg, hover and active set for one button. The specific one wins over <code>--jolt-caption-*</code>.</td></tr>
+    </tbody>
+</table>
+<p>Because these are ordinary custom properties, a light and a dark theme is a few lines in a <code>prefers-color-scheme</code> rule.</p>
+
+<h2 id="state">6. The page knows its window's state</h2>
+<p>Available since <strong>0.4.0</strong>. A custom title bar has to look different when the window is maximized (no rounded corners) or not in front (dimmed). Jolt keeps these attributes on <code>&lt;html&gt;</code> up to date, with or without the kit:</p>
+<table>
+    <thead><tr><th scope="col">Attribute</th><th scope="col">Present when</th></tr></thead>
+    <tbody>
+    <tr><td><code>data-jolt-maximized</code></td><td>The window is maximized.</td></tr>
+    <tr><td><code>data-jolt-inactive</code></td><td>The window is not the one in front.</td></tr>
+    <tr><td><code>data-jolt-fullscreen</code></td><td>The window is full screen (next section).</td></tr>
+    <tr><td><code>data-jolt-platform="windows"</code> or <code>"linux"</code></td><td>Always, so you can style per system.</td></tr>
+    </tbody>
+</table>
+<div class="code" data-lang="html"><pre><code>&lt;style&gt;
+  header { border-radius: 8px 8px 0 0; }
+  html[data-jolt-maximized] header { border-radius: 0; }       /* square corners when maximized */
+  html[data-jolt-inactive] header { opacity: .7; }             /* dim when not in front */
+&lt;/style&gt;</code></pre></div>
+<p>From script, ask or subscribe:</p>
+<div class="code" data-lang="js"><pre><code>jolt.frame.isMaximized();                    // true or false
+jolt.frame.isFocused();
+const stop = jolt.frame.onChange(({ maximized, focused, fullscreen }) =&gt; {
+  maximizeIcon.textContent = maximized ? 'restore' : 'maximize';
+});
+// stop();   // stop listening</code></pre></div>
+
+<h2 id="fullscreen">7. Full screen</h2>
+<p>Available since <strong>0.4.0</strong>. A video player, a presentation or a game wants the whole screen, with no title bar, border or taskbar. The browser's <kbd>F11</kbd> stays disabled in a Jolt window, so this is how you do it:</p>
+<div class="code" data-lang="java"><pre><code>window.setFullscreen(true);
+window.isFullscreen();            // updated on the UI thread: right after setFullscreen it may still say the old value
+window.setFullscreen(false);      // back to the size, position and maximized state it had</code></pre></div>
+<p>A frameless page can do the same itself:</p>
+<div class="code" data-lang="js"><pre><code>jolt.frame.setFullscreen(true);
+jolt.frame.toggleFullscreen();
+jolt.frame.isFullscreen();</code></pre></div>
+<ul>
+    <li>While it is on, <code>&lt;html&gt;</code> has <code>data-jolt-fullscreen</code> and the resize handles are hidden. Use the attribute to hide your own title bar: <code>html[data-jolt-fullscreen] header { display: none }</code>.</li>
+    <li>A window that is still hidden (<code>withVisible(false)</code>) is full screen when first shown.</li>
+    <li><strong>Windows</strong> places the window over the monitor, taskbar included. <strong>Linux</strong> uses <code>gtk_window_fullscreen</code>, which needs a window manager or compositor that honours it.</li>
+    <li>Give the user a way out, for example a key such as <kbd>Esc</kbd> that leaves full screen.</li>
+    <li><strong>Interface change in 0.4.0:</strong> <code>WebWindow</code> gained two abstract methods, <code>setFullscreen</code> and <code>isFullscreen</code>. Only code that implements <code>WebWindow</code> itself is affected.</li>
+</ul>
+
+<h2 id="snap">8. Windows 11 snap layouts and the window menu</h2>
+<p>Available since <strong>0.4.0</strong>. On Windows 11, resting the pointer on a maximize button shows the <em>snap layouts</em> flyout. A web page cannot do that on its own, because Windows only shows it over a native maximize button. Jolt makes it work for yours:</p>
+<div class="code" data-lang="html"><pre><code>&lt;button data-jolt-maximize onclick="jolt.frame.toggleMaximize()"&gt;☐&lt;/button&gt;
+
+&lt;style&gt;
+  [data-jolt-maximize]:hover,
+  [data-jolt-maximize][data-jolt-hover] { background: #2a2a2a; }     /* style hover both ways */
+  [data-jolt-maximize][data-jolt-pressed] { background: #3a3a3a; }
+&lt;/style&gt;</code></pre></div>
+<ul>
+    <li>The kit's maximize button does all this by itself. For your own button, mark the element with <code>data-jolt-maximize</code>.</li>
+    <li>Jolt reports the button's position to the window, which puts a nearly invisible child window over it that answers like a native maximize button. The page then no longer receives the pointer over that spot, so Jolt sets <code>data-jolt-hover</code> and <code>data-jolt-pressed</code> on your element instead. <strong>Style both</strong> <code>:hover</code> and <code>[data-jolt-hover]</code>, or the button looks dead on Windows 11.</li>
+    <li>Clicks still maximize through the window itself.</li>
+    <li>On <strong>Windows 10 and Linux</strong> nothing is added and the button is an ordinary button. Linux has no snap layouts.</li>
+</ul>
+<p>Also on Windows, <strong>right-clicking a title bar</strong> (a <code>data-jolt-drag</code> or <code>data-jolt-titlebar</code> area) opens the system window menu: Restore, Move, Size, Minimize, Maximize, Close. <code>jolt.frame.menu()</code> opens it from code, for example from an icon in the corner. Frameless windows are also rounded explicitly on Windows 11. Linux has no window menu on right click, and whether frameless windows get a shadow or rounded corners there depends on the window manager.</p>
 
 
 </th:block>

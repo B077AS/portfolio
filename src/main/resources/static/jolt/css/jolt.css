@@ -86,6 +86,7 @@ p {
   .page-scroll,
   pre,
   .log,
+  .side,
   .toc,
   table {
     scrollbar-width: thin;
@@ -97,6 +98,7 @@ p {
 }
 pre::-webkit-scrollbar,
 .log::-webkit-scrollbar,
+.side::-webkit-scrollbar,
 .toc::-webkit-scrollbar,
 table::-webkit-scrollbar {
   width: 8px;
@@ -105,6 +107,7 @@ table::-webkit-scrollbar {
 .page-scroll::-webkit-scrollbar-track,
 pre::-webkit-scrollbar-track,
 .log::-webkit-scrollbar-track,
+.side::-webkit-scrollbar-track,
 .toc::-webkit-scrollbar-track,
 table::-webkit-scrollbar-track {
   background: transparent;
@@ -112,6 +115,7 @@ table::-webkit-scrollbar-track {
 .page-scroll::-webkit-scrollbar-thumb,
 pre::-webkit-scrollbar-thumb,
 .log::-webkit-scrollbar-thumb,
+.side::-webkit-scrollbar-thumb,
 .toc::-webkit-scrollbar-thumb,
 table::-webkit-scrollbar-thumb {
   background: rgba(224, 138, 60, 0.6);
@@ -119,6 +123,7 @@ table::-webkit-scrollbar-thumb {
 .page-scroll::-webkit-scrollbar-thumb:hover,
 pre::-webkit-scrollbar-thumb:hover,
 .log::-webkit-scrollbar-thumb:hover,
+.side::-webkit-scrollbar-thumb:hover,
 .toc::-webkit-scrollbar-thumb:hover,
 table::-webkit-scrollbar-thumb:hover {
   background: var(--a);
@@ -940,6 +945,7 @@ nav .links a[aria-current="page"] {
   font-size: 14.5px;
   max-height: calc(100vh - 110px);
   overflow: auto;
+  overscroll-behavior: contain; /* at the end of the list, do not hand the wheel to the page */
 }
 .doc {
   min-width: 0;

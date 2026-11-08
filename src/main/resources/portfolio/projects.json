@@ -17,16 +17,40 @@
     ]
   },
   {
+    "slug": "jolt",
+    "name": "Jolt",
+    "tagline": "Desktop apps with web UIs, in plain Java",
+    "description": "A Java framework for building desktop apps with web UIs, with no Electron, no JNI, and no native code to compile. Built on Java 25's Foreign Function & Memory API, it opens a native window around the system web view (WebView2 on Windows, WebKitGTK on Linux) and lets Java and the page exchange messages in one process, with no HTTP server in between. Published on Maven Central, with a full docs site.",
+    "tech": ["Java 25", "FFM API", "WebView2", "WebKitGTK", "Maven Central"],
+    "icon": "mdi-lightning-bolt",
+    "featured": true,
+    "primaryLink": { "label": "jolt.williamsolari.com", "url": "https://jolt.williamsolari.com" },
+    "repos": [
+      { "label": "jolt", "url": "https://github.com/B077AS/jolt" }
+    ]
+  },
+  {
     "slug": "query-exe",
     "name": "QueryExe",
     "tagline": "Cross-platform SQL client",
-    "description": "A free, cross-platform desktop client for relational databases (MySQL, MariaDB, PostgreSQL, SQL Server, H2, and SQLite). Multi-connection SQL editor with autocomplete, concurrent query execution, and direct result-grid editing, distributed through a self-updating launcher for Windows and Linux, built and released via GitHub Actions.",
-    "tech": ["Java", "JavaFX", "MySQL", "MariaDB", "PostgreSQL", "SQL Server", "H2", "SQLite"],
+    "description": "A free, cross-platform desktop client for relational databases (MySQL, MariaDB, PostgreSQL, SQL Server, H2, and SQLite). Multi-connection SQL editor with autocomplete, concurrent query execution, and direct result-grid editing. Built on Jolt: Java owns connections, SQL execution and storage, while a Vue 3 interface runs in a native window in a single process, for Windows and Linux.",
+    "tech": ["Java", "Jolt", "Vue 3", "MySQL", "MariaDB", "PostgreSQL", "SQL Server", "H2", "SQLite"],
     "icon": "mdi-database-search-outline",
     "primaryLink": { "label": "query-exe", "url": "https://github.com/B077AS/query-exe" },
     "repos": [
-      { "label": "query-exe", "url": "https://github.com/B077AS/query-exe" },
-      { "label": "query-exe-launcher", "url": "https://github.com/B077AS/query-exe-launcher" }
+      { "label": "query-exe", "url": "https://github.com/B077AS/query-exe" }
+    ]
+  },
+  {
+    "slug": "parsel",
+    "name": "Parsel",
+    "tagline": "Clean desktop mail client",
+    "description": "A desktop mail client for your own mailbox: read and send over IMAP and SMTP with no cloud and no account but yours. Built on Jolt as the reference real-world app: Java handles the mail, a Vue 3 page draws the interface, and both run in one process, packaged for Windows and Linux.",
+    "tech": ["Java", "Jolt", "Vue 3", "IMAP", "SMTP", "Windows", "Linux"],
+    "icon": "mdi-email-outline",
+    "primaryLink": { "label": "parsel", "url": "https://github.com/B077AS/parsel" },
+    "repos": [
+      { "label": "parsel", "url": "https://github.com/B077AS/parsel" }
     ]
   },
   {
