@@ -55,6 +55,7 @@ public static void main(String[] args) {
     ...
 }</code></pre></div>
 <p><code>SingleInstance</code> takes a lock file in the data directory (released by the system if the app dies) and talks to the running copy over a Unix domain socket that only the same user can reach. The callback runs on a thread of its own, so use <code>app.dispatch</code>.</p>
+<p>The same hand-over carries other launches to the running copy: a <a th:href="@{/docs/url-schemes#running}">custom link</a> such as <code>myapp://invite/ABC</code>, or an entry chosen from the <a th:href="@{/docs/taskbar#jumplist}">taskbar icon's menu</a>. In both cases the arguments of the new launch arrive in <code>otherArgs</code>.</p>
 
 
 </th:block>

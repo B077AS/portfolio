@@ -15,6 +15,9 @@
     <tr><td><code>app.notify(Notification)</code></td><td>System notification. <a th:href="@{/docs/notifications}">Notifications</a></td></tr>
     <tr><td><code>app.isTraySupported()</code>, <code>app.createTray(icon, tooltip)</code>, <code>app.autostart()</code></td><td><a th:href="@{/docs/tray}">Tray and autostart</a></td></tr>
     <tr><td><code>SingleInstance.acquire(...)</code></td><td>Allow one copy per user. <a th:href="@{/docs/tray}">Tray</a></td></tr>
+    <tr><td><code>app.clipboard()</code></td><td>Read and write text, HTML, images and files. <a th:href="@{/docs/clipboard}">Clipboard</a></td></tr>
+    <tr><td><code>app.urlSchemes()</code>, <code>UrlSchemes.findUrl(args, scheme)</code></td><td>Open the app for <code>myapp://</code> links. <a th:href="@{/docs/url-schemes}">Custom links</a></td></tr>
+    <tr><td><code>app.setJumpList(JumpList)</code>, <code>app.supportsJumpList()</code></td><td>Tasks and categories on the taskbar or launcher icon menu. <a th:href="@{/docs/taskbar}">Taskbar</a></td></tr>
     </tbody>
 </table>
 
@@ -42,7 +45,10 @@
     <tr><td><code>window.dialogs()</code>, <code>enableSaveAs()</code></td><td><code>jolt.saveAs(...)</code></td><td><a th:href="@{/docs/dialogs}">Dialogs</a></td></tr>
     <tr><td><code>window.enableNotifications(app)</code></td><td><code>jolt.notify(...)</code></td><td><a th:href="@{/docs/notifications}">Notifications</a></td></tr>
     <tr><td><code>window.enableOpenWindow(app, opener)</code></td><td><code>jolt.openWindow</code>, <code>jolt.broadcast</code>, <code>jolt.onBroadcast</code></td><td><a th:href="@{/docs/popout-windows}">Pop-out windows</a></td></tr>
-    <tr><td>(frameless windows)</td><td><code>jolt.frame.minimize/toggleMaximize/close</code></td><td><a th:href="@{/docs/window-options}">Window look</a></td></tr>
+    <tr><td>(frameless windows)</td><td><code>jolt.frame.minimize/toggleMaximize/close/menu</code></td><td><a th:href="@{/docs/window-options}">Window look</a></td></tr>
+    <tr><td></td><td><code>jolt.frame.isMaximized/isFocused/isFullscreen</code>, <code>onChange(cb)</code>, <code>setFullscreen</code>, <code>toggleFullscreen</code></td><td>Window state and full screen. <a th:href="@{/docs/window-options#state}">Window state</a></td></tr>
+    <tr><td><code>window.onFileDrop(Consumer&lt;FileDrop&gt;)</code></td><td><code>data-jolt-drop="zone"</code></td><td>Files dropped onto the window, as paths. <a th:href="@{/docs/file-drag-drop}">Dragging files</a></td></tr>
+    <tr><td><code>window.setFileDragSource(FileDragSource)</code></td><td><code>data-jolt-drag-file="token"</code></td><td>Drag files out of the window. <a th:href="@{/docs/file-drag-drop#out}">Dragging files</a></td></tr>
     </tbody>
 </table>
 
@@ -53,6 +59,9 @@
     <tr><td><code>setTitle</code>, <code>setSize</code>, <code>setIcon</code></td><td>Title, size, icon.</td></tr>
     <tr><td><code>setTitleBarScheme</code>, <code>setTitleBarColors</code>, <code>setBackgroundColor</code></td><td>Colours.</td></tr>
     <tr><td><code>show</code>, <code>hide</code>, <code>focus</code>, <code>minimize</code>, <code>maximize</code>, <code>restore</code>, <code>close</code></td><td>State changes.</td></tr>
+    <tr><td><code>setFullscreen(boolean)</code>, <code>isFullscreen()</code></td><td>Cover the whole screen. <a th:href="@{/docs/window-options#fullscreen}">Full screen</a></td></tr>
+    <tr><td><code>setTaskbarProgress(TaskbarProgress)</code></td><td>Progress bar on the taskbar icon. <a th:href="@{/docs/taskbar#progress}">Taskbar</a></td></tr>
+    <tr><td><code>setTaskbarButtons(List&lt;TaskbarButton&gt;)</code></td><td>Up to 7 buttons in the Windows taskbar preview. <a th:href="@{/docs/taskbar#buttons}">Taskbar</a></td></tr>
     <tr><td><code>isVisible</code>, <code>isFocused</code>, <code>isMinimized</code>, <code>isMaximized</code></td><td>State queries.</td></tr>
     <tr><td><code>setCloseBehavior(CloseBehavior)</code></td><td><code>CLOSE</code> (default) or <code>HIDE</code>.</td></tr>
     <tr><td><code>onClosed(Runnable)</code></td><td>Called when the window has closed.</td></tr>
@@ -81,6 +90,11 @@
     <thead><tr><th scope="col">Type</th><th scope="col">Used for</th></tr></thead>
     <tbody>
     <tr><td><code>SecurityPolicy</code>, <code>BlockedEvent</code></td><td>What pages are trusted. <a th:href="@{/docs/security}">Security</a></td></tr>
+    <tr><td><code>Permission</code></td><td><code>MICROPHONE</code> and <code>CAMERA</code>, granted with <code>SecurityPolicy.withGrantedPermissions</code>. <a th:href="@{/docs/security#permissions}">Security</a></td></tr>
+    <tr><td><code>Clipboard</code>, <code>ClipboardContent</code></td><td>Formats, reads, writes, <code>secret(...)</code> and <code>onChange</code>. <a th:href="@{/docs/clipboard}">Clipboard</a></td></tr>
+    <tr><td><code>FileDrop</code>, <code>FileDragSource</code></td><td>Dropped files with zone and position; the token-to-files callback for drags out. <a th:href="@{/docs/file-drag-drop}">Dragging files</a></td></tr>
+    <tr><td><code>UrlSchemes</code></td><td><code>register</code>, <code>unregister</code>, <code>isRegistered</code>, <code>findUrl</code>. <a th:href="@{/docs/url-schemes}">Custom links</a></td></tr>
+    <tr><td><code>TaskbarProgress</code>, <code>TaskbarButton</code>, <code>JumpList</code>, <code>JumpItem</code></td><td><a th:href="@{/docs/taskbar}">Taskbar</a></td></tr>
     <tr><td><code>Dialogs</code>, <code>FileDialogOptions</code>, <code>FileFilter</code></td><td>Native file dialogs. <a th:href="@{/docs/dialogs}">Dialogs</a></td></tr>
     <tr><td><code>Notification</code></td><td>Toasts with click, buttons and reply.</td></tr>
     <tr><td><code>Tray</code>, <code>TrayMenu</code>, <code>Autostart</code>, <code>CloseBehavior</code></td><td><a th:href="@{/docs/tray}">Tray</a></td></tr>

@@ -1,0 +1,63 @@
+<th:block xmlns:th="http://www.thymeleaf.org" th:fragment="body">
+
+<p>Available since <strong>0.4.0</strong>. A link like <code>myapp://invite/ABC</code> in a browser, a chat or an email can start your application and tell it what to open. That is how "Open in the app" buttons, invitations and sign-in callbacks work. You choose the scheme (the part before <code>://</code>); Jolt tells the operating system about it. This page registers a scheme, reads the link at start-up, then handles links that arrive while the app is already running.</p>
+
+<h2 id="register">1. Register your scheme</h2>
+<p>Registering writes an entry for the current user, with no administrator rights. You give the scheme, a name the system can show, and the command that starts your program:</p>
+<div class="code" data-lang="java"><pre><code>UrlSchemes schemes = app.urlSchemes();
+schemes.register("myapp", "My App", Autostart.currentCommand(List.of()));
+
+schemes.isRegistered("myapp");     // true
+schemes.unregister("myapp");       // remove it again (does nothing if there is none)</code></pre></div>
+<ul>
+    <li><strong>The scheme</strong> is lower case letters, digits, <code>+</code>, <code>-</code> and <code>.</code>, starting with a letter: <code>myapp</code>, not <code>myapp://</code>.</li>
+    <li><strong>The command</strong> is the program followed by its arguments. <code>Autostart.currentCommand(List.of())</code> describes the running process, which suits an installed or packaged app. The same helper is used for <a th:href="@{/docs/tray#autostart}">autostart</a>.</li>
+    <li><strong>Windows</strong> writes keys under <code>HKCU\Software\Classes\&lt;scheme&gt;</code>. <strong>Linux</strong> writes a <code>.desktop</code> file that handles <code>x-scheme-handler/&lt;scheme&gt;</code> and makes it the default with <code>xdg-mime</code>.</li>
+    <li>Web, mail and file schemes are refused (<code>http</code>, <code>https</code>, <code>file</code>, <code>ftp</code>, <code>mailto</code>, <code>data</code>, <code>blob</code>, <code>about</code>, <code>javascript</code>), because taking one over would break links for the user's browser or mail program. They throw <code>IllegalArgumentException</code>.</li>
+</ul>
+
+<h2 id="when">2. When to register</h2>
+<ul>
+    <li><strong>On every start, or at install time.</strong> Registering again replaces the entry, so doing it on every start keeps it correct if the program moves.</li>
+    <li><strong>Not from a development run.</strong> From an IDE or the classes folder the entry would point at a command that only works there. Register only when running the packaged app, for example behind a flag or when the app finds itself in its install folder.</li>
+</ul>
+
+<h2 id="receive">3. Read the link at start-up</h2>
+<p>The link arrives as the <strong>last command-line argument</strong>. <code>UrlSchemes.findUrl</code> picks it out of the arguments:</p>
+<div class="code" data-lang="java"><pre><code>public static void main(String[] args) {
+    Optional&lt;URI&gt; link = UrlSchemes.findUrl(List.of(args), "myapp");   // case-insensitive
+    link.ifPresent(url -&gt; System.out.println(url.getHost() + url.getPath()));   // "invite" + "/ABC"
+    ...
+}</code></pre></div>
+<p><code>findUrl</code> returns the first argument that starts with <code>myapp:</code>, as a <code>URI</code>, or empty. Use the usual <code>URI</code> getters to take it apart.</p>
+
+<h2 id="running">4. When the app is already running</h2>
+<p>Clicking a link starts your program again. You do not want a second window, so combine this with <code>SingleInstance</code> (see <a th:href="@{/docs/tray#single-instance}">One copy only</a>): the new launch hands its arguments to the copy that is running, then exits.</p>
+<div class="code" data-lang="java"><pre><code>public static void main(String[] args) {
+    AppOptions options = AppOptions.of("com.example.myapp");
+
+    SingleInstance instance = SingleInstance.acquire(options, List.of(args), otherArgs -&gt;
+            app.dispatch(() -&gt; {                                   // the callback is not on the UI thread
+                main.focus();
+                UrlSchemes.findUrl(otherArgs, "myapp").ifPresent(MyApp::openLink);
+            }));
+    if (!instance.isPrimary()) {
+        return;                                                    // the running copy has the link now
+    }
+
+    // first launch: the link may be in our own arguments
+    UrlSchemes.findUrl(List.of(args), "myapp").ifPresent(MyApp::openLink);
+    ...
+}</code></pre></div>
+<p>The two places to read a link are the <strong>first launch</strong> (<code>main</code>'s <code>args</code>) and the <strong>callback</strong> (<code>otherArgs</code>). A common bug is to handle only one of them.</p>
+
+<h2 id="safe">5. Treat the link as untrusted</h2>
+<p>Any web page can open a <code>myapp://</code> link, so anyone on the internet can make your program start with text of their choosing. Handle it like a request from the network:</p>
+<ul>
+    <li><strong>Check before acting.</strong> Allow a short list of actions and validate every part. <code>myapp://invite/ABC</code> may open an invitation screen; it should not delete anything or run a command.</li>
+    <li><strong>Ask for anything that matters.</strong> A link that would sign out, delete or send something should show a confirmation first.</li>
+    <li><strong>Never build file paths or commands</strong> from the link without validating them.</li>
+</ul>
+<p>Windows and browsers may also ask the user "Open My App?" before they launch it; that is why the display name matters.</p>
+
+</th:block>

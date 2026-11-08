@@ -18,7 +18,7 @@
     <tr><td>Navigation lock</td><td>Links, redirects, frames and <code>loadUrl</code> to an untrusted origin are cancelled</td><td><code>withLockNavigation</code></td></tr>
     <tr><td>Message check</td><td>Messages from an untrusted page never reach <code>onMessage</code></td><td><code>withRestrictMessages</code></td></tr>
     <tr><td>New windows</td><td><code>window.open</code> and <code>target=_blank</code> are refused</td><td><code>withBlockNewWindows</code></td></tr>
-    <tr><td>Permissions</td><td>Camera, microphone, location and similar are denied</td><td><code>withDenyPermissions</code></td></tr>
+    <tr><td>Permissions</td><td>Camera, microphone, location and similar are denied</td><td><code>withDenyPermissions</code>; allow the microphone or camera for your own pages with <code>withGrantedPermissions</code> (section 4)</td></tr>
     <tr><td>Bridge in frames</td><td><code>window.jolt</code> exists only in the top-level page</td><td><code>withBridgeInSubframes</code></td></tr>
     </tbody>
 </table>
@@ -38,13 +38,29 @@ window.onBlocked(event -&gt; openInSystemBrowser(event.url()));           // cal
 });</code></pre></div>
 <p><code>BlockedEvent.kind()</code> is one of <code>NAVIGATION</code>, <code>NEW_WINDOW</code>, <code>PERMISSION</code> or <code>MESSAGE</code>, and <code>url()</code> says what was blocked.</p>
 
-<h2 id="rules">4. Rules of thumb</h2>
+<h2 id="permissions">4. Letting your own pages use the microphone or camera</h2>
+<p>Available since <strong>0.4.0</strong>. By default every permission a page asks for is refused, so <code>getUserMedia</code> fails with <code>NotAllowedError</code>. A voice chat, a recorder or a video call needs the opposite for <em>its own</em> pages and nothing else. Grant exactly that:</p>
+<div class="code" data-lang="java"><pre><code>SecurityPolicy policy = SecurityPolicy.standard()
+        .withGrantedPermissions(Permission.MICROPHONE, Permission.CAMERA);
+
+WindowOptions.defaults().withSecurity(policy);</code></pre></div>
+<ul>
+    <li><code>Permission.MICROPHONE</code> covers <code>getUserMedia({ audio: true })</code>, and <code>Permission.CAMERA</code> covers <code>getUserMedia({ video: true })</code>. Both also let <code>enumerateDevices()</code> list device names, and the rest of WebRTC works from there.</li>
+    <li><strong>Only your own content is granted</strong> (what you show with <code>loadHtml</code> or <code>loadResources</code>), plus origins you trust. Every other permission, and every other page, stays refused.</li>
+    <li>The operating system can still ask the user or refuse (Windows privacy settings, a Linux portal). Granting is your decision to allow the page; it does not bypass the user's.</li>
+    <li>On Windows, Jolt answers the request itself and tells WebView2 not to remember the answer, so changing the policy takes effect right away. On Linux it turns on WebKitGTK's <code>enable-media-stream</code>; a system without the needed symbols keeps refusing.</li>
+    <li><strong>Screen capture</strong> (<code>getDisplayMedia</code>) is not covered by this.</li>
+    <li>A page can open a <a th:href="@{/docs/channels}">binary channel</a> to move captured audio or video frames to Java without base64.</li>
+</ul>
+
+<h2 id="rules">5. Rules of thumb</h2>
 <ul>
     <li><code>loadUrl</code> to another site is blocked unless you trust its origin.</li>
     <li>Trusting an origin gives that site your handlers. List only sites you control, and still validate every parameter.</li>
     <li>WebView2 reports which frame sent a message; WebKitGTK does not, so on Linux the check uses the top-level page. If you turn the navigation lock off on Linux, keep the bridge out of frames (the default).</li>
     <li>In the page, set user-supplied text with <code>textContent</code>, never <code>innerHTML</code>.</li>
     <li>In Java handlers, treat parameters as untrusted input: check types and ranges, and never build file paths or commands from them without validation.</li>
+    <li>Treat data from outside the app the same way: the <a th:href="@{/docs/clipboard#hostile}">clipboard</a>, <a th:href="@{/docs/file-drag-drop#safe}">dropped files</a> and <a th:href="@{/docs/url-schemes#safe}">custom links</a> are all chosen by someone else.</li>
 </ul>
 
 

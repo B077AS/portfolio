@@ -184,15 +184,136 @@
         });
     }
 
-    // Devices without a real :hover (touch) get a tap-to-flip toggle instead; taps on the
-    // links revealed on the back still navigate rather than flipping the card back.
-    if (window.matchMedia("(hover: none)").matches) {
-        document.querySelectorAll(".project-card").forEach(function (card) {
+    // Project coverflow: one card is centered and shows its details, the rest tilt away showing
+    // their fronts. It advances on its own (paused on hover/focus, offscreen, or reduced motion),
+    // and can be driven by clicking a side card, the dots, the arrow keys, or a swipe.
+    var projectGrid = document.querySelector(".project-grid");
+    var projectCards = projectGrid ? Array.prototype.slice.call(projectGrid.querySelectorAll(".project-card")) : [];
+
+    if (projectGrid && projectCards.length > 1) {
+        var count = projectCards.length;
+        var current = 0;
+        var timer = null;
+        var paused = false;
+        var visible = true;
+        var autoplay = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        var narrowQuery = window.matchMedia("(max-width: 720px)");
+
+        projectGrid.classList.add("is-coverflow");
+
+        var dots = document.createElement("div");
+        dots.className = "project-dots";
+        projectCards.forEach(function (card, i) {
+            var dot = document.createElement("button");
+            dot.type = "button";
+            dot.className = "project-dot";
+            dot.setAttribute("aria-label", "Show " + card.querySelector("h3").textContent);
+            dot.addEventListener("click", function () {
+                goTo(i);
+            });
+            dots.appendChild(dot);
+        });
+        projectGrid.parentNode.insertBefore(dots, projectGrid.nextSibling);
+        var dotButtons = Array.prototype.slice.call(dots.children);
+
+        var paint = function () {
+            var narrow = narrowQuery.matches;
+            var half = Math.floor(count / 2);
+            var width = projectCards[0].offsetWidth;
+            var step = width * (narrow ? 0.7 : 0.83);
+            var reach = narrow ? 1 : 2;
+
+            projectCards.forEach(function (card, i) {
+                var offset = ((i - current + count + half) % count) - half;
+                var dist = Math.abs(offset);
+                var active = offset === 0;
+                var scale = active ? 1 : 0.82 - dist * 0.04;
+
+                card.classList.toggle("is-active", active);
+                card.style.transform = "translateX(-50%) translateX(" + offset * step + "px) scale(" + scale + ")";
+                card.style.opacity = dist > reach ? 0 : active ? 1 : 0.75 - dist * 0.2;
+                card.style.zIndex = 10 - dist;
+                card.style.pointerEvents = dist > reach ? "none" : "auto";
+                card.setAttribute("aria-hidden", dist > reach ? "true" : "false");
+
+                // The details side is only reachable (links, focus) while it is the one showing.
+                var back = card.querySelector(".project-card-face-back");
+                if (back) back.inert = !active;
+                var front = card.querySelector(".project-card-face-front");
+                if (front) front.inert = active;
+            });
+
+            dotButtons.forEach(function (dot, i) {
+                dot.setAttribute("aria-current", i === current ? "true" : "false");
+            });
+        };
+
+        var schedule = function () {
+            clearTimeout(timer);
+            if (!autoplay || paused || !visible) return;
+            // Long enough to read the description of the centered card.
+            timer = setTimeout(function () {
+                goTo(current + 1);
+            }, 7000);
+        };
+
+        var goTo = function (index) {
+            current = ((index % count) + count) % count;
+            paint();
+            schedule();
+        };
+
+        projectCards.forEach(function (card, i) {
             card.addEventListener("click", function (e) {
-                if (e.target.closest("a")) return;
-                card.classList.toggle("is-flipped");
+                if (i === current) return;
+                // A side card's links are inert, but a click on its front should only bring it forward.
+                e.preventDefault();
+                goTo(i);
             });
         });
+
+        projectGrid.addEventListener("mouseenter", function () {
+            paused = true;
+            schedule();
+        });
+        projectGrid.addEventListener("mouseleave", function () {
+            paused = false;
+            schedule();
+        });
+        projectGrid.addEventListener("focusin", function () {
+            paused = true;
+            schedule();
+        });
+        projectGrid.addEventListener("focusout", function () {
+            paused = false;
+            schedule();
+        });
+        projectGrid.addEventListener("keydown", function (e) {
+            if (e.key === "ArrowRight") goTo(current + 1);
+            else if (e.key === "ArrowLeft") goTo(current - 1);
+        });
+
+        var touchStartX = null;
+        projectGrid.addEventListener("touchstart", function (e) {
+            touchStartX = e.touches[0].clientX;
+        }, { passive: true });
+        projectGrid.addEventListener("touchend", function (e) {
+            if (touchStartX === null) return;
+            var dx = e.changedTouches[0].clientX - touchStartX;
+            touchStartX = null;
+            if (Math.abs(dx) > 40) goTo(current + (dx < 0 ? 1 : -1));
+        }, { passive: true });
+
+        if ("IntersectionObserver" in window) {
+            new IntersectionObserver(function (entries) {
+                visible = entries[0].isIntersecting;
+                schedule();
+            }).observe(projectGrid);
+        }
+
+        window.addEventListener("resize", paint);
+        paint();
+        schedule();
     }
 
     var sections = document.querySelectorAll("main section[id]");

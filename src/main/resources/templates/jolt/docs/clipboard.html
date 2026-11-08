@@ -1,0 +1,94 @@
+<th:block xmlns:th="http://www.thymeleaf.org" th:fragment="body">
+
+<p>Available since <strong>0.3.3</strong>. Copy and paste is how data moves between programs, so almost every desktop app ends up touching the clipboard: a "Copy link" button, a pasted screenshot, a password that should not stay around. Jolt gives your <strong>Java</strong> code the system clipboard without AWT (on Linux AWT would load a second toolkit next to GTK). This page starts with one line of text and ends with secrets and change events.</p>
+
+<div class="callout">The clipboard is for your Java code, not for the page. A page's own <code>navigator.clipboard</code> is still decided by the <a th:href="@{/docs/security}">SecurityPolicy</a>, and the default refuses it. If the page needs to copy something, send Java a message and let your handler decide what may be copied.</div>
+
+<h2 id="text">1. Copy and paste text</h2>
+<p>Get the clipboard from the application. Every call returns a <code>CompletableFuture</code> at once and may be made from any thread:</p>
+<div class="code" data-lang="java"><pre><code>Clipboard clipboard = app.clipboard();
+
+clipboard.writeText("https://jolt.williamsolari.com");               // copy
+
+clipboard.readText().thenAccept(text -&gt; {                            // paste
+    text.ifPresent(t -&gt; System.out.println("Clipboard says: " + t)); // empty if there is no text
+});</code></pre></div>
+<ul>
+    <li><strong>The futures complete on the UI thread.</strong> Never block that thread waiting for one (no <code>.get()</code> in a message listener). Keep the work inside <code>thenAccept</code> short.</li>
+    <li><code>clipboard.clear()</code> empties the clipboard.</li>
+</ul>
+
+<h2 id="page">2. A "Copy" button in the page</h2>
+<p>The usual way to connect the two is a message: the page asks, Java copies and answers.</p>
+<div class="code" data-lang="js"><pre><code>copyButton.onclick = () =&gt; jolt.postMessage('copy-link');
+jolt.onMessage(m =&gt; { if (m === 'copied') copyButton.textContent = 'Copied'; });</code></pre></div>
+<div class="code" data-lang="java"><pre><code>window.onMessage(message -&gt; {
+    if (message.equals("copy-link")) {
+        app.clipboard().writeText(currentLink())
+                .thenRun(() -&gt; window.postMessage("copied"));
+    }
+});</code></pre></div>
+<p>For anything beyond a couple of messages, use the call-style helper from <a th:href="@{/docs/messaging}">Messaging</a>. The handler decides what is copied; the page cannot put arbitrary data on the clipboard unless you write a handler that lets it.</p>
+
+<h2 id="formats">3. More than text: HTML, images and files</h2>
+<p>The clipboard can hold several forms of the same copy, and the program that pastes picks the one it prefers. <code>Clipboard.Format</code> names them: <code>TEXT</code>, <code>HTML</code>, <code>IMAGE</code> and <code>FILES</code>.</p>
+<div class="code" data-lang="java"><pre><code>clipboard.formats().thenAccept(formats -&gt; {                  // Set&lt;Clipboard.Format&gt;
+    if (formats.contains(Clipboard.Format.IMAGE)) {
+        clipboard.readImage().thenAccept(png -&gt; png.ifPresent(this::showPreview));   // PNG bytes
+    } else if (formats.contains(Clipboard.Format.FILES)) {
+        clipboard.readFiles().thenAccept(paths -&gt; importAll(paths));                // absolute local paths
+    }
+});</code></pre></div>
+<p>To write more than one form at once, build a <code>ClipboardContent</code>. A rich-text editor would offer HTML for programs that can render it and plain text for the rest:</p>
+<div class="code" data-lang="java"><pre><code>clipboard.write(ClipboardContent.html("&lt;b&gt;Hello&lt;/b&gt; world", "Hello world"));     // HTML fragment + plain fallback
+
+clipboard.write(ClipboardContent.image(pngBytes));                               // a PNG
+clipboard.write(ClipboardContent.files(List.of(Path.of("C:\\Reports\\q3.pdf")))); // as if copied in the file manager
+
+clipboard.write(ClipboardContent.text("Plain text")
+        .withHtml("&lt;i&gt;Plain&lt;/i&gt; text"));                                     // combine forms with with...</code></pre></div>
+<ul>
+    <li><strong>Images are PNG.</strong> On Windows Jolt also adds a bitmap form, so programs that only know bitmaps can still paste it.</li>
+    <li><strong>Files are copied, not moved.</strong> Pasting in a file manager makes a copy of each path you gave.</li>
+    <li><strong>On Linux, <code>FILES</code> is reported whenever a <code>text/uri-list</code> is offered</strong>, which browsers also do for plain links. <code>readFiles()</code> then returns an empty list, so always check the result.</li>
+</ul>
+
+<h2 id="secrets">4. Passwords and tokens</h2>
+<p>A copied password should not end up in the clipboard history, the cloud clipboard or a clipboard monitor, and should not sit there for an hour. <code>ClipboardContent.secret</code> does both:</p>
+<div class="code" data-lang="java"><pre><code>clipboard.write(ClipboardContent.secret(password));                      // removed after 30 seconds
+clipboard.write(ClipboardContent.secret(token, Duration.ofSeconds(10)));  // or choose how long</code></pre></div>
+<ul>
+    <li><strong>Kept out of history.</strong> Windows clipboard history, the cloud clipboard and monitors skip it. On Linux Jolt sets <code>x-kde-passwordManagerHint</code>, which Klipper and other managers honour.</li>
+    <li><strong>Taken off again.</strong> After the time is up the clipboard is emptied, but only if it still holds your value. If the user copied something else in the meantime, that stays.</li>
+    <li><strong>Removed at exit.</strong> A secret that is still there when the application ends is removed too.</li>
+    <li><strong>It is a request, not a lock.</strong> Other programs the user runs can still read the clipboard while the value is on it. Pair this with the <a th:href="@{/docs/credentials}">credential store</a> for storage, and use the clipboard only for the moment the user needs to paste.</li>
+    <li>You can set the same behaviour yourself with <code>withSensitive(true)</code> and <code>withClearAfter(duration)</code> on any content.</li>
+</ul>
+
+<h2 id="change">5. Reacting to changes</h2>
+<p>Watch the clipboard to enable a "Paste" button only when there is something to paste, or to offer "Import the copied image":</p>
+<div class="code" data-lang="java"><pre><code>Clipboard.Subscription watch = clipboard.onChange(formats -&gt; {          // UI thread; return quickly
+    window.postMessage(formats.contains(Clipboard.Format.IMAGE) ? "clipboard:image" : "clipboard:other");
+});
+
+// later, when you no longer care
+watch.close();</code></pre></div>
+<ul>
+    <li>The listener gets the <strong>formats only</strong>, never the content. Read what you need with the calls above.</li>
+    <li>It also fires for this application's own writes.</li>
+    <li><strong>Wayland limit:</strong> GTK 3 does not report clipboard owner changes on Wayland. Your own writes and clears are announced (since 0.4.1), but what other programs copy cannot be seen there. Where the system reports them, as Windows does, copies made by other programs arrive too.</li>
+</ul>
+
+<h2 id="hostile">6. Treat what you read as hostile</h2>
+<p>The clipboard is shared with every program the user runs, so whatever is on it came from whoever copied last. Jolt validates what it can, and you handle the rest:</p>
+<ul>
+    <li><strong>Limits.</strong> Content over 32 MB or more than 4096 files is refused. Lengths and offsets in data from other programs are checked against the data that is actually there, and text stops at the first NUL character.</li>
+    <li><strong>Text and file names</strong> can be anything. Do not run them, use them to build commands, or open them without checking.</li>
+    <li><strong>HTML</strong> from <code>readHtml()</code> may contain scripts and remote references. Never put it into a page without sanitizing it, and set text with <code>textContent</code> where you can.</li>
+    <li><strong>Images</strong> are validated as PNG at the header only. Jolt hands out the bytes without decoding them, so a program that decodes the image should expect a damaged one.</li>
+    <li><strong>File paths</strong> are always absolute and local. A network path such as <code>\\server\share\x</code> is dropped, because opening it would make Windows send the user's credentials to that server. Nothing is said about what is at a path.</li>
+    <li><strong>Nothing is logged.</strong> Content never reaches the log, and <code>ClipboardContent.toString()</code> only says which forms are present.</li>
+</ul>
+<p>Bad input to a write (an empty content, a relative path, text with a NUL) throws <code>IllegalArgumentException</code> when you build the <code>ClipboardContent</code>, before anything touches the clipboard.</p>
+
+</th:block>

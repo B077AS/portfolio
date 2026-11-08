@@ -67,6 +67,7 @@ jolt.postMessage("ready");</code></pre></div>
 
 <h2 id="devtools">Developer tools</h2>
 <p><code>WindowOptions.defaults().withDevTools(true)</code>, then right-click and choose Inspect, or call <code>window.openDevTools()</code>. You get the console, network and elements panels of the underlying browser. Turn them off for release builds if you do not want users poking around.</p>
+<p>Your page is an app, not a browser tab, so on Windows the browser's own shortcuts are switched off (since 0.3.3): <kbd>Ctrl</kbd>+<kbd>F</kbd> does not open the find bar, and <kbd>Ctrl</kbd>+<kbd>P</kbd>, <kbd>F5</kbd>, <kbd>Ctrl</kbd>+<kbd>R</kbd>, zoom keys, <kbd>F12</kbd> and <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>I</kbd> do nothing. With developer tools on, Inspect in the context menu still works. If you want a find box or a reload key, build it in the page. Zooming was removed in 0.3.3 as well.</p>
 <p>Next: <a th:href="@{/docs/tutorial}">a small app that puts it all together</a>.</p>
 
 
