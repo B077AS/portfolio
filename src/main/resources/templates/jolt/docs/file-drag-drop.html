@@ -50,7 +50,16 @@ window.loadResources(AppResources.classpath("ui"));</code></pre></div>
     <tr><td><code>x()</code>, <code>y()</code></td><td>Where the pointer was, in page pixels.</td></tr>
     </tbody>
 </table>
-<p>The window accepts a drop anywhere on the page, not only inside zones. Check <code>zone()</code> if drops outside your areas should be ignored.</p>
+<p>By default the window accepts a drop anywhere on the page, not only inside zones. Check <code>zone()</code> if drops outside your areas should be ignored, or make the page itself refuse them:</p>
+
+<h3 id="strict">Strict drops</h3>
+<p>Available since <strong>0.4.2</strong>. Put <code>data-jolt-drop-strict</code> on <code>&lt;html&gt;</code> and only the <code>data-jolt-drop</code> areas accept files:</p>
+<div class="code" data-lang="html"><pre><code>&lt;html data-jolt-drop-strict&gt;</code></pre></div>
+<ul>
+    <li>A file dragged over anything outside a drop area gets <code>dropEffect = 'none'</code>, so the user sees the system's not-allowed cursor, and a drop there is <strong>not delivered</strong> to <code>onFileDrop</code>.</li>
+    <li>Without the attribute the whole page accepts drops, as before.</li>
+    <li>On <strong>Windows</strong> this is done in the page script. On <strong>Linux</strong> only the delivery is refused: the cursor still shows "copy" outside the areas, because the host window reports the drag natively. Not yet verified: that WebKitGTK and WebView2 draw <code>dropEffect = 'none'</code> as the not-allowed cursor.</li>
+</ul>
 
 <h2 id="out">4. Drag files out of the window</h2>
 <p>The other direction: the user drags an item from your page into the file manager, onto the desktop or into another application. The page never names a file. It puts a <strong>token</strong>, a string you made up, on a draggable element, and your Java code says which files that token stands for:</p>

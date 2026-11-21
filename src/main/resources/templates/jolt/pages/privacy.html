@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{jolt/layouts/layout}">
+<body>
+<th:block layout:fragment="content">
+    <div class="wrap" style="padding-top:56px;padding-bottom:72px">
+        <article class="doc" style="max-width:720px;margin:0 auto">
+            <div class="kicker">Privacy</div>
+            <h1>Privacy notice</h1>
+            <p class="lead">This site has no accounts, no forms, no analytics, no advertising and no third-party trackers. It does not ask you for any personal data.</p>
+
+            <h2 id="storage">Cookies and local storage</h2>
+            <p>The site sets no cookies. It stores one thing in your browser, in local storage: your choice of light or dark theme, under the name <code>jolt-theme</code>. It stays on your device, is never sent to the server and identifies no one. Because it only remembers a preference you chose, no consent banner is shown.</p>
+
+            <h2 id="third-parties">Third parties</h2>
+            <p>Fonts and icons are served from this site, so your browser makes no requests to Google or other font providers. The version number and the changelog on these pages are fetched by the server from GitHub, not by your browser, so GitHub does not see you. Links to GitHub, Maven Central and williamsolari.com leave this site, and those services have their own policies.</p>
+
+            <h2 id="logs">Server logs</h2>
+            <p>Like any web server, the hosting infrastructure may keep standard access logs (IP address, time, requested page) for security and troubleshooting. They are not used to build profiles or for marketing.</p>
+
+            <h2 id="contact">Contact</h2>
+            <p>Questions about this notice: <a href="mailto:contact@williamsolari.com">contact@williamsolari.com</a>. The site is run by William Solari, see <a th:href="${site.portfolioUrl}">williamsolari.com</a>.</p>
+            <p class="note">Last updated: 21 November 2026.</p>
+        </article>
+    </div>
+</th:block>
+</body>
+</html>

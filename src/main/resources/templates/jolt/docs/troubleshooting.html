@@ -39,7 +39,9 @@
 <h2 id="debug">Looking inside</h2>
 <ul>
     <li>Create the window with <code>.withDevTools(true)</code> and use Inspect for the console, network and elements of the page.</li>
-    <li>Handler exceptions never reach the page, only a bare 500; the details are in your application log. For messages, an exception in an <code>Rpc</code> function comes back as the rejected promise's message.</li>
+    <li>Handler exceptions never reach the page by default, only a bare 500 from a <code>Router</code> and <code>code: "internal"</code> from an <code>Rpc</code>; the details are in your application log. To show the real message while you develop, use <code>rpc.onException(Throwable.class, (call, e) -&gt; RpcException.exposing(e))</code>. For errors your app expects, register <code>rpc.onException</code> or <code>router.onException</code> handlers for them. See <a th:href="@{/docs/rpc#errors}">RPC errors</a>.</li>
+    <li>A <code>jolt.call</code> that is rejected with <code>not_enabled</code> means no <code>Rpc</code> is attached to that window. Call <code>rpc.attach(window)</code> before <code>loadResources</code>, so the page has it from its first line.</li>
+    <li>A rejection with <code>unknown_method</code> is a name that no <code>on(...)</code> registered: check the spelling, and that the handler is registered on the <code>Rpc</code> you attached.</li>
     <li>On Linux, <code>AppOptions.of(id).withQuietNativeLogs(true)</code> hides GTK's known harmless warnings so real ones stand out.</li>
 </ul>
 

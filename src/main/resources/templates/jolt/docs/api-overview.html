@@ -18,6 +18,25 @@
     <tr><td><code>app.clipboard()</code></td><td>Read and write text, HTML, images and files. <a th:href="@{/docs/clipboard}">Clipboard</a></td></tr>
     <tr><td><code>app.urlSchemes()</code>, <code>UrlSchemes.findUrl(args, scheme)</code></td><td>Open the app for <code>myapp://</code> links. <a th:href="@{/docs/url-schemes}">Custom links</a></td></tr>
     <tr><td><code>app.setJumpList(JumpList)</code>, <code>app.supportsJumpList()</code></td><td>Tasks and categories on the taskbar or launcher icon menu. <a th:href="@{/docs/taskbar}">Taskbar</a></td></tr>
+    <tr><td><code>app.registerHotkey(Shortcut, Runnable)</code>, <code>app.supportsGlobalHotkeys()</code></td><td>A key combination that works while another program has the focus (Windows only). <a th:href="@{/docs/menus#hotkey}">Menus and hotkeys</a></td></tr>
+    </tbody>
+</table>
+
+<h2 id="rpc">Rpc: the page calls Java</h2>
+<p>Since 0.4.2, with streaming, interceptors and TypeScript in 0.5.0. Explained on <a th:href="@{/docs/rpc}">Calling Java from the page</a>.</p>
+<table>
+    <thead><tr><th scope="col">Java</th><th scope="col">Page</th><th scope="col">Notes</th></tr></thead>
+    <tbody>
+    <tr><td><code>Rpc.create([RpcOptions])</code>, <code>rpc.attach(window)</code> / <code>detach</code></td><td></td><td>Attach before the page loads. One <code>Rpc</code> can serve several windows.</td></tr>
+    <tr><td><code>rpc.on(name, handler)</code>, <code>on(name, Type.class, handler)</code></td><td><code>await jolt.call(name, params, { signal, timeout, onProgress })</code></td><td>Handlers run on virtual threads. A <code>JoltRpcError</code> has <code>code</code>, <code>message</code> and <code>data</code>.</td></tr>
+    <tr><td><code>call.progress(data)</code>, <code>call.checkCancelled()</code>, <code>call.window()</code></td><td><code>onProgress</code>, an <code>AbortSignal</code></td><td><code>RpcCall</code>, the second handler parameter.</td></tr>
+    <tr><td><code>rpc.emit(name, data)</code></td><td><code>jolt.onEvent(name, cb)</code></td><td>Java to page. Returns a function that unsubscribes.</td></tr>
+    <tr><td>Return a <code>Flow.Publisher</code>, or <code>call.stream()</code> for an <code>RpcStream</code> (<code>send</code>, <code>complete</code>, <code>fail</code>)</td><td><code>for await (const x of jolt.stream(name, params, { signal }))</code></td><td>Since 0.5.0. The page sets the pace, <code>RpcOptions.streamWindow</code> items at most.</td></tr>
+    <tr><td><code>rpc.onException(Type.class, (call, e) -&gt; new RpcException(...))</code>, <code>rpc.onError(listener)</code></td><td></td><td>What the page is told for an exception. <code>RpcException.exposing(e)</code> while developing.</td></tr>
+    <tr><td><code>rpc.before(...)</code>, <code>rpc.around((call, next) -&gt; ...)</code></td><td></td><td>Since 0.5.0. <code>RpcInterceptor</code>.</td></tr>
+    <tr><td><code>rpc.typeScript()</code>, <code>rpc.writeTypeScript(path)</code></td><td>typed <code>window.jolt</code></td><td>Since 0.5.0.</td></tr>
+    <tr><td><code>rpc.register(controller)</code>, <code>@JoltRpc</code>, <code>@JoltRpcExceptionHandler</code></td><td></td><td>Since 0.5.0. Annotated classes instead of <code>on</code>, by reflection.</td></tr>
+    <tr><td><code>RpcOptions</code>, <code>JsonCodec</code></td><td></td><td><code>withCodec</code>, <code>withMaxConcurrentCalls</code> (64), <code>withMaxMessageChars</code> (8 million), <code>withStreamWindow</code> (64), <code>withExecutor</code>. <code>JsonCodec.basic()</code> or <code>JsonCodec.of(...)</code>.</td></tr>
     </tbody>
 </table>
 
@@ -63,6 +82,9 @@
     <tr><td><code>setTaskbarProgress(TaskbarProgress)</code></td><td>Progress bar on the taskbar icon. <a th:href="@{/docs/taskbar#progress}">Taskbar</a></td></tr>
     <tr><td><code>setTaskbarButtons(List&lt;TaskbarButton&gt;)</code></td><td>Up to 7 buttons in the Windows taskbar preview. <a th:href="@{/docs/taskbar#buttons}">Taskbar</a></td></tr>
     <tr><td><code>isVisible</code>, <code>isFocused</code>, <code>isMinimized</code>, <code>isMaximized</code></td><td>State queries.</td></tr>
+    <tr><td><code>setMenuBar(Menu)</code>, <code>supportsMenuBar()</code></td><td>A native menu bar with shortcuts. <a th:href="@{/docs/menus#menubar}">Menus</a></td></tr>
+    <tr><td><code>setContextMenu(ContextMenuProvider)</code>, <code>edit(EditCommand)</code></td><td>Your own right-click menu; cut, copy, paste and more. <a th:href="@{/docs/menus#context}">Menus</a></td></tr>
+    <tr><td><code>printToPdf(PrintOptions)</code>, <code>print()</code></td><td>The page as PDF bytes; the print dialog. <a th:href="@{/docs/menus#print}">Print and PDF</a></td></tr>
     <tr><td><code>setCloseBehavior(CloseBehavior)</code></td><td><code>CLOSE</code> (default) or <code>HIDE</code>.</td></tr>
     <tr><td><code>onClosed(Runnable)</code></td><td>Called when the window has closed.</td></tr>
     <tr><td><code>openDevTools()</code></td><td>Developer tools (create with <code>withDevTools(true)</code>).</td></tr>
@@ -71,14 +93,14 @@
 </table>
 
 <h2 id="options">WindowOptions</h2>
-<p>Immutable; start from <code>WindowOptions.defaults()</code>. Methods: <code>withTitle</code>, <code>withSize</code>, <code>withMinSize</code>, <code>withIcon</code>, <code>withTitleBarScheme</code>, <code>withBackgroundColor</code>, <code>withMaximized</code>, <code>withCentered</code>, <code>withVisible</code>, <code>withFrameless</code>, <code>withOwner</code>, <code>withDevTools</code>, <code>withSecurity</code>. See <a th:href="@{/docs/window-options}">Window look and placement</a>.</p>
+<p>Immutable; start from <code>WindowOptions.defaults()</code>. Methods: <code>withTitle</code>, <code>withSize</code>, <code>withMinSize</code>, <code>withIcon</code>, <code>withTitleBarScheme</code>, <code>withBackgroundColor</code>, <code>withMaximized</code>, <code>withCentered</code>, <code>withVisible</code>, <code>withFrameless</code>, <code>withResizable</code> (0.4.2), <code>withOwner</code>, <code>withDevTools</code>, <code>withSecurity</code>. See <a th:href="@{/docs/window-options}">Window look and placement</a>.</p>
 
 <h2 id="requests">Handling page requests</h2>
 <table>
     <thead><tr><th scope="col">Type</th><th scope="col">Main members</th></tr></thead>
     <tbody>
     <tr><td><code>RequestHandler</code></td><td><code>AppResponse handle(AppRequest)</code>; return <code>null</code> to let files answer.</td></tr>
-    <tr><td><code>Router</code></td><td><code>get/post/put/patch/delete(pattern, route)</code>, <code>group</code>, <code>before</code>, <code>onError</code>.</td></tr>
+    <tr><td><code>Router</code></td><td><code>get/post/put/patch/delete(pattern, route)</code>, <code>group</code>, <code>before</code>, <code>onException(Type.class, (request, error) -&gt; response)</code>, <code>onError((request, error) -&gt; ...)</code> as a listener (changed in 0.5.0).</td></tr>
     <tr><td><code>AppRequest</code></td><td><code>method</code>, <code>path</code>, <code>param</code>, <code>queryParams</code>, <code>form</code>, <code>formValue</code>, <code>bodyText</code>, <code>header</code>, <code>isHtmx</code>, <code>parts</code>, <code>part</code>.</td></tr>
     <tr><td><code>AppResponse</code></td><td><code>html</code>, <code>text</code>, <code>status</code>, <code>redirect</code>, <code>withStatus</code>, <code>withHeader</code>.</td></tr>
     <tr><td><code>ResourceOptions</code></td><td><code>withMaxRequestBytes</code> (default 8 MB, max 1 GB), <code>withStartPath</code>.</td></tr>
@@ -98,6 +120,9 @@
     <tr><td><code>Dialogs</code>, <code>FileDialogOptions</code>, <code>FileFilter</code></td><td>Native file dialogs. <a th:href="@{/docs/dialogs}">Dialogs</a></td></tr>
     <tr><td><code>Notification</code></td><td>Toasts with click, buttons and reply.</td></tr>
     <tr><td><code>Tray</code>, <code>TrayMenu</code>, <code>Autostart</code>, <code>CloseBehavior</code></td><td><a th:href="@{/docs/tray}">Tray</a></td></tr>
+    <tr><td><code>Menu</code>, <code>Shortcut</code>, <code>Hotkey</code>, <code>ContextMenuInfo</code>, <code>EditCommand</code></td><td>Menu bar, context menu and global hotkeys. <a th:href="@{/docs/menus}">Menus, hotkeys and PDF</a></td></tr>
+    <tr><td><code>PrintOptions</code>, <code>Paper</code></td><td>Options for <code>printToPdf</code>. <a th:href="@{/docs/menus#print}">Print and PDF</a></td></tr>
+    <tr><td><code>io.github.b077as.jolt.spring.JoltSpringApplication</code></td><td>Run a Spring Boot 4 application in a window (module <code>jolt-spring-boot-starter</code>). <a th:href="@{/docs/spring-boot}">Spring Boot</a></td></tr>
     <tr><td><code>BinaryChannel</code>, <code>ChannelOptions</code></td><td><a th:href="@{/docs/channels}">Channels</a></td></tr>
     <tr><td><code>OpenWindowRequest</code>, <code>WindowOpener</code></td><td><a th:href="@{/docs/popout-windows}">Pop-out windows</a></td></tr>
     <tr><td><code>io.github.b077as.jolt.credentials.CredentialStore</code></td><td>OS keystore. <a th:href="@{/docs/credentials}">Saving passwords</a></td></tr>

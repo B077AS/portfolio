@@ -458,8 +458,10 @@
     box-shadow: var(--shadow-md);
 }
 
-/* Marks the single most important project in the list. Sits on the static
-   wrapper (not the rotating faces) so it stays put through the flip. */
+/* Marks the most important projects in the list. Sits on the static
+   wrapper (not the rotating faces) so it stays put through the flip. It is centered on the
+   top edge, away from the sides: in the coverflow the neighbours of the centered card tuck
+   under it, and a badge near a side edge would be cut off. */
 .project-card-featured {
     border-color: var(--color-accent);
     box-shadow: 0 0 0 1px var(--color-accent-soft);
@@ -474,7 +476,9 @@
 .project-badge {
     position: absolute;
     top: -0.7rem;
-    right: 1.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    white-space: nowrap;
     z-index: 2;
     display: inline-flex;
     align-items: center;

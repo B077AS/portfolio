@@ -1,0 +1,178 @@
+<th:block xmlns:th="http://www.thymeleaf.org" th:fragment="body">
+
+<p>Available since <strong>0.4.2</strong>. The <a th:href="@{/docs/messaging}">messaging page</a> ends with a request and response layer you write yourself. Jolt now has one built in: the page calls a Java function with <code>jolt.call</code> and gets a promise back, and Java can push events to the page. It handles JSON, errors, cancellation, progress and limits for you, so you no longer copy an <code>Rpc</code> class and a <code>call()</code> function into every project. Streaming results, interceptors and generated TypeScript types arrived in <strong>0.5.0</strong>.</p>
+
+<h2 id="first">1. The smallest call</h2>
+<p>Create an <code>Rpc</code>, register functions by name, and attach it to a window <strong>before the page loads</strong>:</p>
+<div class="code" data-lang="java"><pre><code>Rpc rpc = Rpc.create()
+        .on("hello", call -&gt; "Hello from Java");
+
+rpc.attach(window);
+window.loadResources(AppResources.classpath("ui"));</code></pre></div>
+<div class="code" data-lang="js"><pre><code>const text = await jolt.call('hello');      // "Hello from Java"</code></pre></div>
+<ul>
+    <li>A handler runs on a <strong>virtual thread</strong>, one per call, never on the UI thread. It may block, wait on a database or take a while, and the window stays responsive.</li>
+    <li>What a handler returns is sent back as JSON. A handler may also return a <code>CompletionStage</code>; the page gets the value it completes with.</li>
+    <li>RPC traffic never reaches <code>window.onMessage</code> or <code>jolt.onMessage</code>, so those stay free for your own messages. One <code>Rpc</code> can serve several windows, and <code>call.window()</code> tells a handler which one asked.</li>
+</ul>
+
+<h2 id="params">2. Parameters and results</h2>
+<p>Tell <code>on</code> which type the page sends and Jolt decodes the JSON into it. Records work well:</p>
+<div class="code" data-lang="java"><pre><code>record NewNote(String text, List&lt;String&gt; tags) {}
+
+Rpc rpc = Rpc.create()
+        .on("notes.list", call -&gt; store.list())                                        // no parameters
+        .on("notes.add", NewNote.class, note -&gt; store.add(note.text(), note.tags()));  // one parameter</code></pre></div>
+<div class="code" data-lang="js"><pre><code>const notes = await jolt.call('notes.list');
+const added = await jolt.call('notes.add', { text: 'Buy milk', tags: ['home'] });</code></pre></div>
+<p>The built-in JSON reader and writer, <code>JsonCodec.basic()</code>, needs no library. It handles records, enums, collections, maps, arrays, <code>Optional</code>, <code>UUID</code> and the <code>java.time</code> types. If your app already uses Gson or Jackson, plug it in once:</p>
+<div class="code" data-lang="java"><pre><code>// Gson
+RpcOptions options = RpcOptions.defaults().withCodec(JsonCodec.of(gson::toJson, gson::fromJson));
+
+// Jackson
+RpcOptions options = RpcOptions.defaults().withCodec(JsonCodec.of(
+        mapper::writeValueAsString,
+        (json, type) -&gt; mapper.readValue(json, mapper.constructType(type))));
+
+Rpc rpc = Rpc.create(options);</code></pre></div>
+<p>Treat everything the page sends as untrusted input and check it, exactly as you would a web form.</p>
+
+<h2 id="errors">3. Errors</h2>
+<p>Throw an <code>RpcException</code> to tell the page what went wrong. It carries a code, a message and optional data, and the promise rejects with a <code>JoltRpcError</code> that has the same three fields:</p>
+<div class="code" data-lang="java"><pre><code>.on("notes.get", Integer.class, id -&gt; {
+    Note note = store.find(id);
+    if (note == null) throw new RpcException("not_found", "No note " + id, Map.of("id", id));
+    return note;
+})</code></pre></div>
+<div class="code" data-lang="js"><pre><code>try {
+  await jolt.call('notes.get', 7);
+} catch (e) {
+  console.log(e.code, e.message, e.data);      // "not_found" "No note 7" { id: 7 }
+}</code></pre></div>
+<p>Any <em>other</em> exception reaches the page only as <code>code: "internal"</code> with a generic message, so file paths and SQL never leak. It is logged and passed to <code>rpc.onError(...)</code>. That is the safe default, but for the failures your app <em>expects</em> you usually want the page to see the real reason. Say so per exception type:</p>
+<div class="code" data-lang="java"><pre><code>rpc.onException(IllegalArgumentException.class, (call, e) -&gt; new RpcException("invalid", e.getMessage()))
+   .onException(SQLException.class,            (call, e) -&gt; new RpcException("sql", e.getMessage()));</code></pre></div>
+<ul>
+    <li>The <strong>most specific type wins</strong>, as with <code>catch</code> clauses. <code>Throwable.class</code> catches the rest.</li>
+    <li>A handler always answers with an <code>RpcException</code>. It sees the exception itself, unwrapped from <code>ExecutionException</code> or <code>CompletionException</code>.</li>
+    <li>An exception with a handler is an <strong>expected failure</strong>: it is logged at <code>DEBUG</code>, not as a warning, and not given to <code>onError</code>. One without a handler is a bug and is reported as before.</li>
+    <li>While you develop, <code>rpc.onException(Throwable.class, (call, e) -&gt; RpcException.exposing(e))</code> shows every real class and message in the page.</li>
+    <li>An error message is cut to 4096 characters. A <code>bad_params</code> answer never carries the JSON library's message, because it can name your classes and fields.</li>
+    <li>Jolt's own codes are <code>unknown_method</code>, <code>bad_params</code>, <code>too_many_calls</code>, <code>too_large</code>, <code>unavailable</code> and <code>stream_required</code>; the page itself can also produce <code>timeout</code>, <code>bad_request</code> and <code>not_enabled</code> (no <code>Rpc</code> is attached to the window).</li>
+</ul>
+<div class="callout"><strong>Changed in 0.5.0:</strong> <code>RpcOptions.withExposeErrorMessages(true)</code> is gone. Use the <code>RpcException.exposing</code> line above instead. <code>RpcOptions</code> also gained <code>streamWindow</code>, so code that calls its constructor directly must pass it: <code>RpcOptions(codec, maxMessageChars, maxConcurrentCalls, streamWindow, executor)</code>. The <code>with...</code> methods are unaffected.</div>
+
+<h2 id="long">4. Long work: progress, cancel and timeout</h2>
+<p>A handler can take a second parameter, the <code>RpcCall</code>, to report progress and notice that the page gave up:</p>
+<div class="code" data-lang="java"><pre><code>.on("export", ExportRequest.class, (request, call) -&gt; {
+    for (Page page : request.pages()) {
+        call.checkCancelled();                  // throws if the page gave up
+        write(page);
+        call.progress(page.number());           // reaches onProgress in the page
+    }
+    return "done";
+})</code></pre></div>
+<div class="code" data-lang="js"><pre><code>const controller = new AbortController();
+const result = await jolt.call('export', { pages }, {
+  signal: controller.signal,                    // controller.abort() cancels the call
+  timeout: 60_000,                              // milliseconds
+  onProgress: (n) =&gt; (bar.value = n),
+});</code></pre></div>
+<p>An aborted <code>signal</code>, a passed <code>timeout</code>, a reload or navigation, closing the window and <code>rpc.detach(window)</code> all cancel the call: Java interrupts the handler's thread and drops its answer.</p>
+
+<h2 id="events">5. Java telling the page</h2>
+<p>Not everything is an answer. Push an event to every attached window, from any thread:</p>
+<div class="code" data-lang="java"><pre><code>rpc.emit("notes.changed", store.count());           // every attached window
+rpc.emit(window, "notes.changed", store.count());   // one window</code></pre></div>
+<div class="code" data-lang="js"><pre><code>const stop = jolt.onEvent('notes.changed', (count) =&gt; (badge.textContent = count));
+// stop() unsubscribes</code></pre></div>
+
+<h2 id="streams">6. Streaming results</h2>
+<p>Available since <strong>0.5.0</strong>. Some methods have many answers over time: lines of a log, rows of a query, steps of a job. Return a <code>Flow.Publisher</code>, or fill an <code>RpcStream</code>, and read it in the page with <code>jolt.stream</code>, an async iterator:</p>
+<div class="code" data-lang="java"><pre><code>rpc.on("tail", call -&gt; {
+    RpcStream&lt;String&gt; out = call.stream();
+    try (BufferedReader log = Files.newBufferedReader(path)) {
+        for (String line; (line = log.readLine()) != null; ) {
+            out.send(line);          // waits while the page is behind; throws if it gave up
+        }
+    }
+    return null;                     // the stream ends when the handler returns
+});
+
+rpc.on("rows", call -&gt; database.rowsPublisher());   // a Publisher is forwarded item by item</code></pre></div>
+<div class="code" data-lang="js"><pre><code>for await (const line of jolt.stream('tail', { file: 'app.log' }, { signal })) {
+  append(line);                      // break (or abort) stops the producer in Java
+}</code></pre></div>
+<ul>
+    <li><strong>The page sets the pace.</strong> It asks for more items as it consumes them, so at most <code>RpcOptions.streamWindow</code> (64 by default) are in flight. <code>send</code> waits, a <code>Publisher</code> is asked for no more, and a page cannot grant more than the window.</li>
+    <li>If the handler throws, the stream ends with a <code>JoltRpcError</code> after the items already sent. A <code>break</code>, an abort or a reload cancels it like any other call.</li>
+    <li>A stream counts as a running call until it ends, so <code>maxConcurrentCalls</code> applies to it.</li>
+    <li>A handler can return its <code>RpcStream</code> so that another thread keeps filling it and calls <code>complete()</code> or <code>fail(error)</code> later.</li>
+    <li>A plain value read with <code>jolt.stream</code> is a stream of one item. A streaming method called with <code>jolt.call</code> is answered with <code>stream_required</code>.</li>
+</ul>
+
+<h2 id="interceptors">7. Interceptors</h2>
+<p>Available since <strong>0.5.0</strong>. Code that should run around <em>every</em> call, such as a sign-in check, timing or logging, does not belong in each handler:</p>
+<div class="code" data-lang="java"><pre><code>rpc.before(call -&gt; {
+    if (!session.isSignedIn() &amp;&amp; !call.method().startsWith("auth.")) {
+        throw new RpcException("unauthorized", "Please sign in");   // refuses the call
+    }
+});
+
+rpc.around((call, next) -&gt; {
+    long start = System.nanoTime();
+    try {
+        return next.handle(call);               // run the rest of the chain and the method itself
+    } finally {
+        log.debug("{} took {} ms", call.method(), (System.nanoTime() - start) / 1_000_000);
+    }
+});</code></pre></div>
+<p>Interceptors run in the order you register them, the first one outermost, and only for methods that exist. They see the <em>value</em> a <code>CompletionStage</code> resolves to, not the stage. Whatever they throw goes through the exception handlers from section 3.</p>
+
+<h2 id="typescript">8. TypeScript types</h2>
+<p>Available since <strong>0.5.0</strong>. If your page is written in TypeScript, let Jolt write the declarations of your Java methods, so a wrong method name, parameter or result is a compile error:</p>
+<div class="code" data-lang="java"><pre><code>rpc.writeTypeScript(Path.of("frontend/src/jolt-api.d.ts"));    // call it at start-up while developing</code></pre></div>
+<div class="code" data-lang="ts"><pre><code>const notes = await window.jolt.call('notes.list');              // Note[]
+await window.jolt.call('notes.add', { txt: 'x' });               // error: no property 'txt'
+for await (const note of window.jolt.stream('notes.watch')) {}   // note is a Note</code></pre></div>
+<ul>
+    <li>The file has an interface per record, a type per enum and a typed <code>window.jolt</code> with <code>call</code> and <code>stream</code>. It is only rewritten when its text changes, so it does not disturb a dev server. <code>rpc.typeScript()</code> returns the text instead of writing it.</li>
+    <li>The types come from the declared parameter and return types of methods registered with <code>rpc.register(controller)</code> (next section). A <code>CompletionStage</code> is unwrapped, and a <code>Publisher&lt;T&gt;</code> or <code>RpcStream&lt;T&gt;</code> result is a stream.</li>
+    <li>A method registered with <code>on</code> and a lambda has no declared result, so the page sees <code>unknown</code> (and the parameter type only if you passed the class, as in <code>on("notes.add", NewNote.class, handler)</code>). To state both, use the longer form: <code>rpc.on("notes.add", NewNote.class, Note.class, call -&gt; store.add(call.params(NewNote.class)))</code>. The types change nothing at run time.</li>
+    <li>The shapes follow <code>JsonCodec.basic()</code>. A JSON library that renames properties or writes dates differently needs declarations of its own.</li>
+    <li>A record component that can be null is written <code>name?: T | null</code>, unless it is primitive or annotated <code>@NonNull</code> (any annotation with that name).</li>
+</ul>
+
+<h2 id="register">9. Annotated controllers</h2>
+<p>Available since <strong>0.5.0</strong>. <code>rpc.on(...)</code> is the preferred way: the compiler checks it and it needs no reflection. If your app has a great many methods, you can group them in classes and register the objects instead:</p>
+<div class="code" data-lang="java"><pre><code>@JoltRpc("notes")                                     // optional prefix
+class NotesService {
+    @JoltRpc List&lt;Note&gt; list() { ... }                // "notes.list"
+    @JoltRpc("add") Note add(NewNote note) { ... }    // "notes.add"
+    @JoltRpc String export(Request r, RpcCall call) { call.progress(50); ... }
+}
+
+class RpcErrors {
+    @JoltRpcExceptionHandler                          // like rpc.onException(SQLException.class, ...)
+    RpcException sql(SQLException e) { return new RpcException("sql", e.getMessage()); }
+}
+
+rpc.register(new NotesService(store)).register(new RpcErrors());</code></pre></div>
+<p>A method takes at most one parameter for what the page sends, plus optionally the <code>RpcCall</code> and the calling <code>WebWindow</code>. Everything about errors, threads and cancellation is as above. The price is that the methods are found by <strong>reflection</strong>:</p>
+<ul>
+    <li>A repeated name, a static method or a method of the wrong shape is reported when you call <code>register</code> (as an <code>IllegalStateException</code>, with nothing of that controller registered), not by the compiler.</li>
+    <li>Native images and trimmed (<code>jlink</code>) module sets need extra configuration for reflection.</li>
+    <li>Names are strings inside annotations.</li>
+</ul>
+<p>It pays off when one class per area of the app reads better than a long list of <code>on</code> calls. In a <a th:href="@{/docs/spring-boot}">Spring Boot</a> application the beans are found for you.</p>
+
+<h2 id="limits">10. Limits and security</h2>
+<ul>
+    <li>Only pages whose origin your <a th:href="@{/docs/security}">SecurityPolicy</a> trusts can call, and only from the top-level document.</li>
+    <li>A window can have <strong>64</strong> calls running at once and send requests of up to <strong>8 million</strong> characters. Both are in <code>RpcOptions</code>.</li>
+    <li>For big or binary data, use a <a th:href="@{/docs/channels}">channel</a> instead of a call.</li>
+    <li>If you still have your own <code>Rpc</code> class from the old messaging page, delete it. Pick a method naming scheme like <code>area.action</code>; names starting with <code>jolt.</code> are reserved.</li>
+</ul>
+<p>Next: <a th:href="@{/docs/frontend}">building the frontend</a> with real files.</p>
+
+</th:block>

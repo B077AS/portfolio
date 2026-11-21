@@ -38,16 +38,17 @@
     </tbody>
 </table>
 
-<h2 id="talking">Three ways for Java and the page to talk</h2>
+<h2 id="talking">Four ways for Java and the page to talk</h2>
 <table>
     <thead><tr><th scope="col">Way</th><th scope="col">What it is</th><th scope="col">Good for</th></tr></thead>
     <tbody>
-    <tr><td><strong>Messages</strong></td><td><code>jolt.postMessage</code> / <code>window.onMessage</code> and back. Text in both directions, either side can start.</td><td>Almost everything: calling Java functions, pushing updates to the page.</td></tr>
+    <tr><td><strong>Messages</strong></td><td><code>jolt.postMessage</code> / <code>window.onMessage</code> and back. Text in both directions, either side can start.</td><td>Simple notes between the two sides; the layer everything else is built on.</td></tr>
+    <tr><td><strong>RPC</strong></td><td>The page calls a Java function with <code>jolt.call</code> and gets a promise; Java pushes events with <code>rpc.emit</code>, and a method can stream many results.</td><td>Almost every app: "load the notes", "save this", "export with progress".</td></tr>
     <tr><td><strong>Requests</strong></td><td>The page makes normal <code>fetch</code> calls, form posts or htmx requests; a Java handler answers them.</td><td>Apps built like a small website; server-style pages and JSON APIs.</td></tr>
     <tr><td><strong>Channels</strong></td><td>A named two-way pipe for bytes.</td><td>Large or binary data: images, video frames, files.</td></tr>
     </tbody>
 </table>
-<p>Start with messages. They are enough for most apps, and the other two are there when you need them.</p>
+<p>Start with messages to see how the two sides connect, then use RPC for the app itself. Requests and channels are there when you need them. If your Java side is already a Spring Boot application, <a th:href="@{/docs/spring-boot}">the starter</a> wires RPC to your beans for you.</p>
 
 <h2 id="ui-thread">The UI thread</h2>
 <p>A window system works on one thread, called the <strong>UI thread</strong>. <code>app.run</code> makes the thread that calls it the UI thread. Two rules cover nearly everything:</p>
@@ -71,7 +72,7 @@
     <tr><td>Handler</td><td>Java code that answers a request the page makes to your app.</td></tr>
     </tbody>
 </table>
-<p>Next: <a th:href="@{/docs/messaging}">messaging between Java and the page</a>.</p>
+<p>Next: <a th:href="@{/docs/messaging}">messaging between Java and the page</a>, and then <a th:href="@{/docs/rpc}">RPC</a>.</p>
 
 
 </th:block>

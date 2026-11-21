@@ -28,5 +28,17 @@
 <h2 id="in-practice">4. In practice</h2>
 <p><a th:href="@{/parsel}">Parsel</a> ships this way: a Windows installer of about 33 MB with its own Java runtime inside, plus a portable zip and Linux packages. There is no bundled browser, because the app uses the web view your system already has.</p>
 
+<h2 id="updates">5. Keeping installs up to date</h2>
+<p><code>jpackage</code> makes the first install. It has no answer for the second release: how does a copy that is already on someone's machine get the new jars, or a newer Java? <a th:href="@{/jpack}">jpack</a> is Jolt's companion for exactly that. A Maven plugin builds the install folder with its own Java runtime, and a small native program next to your app downloads new releases from plain files (a GitHub release is enough), verifies them, swaps them in while nothing is running, and starts the new version. It replaces the <code>jpackage</code> command above, and a new jar costs users a download of just that jar.</p>
+<p>It works with any Java app, and it fits Jolt especially well: the launcher that shows "checking, downloading 42%" can be a small Jolt window, and a Jolt app can tell jpack the moment its window is on screen. <a th:href="@{/jpack}">Read how jpack and Jolt fit together</a>.</p>
+<p>If you start the app from a Jolt launcher, the app tells jpack when it is up:</p>
+<div class="code" data-lang="java"><pre><code>window.show();
+if (Jpack.isAvailable()) {
+    try (Jpack jpack = Jpack.connect()) {
+        jpack.notifyShown();      // the launcher can close now: no blank moment between the two
+    }
+}</code></pre></div>
+<p>In a <a th:href="@{/docs/spring-boot}">Spring Boot</a> app, <code>JoltRuntime.whenShown()</code> is the moment to call it.</p>
+
 
 </th:block>

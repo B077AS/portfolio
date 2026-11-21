@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class JoltDocs {
 
-    private static final LocalDate UPDATED = LocalDate.of(2026, 11, 8);
+    private static final LocalDate UPDATED = LocalDate.of(2026, 11, 21);
 
     private final List<DocPage> pages = List.of(
             page("getting-started", "Getting started", "Start",
@@ -23,6 +23,8 @@ public class JoltDocs {
                     "The few ideas behind every Jolt app in plain terms: application, window, the UI thread, and the ways to show a page and talk to it."),
             page("messaging", "Messaging between Java and the page", "Start",
                     "Send messages both ways between Java and the page, step by step from one string to calling Java functions like async functions."),
+            page("rpc", "Calling Java from the page (RPC)", "Start",
+                    "Call Java functions with jolt.call and get promises back: JSON, errors, progress, cancellation, streaming results, interceptors and TypeScript types."),
             page("frontend", "Building the frontend", "Start",
                     "Put your page in HTML, CSS and JS files and show it: from a folder or a dev server with hot reload while you work, from the jar for release."),
             page("tutorial", "Tutorial: a notes app", "Start",
@@ -31,6 +33,8 @@ public class JoltDocs {
                     "Let the page talk to Java like a website talks to a server: fetch, forms and htmx answered by a handler or the Router, with no socket."),
             page("channels", "Binary channels", "Serving",
                     "Open named two-way channels to move video frames, images and files between Java and the page without base64 or JSON."),
+            page("spring-boot", "Spring Boot", "Serving",
+                    "Run a Spring Boot 4 application in a Jolt window: your beans answer the page over RPC or through a guarded local server, with no extra setup."),
             page("dialogs", "File dialogs", "Desktop",
                     "Open the native open, save and folder dialogs from Java or from the page, without the page ever seeing a file path."),
             page("notifications", "System notifications", "Desktop",
@@ -43,6 +47,8 @@ public class JoltDocs {
                     "Let a page ask for another window while your Java code decides, with keys to avoid duplicates and broadcasts between windows."),
             page("window-options", "Window look and placement", "Desktop",
                     "Set size, icon, theme and start position of a window, then draw your own title bar, go full screen and get Windows 11 snap layouts."),
+            page("menus", "Menus, hotkeys and PDF", "Desktop",
+                    "Add a native menu bar with shortcuts, your own right-click menu, a global hotkey and print the page to a PDF, all from Java."),
             page("tray", "Tray icon, close to tray and autostart", "Desktop",
                     "Add a tray icon and menu, hide the window on close, start with the computer and allow only one copy per user."),
             page("taskbar", "Taskbar progress, buttons and jump list", "Desktop",
@@ -54,7 +60,7 @@ public class JoltDocs {
             page("credentials", "Saving passwords and tokens", "Reference",
                     "Store secrets in the Windows Credential Manager or the Linux Secret Service with the optional jolt-credentials module."),
             page("packaging", "Packaging your app", "Reference",
-                    "Turn your jars into a double-clickable app that bundles its own Java runtime with jpackage, about 32 MB in size."),
+                    "Turn your jars into a double-clickable app that bundles its own Java runtime with jpackage, about 32 MB in size, and keep installs up to date with jpack."),
             page("api-overview", "API at a glance", "Reference",
                     "A quick lookup of the main Jolt types and calls for Java and for the page, with links to the page that explains each."),
             page("troubleshooting", "Troubleshooting", "Reference",

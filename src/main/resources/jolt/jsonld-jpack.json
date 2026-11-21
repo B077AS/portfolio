@@ -1,0 +1,35 @@
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "SoftwareSourceCode",
+      "name": "jpack",
+      "description": "{{description}}",
+      "url": "{{url}}",
+      "codeRepository": "{{jpackGithub}}",
+      "programmingLanguage": "Java",
+      "license": "https://www.apache.org/licenses/LICENSE-2.0",
+      "version": "{{version}}",
+      "author": { "@type": "Person", "name": "William Solari", "url": "{{portfolio}}" }
+    },
+    {
+      "@type": "SoftwareApplication",
+      "name": "jpack",
+      "applicationCategory": "DeveloperApplication",
+      "operatingSystem": "Windows, Linux",
+      "softwareVersion": "{{version}}",
+      "url": "{{url}}",
+      "downloadUrl": "{{jpackCentral}}",
+      "description": "{{description}}",
+      "author": { "@type": "Person", "name": "William Solari", "url": "{{portfolio}}" },
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Jolt", "item": "{{home}}" },
+        { "@type": "ListItem", "position": 2, "name": "jpack", "item": "{{url}}" }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,123 @@
+<th:block xmlns:th="http://www.thymeleaf.org" th:fragment="body">
+
+<p>Available since <strong>0.4.2</strong>. If your Java code is already a Spring Boot application, it can be the backend of a Jolt window: your beans, Spring Data repositories, validation and configuration stay as they are, and the window shows your page. The module is <code>jolt-spring-boot-starter</code> and it needs <strong>Spring Boot 4</strong>. This page shows the two ways the page can reach your beans and how the window and the Spring context start and stop together.</p>
+
+<h2 id="add">1. Add the starter</h2>
+<p>Add the starter next to <code>jolt-core</code> and the two backends from <a th:href="@{/docs/getting-started}">Getting started</a>:</p>
+<div class="code" data-lang="xml" data-file="pom.xml"><pre><code>&lt;dependency&gt;
+  &lt;groupId&gt;io.github.b077as&lt;/groupId&gt;
+  &lt;artifactId&gt;jolt-spring-boot-starter&lt;/artifactId&gt;
+  &lt;version&gt;<span th:text="${site.version}">0.5.0</span>&lt;/version&gt;
+&lt;/dependency&gt;</code></pre></div>
+<p>Then start the application with <code>JoltSpringApplication</code> instead of <code>SpringApplication</code>:</p>
+<div class="code" data-lang="java" data-file="NotesApp.java"><pre><code>@SpringBootApplication
+public class NotesApp {
+    public static void main(String[] args) {
+        JoltSpringApplication.run(NotesApp.class, args);
+    }
+}</code></pre></div>
+<p>That opens a native window and runs Spring behind it, in one process. The calling thread becomes Jolt's UI thread, and Spring starts on another thread at the same time, so the window and its web view are created while your beans are.</p>
+
+<h2 id="modes">2. Two ways for the page to reach your beans</h2>
+<p>By default (<code>jolt.mode=auto</code>) the starter picks <strong>web</strong> when your application runs a servlet web server (Spring MVC) and <strong>rpc</strong> otherwise. You can set <code>jolt.mode</code> yourself.</p>
+<table>
+    <thead><tr><th scope="col"></th><th scope="col">rpc mode</th><th scope="col">web mode</th></tr></thead>
+    <tbody>
+    <tr><th scope="row">Needs</th><td>No web server</td><td>Spring MVC</td></tr>
+    <tr><th scope="row">The page's files come from</th><td><code>src/main/resources/ui</code> (<code>jolt.ui</code>)</td><td>Your MVC application: controllers, templates, static files</td></tr>
+    <tr><th scope="row">The page reaches beans through</th><td><code>jolt.call</code> to <code>@JoltRpc</code> methods</td><td>Normal requests, and <code>jolt.call</code> works too</td></tr>
+    <tr><th scope="row">Listens on the network</th><td>Nothing</td><td>A guarded server on <code>127.0.0.1</code></td></tr>
+    <tr><th scope="row">Good for</th><td>A single-page frontend (Vue, React, Svelte)</td><td>Server-rendered pages: Thymeleaf, JTE, htmx</td></tr>
+    </tbody>
+</table>
+
+<h2 id="rpc">3. rpc mode</h2>
+<p>Mark bean methods with <code>@JoltRpc</code> (<code>io.github.b077as.jolt.JoltRpc</code>, the same annotation <code>Rpc.register</code> uses, see <a th:href="@{/docs/rpc#register}">annotated controllers</a>). They answer <code>jolt.call</code>, and nothing listens on the network. Set <code>spring.main.web-application-type=none</code> if Spring MVC is on the class path anyway.</p>
+<div class="code" data-lang="java"><pre><code>@Service
+@JoltRpc("notes")                                    // optional prefix
+class NotesService {
+    @JoltRpc List&lt;Note&gt; list() { ... }               // jolt.call("notes.list")
+    @JoltRpc Note add(NewNote note) { ... }          // jolt.call("notes.add", { text: "..." })
+    @JoltRpc String export(Request r, RpcCall call) { call.progress(50); ... }
+}</code></pre></div>
+<div class="code" data-lang="js"><pre><code>const notes = await jolt.call('notes.list');
+await jolt.call('notes.add', { text: 'Buy milk' });</code></pre></div>
+<ul>
+    <li>A method takes at most one parameter for what the page sends (decoded into its type, generics included), plus optionally the <code>RpcCall</code> and the calling <code>WebWindow</code>. It runs on a virtual thread and may return a <code>CompletionStage</code>, a <code>Flow.Publisher</code> or an <code>RpcStream</code> (<a th:href="@{/docs/rpc#streams}">streaming</a>).</li>
+    <li><strong>JSON is your application's own:</strong> its Jackson 3 <code>ObjectMapper</code> (Spring Boot 4's default), a Jackson 2 or Gson bean, or else <code>JsonCodec.basic()</code>. A <code>JsonCodec</code>, <code>RpcOptions</code> or <code>Rpc</code> bean of your own replaces the starter's.</li>
+    <li><strong>Errors</strong> work as in <a th:href="@{/docs/rpc#errors}">RPC</a>. An <code>RpcException</code> reaches the page with its code, and anything else only as <code>internal</code>, unless you say otherwise.</li>
+    <li>Inject <code>Rpc</code> anywhere to push events with <code>rpc.emit(...)</code>.</li>
+    <li>Two methods with one name, or a name starting with <code>jolt.</code>, stop the application at start-up with a message that names them.</li>
+</ul>
+
+<h3 id="rpc-beans">Beans that join the Rpc</h3>
+<p>Available since <strong>0.5.0</strong>. Instead of calling <code>rpc.before</code> or <code>rpc.onException</code> yourself, declare beans, as you would in any Spring application:</p>
+<div class="code" data-lang="java"><pre><code>@Component
+@Order(1)
+class SignedIn implements RpcInterceptor {                  // wraps every call; @Order sets the order
+    public Object intercept(RpcCall call, RpcHandler next) throws Exception {
+        if (!session.isSignedIn()) throw new RpcException("unauthorized", "Please sign in");
+        return next.handle(call);
+    }
+}
+
+@Component
+class SqlErrors implements RpcExceptionHandler&lt;SQLException&gt; {   // the exception type comes from the generic
+    public RpcException handle(RpcCall call, SQLException e) { return new RpcException("sql", e.getMessage()); }
+}
+
+@Component
+class MoreErrors {
+    @JoltRpcExceptionHandler                                // like Spring's @ExceptionHandler
+    RpcException invalid(IllegalArgumentException e) { return new RpcException("invalid", e.getMessage()); }
+}</code></pre></div>
+<p><code>@JoltRpcExceptionHandler</code> methods are checked at start-up: one exception parameter (optionally also an <code>RpcCall</code>), a return type of <code>RpcException</code>, and no two handlers for one exception type.</p>
+
+<h3 id="rpc-ts">TypeScript declarations</h3>
+<p>Set <code>jolt.rpc.typescript=frontend/src/jolt-api.d.ts</code> and the starter writes the <a th:href="@{/docs/rpc#typescript}">TypeScript declarations</a> of your <code>@JoltRpc</code> methods at start-up. Methods are registered with their declared types, so they appear fully typed.</p>
+
+<h2 id="web">4. web mode</h2>
+<p>With Spring MVC the window shows your application's own server, so existing controllers, templates (Thymeleaf, JTE), htmx and static files work unchanged, and <code>jolt.call</code> works there too. The server listens on <code>127.0.0.1</code> on a free port, and <strong>only the window can use it</strong>:</p>
+<ul>
+    <li>The window first opens a one-time entry address. That sets an <code>HttpOnly</code>, <code>SameSite=Strict</code> session cookie in the window's own web view profile and redirects to <code>jolt.web.start-path</code>.</li>
+    <li>Every request without that cookie gets <strong>403</strong>: other programs on the machine, and pages in the user's browser.</li>
+    <li>A <code>Host</code> that is not a loopback name (DNS rebinding) is refused, and so is a state-changing request from another <code>Origin</code>.</li>
+</ul>
+<p>The guard is only there when the application is started by <code>JoltSpringApplication</code>, so a <code>@SpringBootTest</code>, or a plain run of the same application in a browser, is unaffected. WebFlux applications are not supported in web mode.</p>
+
+<h2 id="lifecycle">5. Start-up and shutdown</h2>
+<ul>
+    <li>The window stays <strong>hidden until the page has loaded</strong> (<code>jolt.window.show=on-load</code>), so there is no white flash, and it appears after <code>jolt.window.show-after</code> (10 seconds) at the latest. With <code>manual</code>, the page calls <code>jolt.call("jolt.window.show")</code> itself.</li>
+    <li>If Spring fails to start, <strong>the window shows the error</strong> instead of vanishing.</li>
+    <li>Closing the window closes the Spring context, and closing the context (<code>SpringApplication.exit</code>) closes the window.</li>
+    <li><code>JoltRuntime</code>, <code>Application</code> and <code>WebWindow</code> can be injected. <code>JoltRuntime.whenShown()</code> completes once the window is on screen, which is the moment to tell a <a th:href="@{/jpack}">jpack</a> launcher.</li>
+</ul>
+
+<h2 id="settings">6. Settings</h2>
+<p>In <code>application.properties</code>:</p>
+<table>
+    <thead><tr><th scope="col">Property</th><th scope="col">What it does</th></tr></thead>
+    <tbody>
+    <tr><td><code>jolt.app-id</code></td><td>The application id (data folder, notifications).</td></tr>
+    <tr><td><code>jolt.mode</code></td><td><code>auto</code> (default), <code>rpc</code> or <code>web</code>.</td></tr>
+    <tr><td><code>jolt.ui</code></td><td>The page's files in rpc mode: <code>classpath:ui</code> (the default, <code>src/main/resources/ui</code>) or <code>file:...</code> for a folder while you develop.</td></tr>
+    <tr><td><code>jolt.window.*</code></td><td><code>title</code>, <code>width</code>, <code>height</code>, <code>min-width</code>, <code>min-height</code>, <code>maximized</code>, <code>frameless</code>, <code>resizable</code>, <code>dev-tools</code>, <code>show</code>, <code>show-after</code>.</td></tr>
+    <tr><td><code>jolt.web.start-path</code></td><td>Where the window opens in web mode.</td></tr>
+    <tr><td><code>jolt.rpc.*</code></td><td><code>expose-error-messages</code> (shows every message while you develop), <code>max-concurrent-calls</code>, <code>max-message-chars</code>, <code>stream-window</code>, <code>typescript</code>.</td></tr>
+    </tbody>
+</table>
+<p>The window settings are read <em>before</em> the beans exist, so they come from the environment. For anything else, such as an icon, a menu or a background colour, use the builder:</p>
+<div class="code" data-lang="java"><pre><code>new JoltSpringApplication(NotesApp.class)
+        .window(options -&gt; options.withIcon(icon).withBackgroundColor(0x1E1E1E))
+        .onWindow(window -&gt; window.setMenuBar(menu))     // on the UI thread, before the page loads
+        .run(args);</code></pre></div>
+
+<h2 id="good">7. Good to know</h2>
+<ul>
+    <li>Tested with real windows on Windows and on Linux (X11 and Wayland, headless): rpc mode, web mode with a request refused without the cookie, and a failed start shown in the window.</li>
+    <li><code>jolt.rpc.expose-error-messages=true</code> registers a catch-all handler that shows every message. A handler of your own for <code>Throwable</code> replaces it.</li>
+    <li>Upgrading from 0.4.2: <code>@JoltRpc</code> moved from <code>io.github.b077as.jolt.spring</code> to <code>io.github.b077as.jolt</code>. Only the import changes. Beans are still found through proxies and composed annotations.</li>
+    <li>Package it like any Jolt app: see <a th:href="@{/docs/packaging}">Packaging</a>, and <a th:href="@{/jpack}">jpack</a> to keep installs up to date.</li>
+</ul>
+
+</th:block>

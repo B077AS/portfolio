@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{jolt/layouts/layout}">
+<body>
+<th:block layout:fragment="content">
+
+    <div class="wrap phero">
+        <div class="kicker">Companion project</div>
+        <h1>jpack, updates for Java desktop apps, <em>made to fit Jolt.</em></h1>
+        <p class="lead">An app ships once and then needs fixing again and again. jpack puts a small native program next to your app. It downloads each new release in the background, checks it, swaps the files in while nothing is running, and starts the new version. The jars, the bundled Java runtime and every other file.</p>
+        <div class="facts">
+            <div><b>The whole app</b><span>jars, Java runtime, assets, even the updater itself</span></div>
+            <div><b>Only what changed</b><span>a part that did not change is never downloaded again</span></div>
+            <div><b>No admin rights</b><span>per-user installs, no store, no Java on the machine</span></div>
+            <div><b>Plain files</b><span>a GitHub release is enough to host your updates</span></div>
+        </div>
+        <div class="hero-links" style="margin-top:26px">
+            <a class="textlink" style="margin-top:0" th:href="${site.jpackGithubUrl}" rel="noopener">jpack on GitHub <i class="mdi mdi-arrow-right" aria-hidden="true"></i></a>
+            <a class="textlink" style="margin-top:0" th:href="${site.jpackMavenCentralUrl}" rel="noopener">Maven Central<span th:if="${site.jpackVersionKnown}" th:text="' (v' + ${site.jpackVersion} + ')'"></span> <i class="mdi mdi-arrow-right" aria-hidden="true"></i></a>
+        </div>
+    </div>
+
+    <section class="rule pad-top" aria-labelledby="why-title">
+        <div class="wrap">
+            <div class="kicker">Why it matters</div>
+            <h2 class="t" id="why-title">A Java app is easy to build and awkward to update.</h2>
+            <div class="feat">
+                <div><i class="mdi mdi-hammer-wrench ic" aria-hidden="true"></i><h3>It cannot replace itself</h3><p>A running Java program holds its jars open, and on Windows a file in use cannot be swapped. An app that tries to update itself in place ends up needing a second program to do it. jpack is that program, done once and done carefully.</p></div>
+                <div><i class="mdi mdi-package-variant-closed ic" aria-hidden="true"></i><h3>Shipping a runtime has a cost</h3><p>Bundling Java is the best thing for your users: nothing to install, and the version you tested. But a one-line fix should not mean a new 30 MB installer for everyone, and that is what a plain installer gives you.</p></div>
+                <div><i class="mdi mdi-cloud-download-outline ic" aria-hidden="true"></i><h3>The JDK stops at the first install</h3><p><code>jpackage</code> builds the install folder and the installer. Nothing in the JDK gets the <em>second</em> release onto the machine. jpack starts exactly where it stops.</p></div>
+            </div>
+        </div>
+    </section>
+
+    <section class="rule pad-top" aria-labelledby="good-title">
+        <div class="wrap">
+            <div class="kicker">What you get</div>
+            <h2 class="t" id="good-title">Updates that users do not have to think about.</h2>
+            <div class="feat">
+                <div><i class="mdi mdi-update ic" aria-hidden="true"></i><h3>Updates everything</h3><p>Your jars, the Java runtime, native libraries, assets, plugins, the launcher and the stub itself. A new Java version is just another part of a release.</p></div>
+                <div><i class="mdi mdi-puzzle-outline ic" aria-hidden="true"></i><h3>Downloads only what changed</h3><p>A release is a set of parts, each with its own hash. A new jar costs the jar and nothing else, so a bugfix can be a few megabytes instead of the whole app.</p></div>
+                <div><i class="mdi mdi-swap-horizontal ic" aria-hidden="true"></i><h3>Atomic swaps</h3><p>New files are unpacked next to the old ones, then switched in with folder renames that take milliseconds. A power cut halfway is finished on the next start. The app never runs half old and half new.</p></div>
+                <div><i class="mdi mdi-backup-restore ic" aria-hidden="true"></i><h3>Rolls itself back</h3><p>The previous version is kept until the new one has started. A release that cannot start is taken out again automatically and is not offered a second time.</p></div>
+                <div><i class="mdi mdi-shield-check-outline ic" aria-hidden="true"></i><h3>Verified and resumable</h3><p>https only, and every part is checked against its SHA-256 before it is used. A cut-off download continues with an HTTP range request instead of starting over.</p></div>
+                <div><i class="mdi mdi-palette-outline ic" aria-hidden="true"></i><h3>You draw the interface</h3><p>jpack only reports numbers: checking, 42%, ready. Show them in a launcher window, in the app, or nowhere. With the background policy there is no update code at all.</p></div>
+            </div>
+        </div>
+    </section>
+
+    <section class="rule pad-top" aria-labelledby="how-title">
+        <div class="wrap">
+            <div class="kicker">How an update happens</div>
+            <h2 class="t" id="how-title">Only one program ever starts your app, and it is not Java.</h2>
+            <p class="lead">That is the whole trick. The stub, a native program of about 1 MB on Windows and 2 MB on Linux, starts your app on its own runtime and waits. While no Java process is running, nothing is ever replaced under a live JVM: not the jars, not the runtime, not the launcher.</p>
+            <div class="arch">
+                <div class="box"><h3>Your release</h3><ul><li>A manifest, <code>jpack-windows-x64.json</code></li><li>One zip per part</li><li>Plain files on any HTTPS host</li></ul></div>
+                <div class="arr"><div><b>&#8646;</b><br>GET and Range</div></div>
+                <div class="box mid"><h3>The stub</h3><ul><li>Checks and downloads</li><li>Verifies every part</li><li>Swaps files, starts programs</li></ul></div>
+                <div class="arr"><div><b>&#8646;</b><br>local, with a token</div></div>
+                <div class="box"><h3>Your program</h3><ul><li>The app, or a launcher</li><li>Asks and shows progress</li><li>Or no code at all</li></ul></div>
+            </div>
+            <ol class="note" style="margin-top:28px;padding-left:20px;line-height:1.7">
+                <li><strong>Start.</strong> The stub finishes any swap an earlier run left half done, then swaps in a release that is waiting.</li>
+                <li><strong>Run.</strong> It starts your app (or your launcher) on the installed runtime and waits. With the <code>background</code> policy it also looks for updates a few seconds after the start, and then every few hours.</li>
+                <li><strong>Download.</strong> The new release is fetched and unpacked next to the running files. Your program, or the stub itself, does this while the user works.</li>
+                <li><strong>Swap.</strong> When the program exits, the stub switches the files in and starts the new version.</li>
+                <li><strong>Trial.</strong> A release that was just swapped in is on trial. If its first start fails before it says hello, the old files are put back.</li>
+            </ol>
+        </div>
+    </section>
+
+    <section class="rule pad-top" aria-labelledby="jolt-title">
+        <div class="wrap">
+            <div class="kicker">With Jolt</div>
+            <h2 class="t" id="jolt-title">Five places where jpack and Jolt meet.</h2>
+            <p class="lead">jpack works with JavaFX, Swing or anything that runs on the JVM. These parts fit a Jolt app especially well, because Jolt already knows how to stay small, talk to a page and call into the system from any thread.</p>
+
+            <div class="explorer" data-explorer>
+                <div class="flist" role="tablist" aria-label="Where jpack meets Jolt">
+                    <button type="button" class="fitem" role="tab">A launcher that is a Jolt window<small>Jpack.check, download, rpc.emit</small></button>
+                    <button type="button" class="fitem" role="tab">No blank moment at hand-over<small>startNow, whenShown, notifyShown</small></button>
+                    <button type="button" class="fitem" role="tab">Restart to update, in the app<small>onReady, restartAfterExit</small></button>
+                    <button type="button" class="fitem" role="tab">Silent updates, no code<small>"policy": "background"</small></button>
+                    <button type="button" class="fitem" role="tab">Links and autostart keep working<small>JPACK_EXE, UrlSchemes, Autostart</small></button>
+                </div>
+                <div class="fpanels">
+                    <div class="fpanel" role="tabpanel">
+                        <h3>A launcher that is a Jolt window</h3>
+                        <p>A launcher is a small program that runs before your app: it checks, shows the download and hands over. A Jolt window with a page is an easy way to draw "Downloading 42%". Every Jolt call is safe from any thread, so jpack's progress callback can push straight to the page.</p>
+                        <div class="code" data-lang="java"><pre><code>try (Jpack jpack = Jpack.connect()) {
+    UpdateCheck update = jpack.check().get(30, TimeUnit.SECONDS);
+    if (update.available()) {
+        rpc.emit("status", "Downloading " + update.version());
+        jpack.download((received, total) -&gt;
+                rpc.emit("progress", total == 0 ? 1.0 : (double) received / total)).get();
+    }
+    jpack.startAfterExit("app");      // the stub swaps the files in, then starts the app
+}
+app.quit();                           // the launcher must exit for the swap to happen</code></pre></div>
+                    </div>
+                    <div class="fpanel" role="tabpanel">
+                        <h3>No blank moment at hand-over</h3>
+                        <p>Starting a Java app and its window takes a moment. The launcher can start the app while it is still on screen and close only when the app says its window is up. A Jolt app says it with one line, right after it shows the window.</p>
+                        <div class="code" data-lang="java" data-file="in the app"><pre><code>window.show();
+if (Jpack.isAvailable()) {
+    try (Jpack jpack = Jpack.connect()) {
+        jpack.notifyShown();
+    }
+}</code></pre></div>
+                        <div class="code" data-lang="java" data-file="in the launcher"><pre><code>if (jpack.startNow("app").get(30, TimeUnit.SECONDS).isPresent()) {
+    jpack.whenShown("app").get(60, TimeUnit.SECONDS);   // fails with the exit code if the app dies first
+}
+app.quit();</code></pre></div>
+                        <p>In a Spring Boot app, <code>JoltRuntime.whenShown()</code> completes once the window is on screen, which is the moment to call <code>notifyShown()</code>.</p>
+                    </div>
+                    <div class="fpanel" role="tabpanel">
+                        <h3>Restart to update, in the app</h3>
+                        <p>No launcher at all: the app downloads while the user works and the page shows a "Restart to update" button. The page talks to Java with Jolt's own <a th:href="@{/docs/rpc}">RPC</a>.</p>
+                        <div class="code" data-lang="java"><pre><code>Jpack jpack = Jpack.connect();
+jpack.onReady(version -&gt; rpc.emit("update.ready", version));      // the page shows the button
+jpack.check().thenAccept(u -&gt; { if (u.available()) jpack.download(); });
+
+rpc.on("update.restart", call -&gt; {
+    jpack.restartAfterExit();                                       // the stub starts the new version after the swap
+    app.quit();
+    return null;
+});</code></pre></div>
+                    </div>
+                    <div class="fpanel" role="tabpanel">
+                        <h3>Silent updates, no code</h3>
+                        <p>With the <code>background</code> policy the stub looks for updates itself and what it downloads is used the next time the app starts. Your app contains no update code. The settings live in <code>src/jpack/jpack.json</code>, next to a pom that only needs a main class and an address.</p>
+                        <div class="code" data-lang="json" data-file="src/jpack/jpack.json"><pre><code>{
+  "mainClass": "com.example.notes.NotesApp",
+  "updateUrl": "https://github.com/owner/repo/releases/latest/download",
+  "policy": "background",
+  "jvmArgs": ["--enable-native-access=ALL-UNNAMED"],
+  "branding": { "icon": "src/jpack/icon.ico", "description": "Notes", "company": "Acme" }
+}</code></pre></div>
+                        <p><code>--enable-native-access</code> is the flag every Jolt app needs, so it belongs in <code>jvmArgs</code> and users never see the warning.</p>
+                    </div>
+                    <div class="fpanel" role="tabpanel">
+                        <h3>Links and autostart keep working</h3>
+                        <p>After an update the app's files move, but the stub does not. <code>JPACK_EXE</code> is the one file that always starts the installed app, so it is what <code>myapp://</code> links, autostart entries and shortcuts should point at. Whatever the stub is started with, such as a file or a link, reaches the app, where Jolt's <a th:href="@{/docs/url-schemes}">custom links</a> and <code>SingleInstance</code> pick it up.</p>
+                        <div class="code" data-lang="java"><pre><code>String exe = System.getenv("JPACK_EXE");        // null when started from the IDE
+if (exe != null) {
+    app.autostart().enable(List.of(exe, "--minimized"));
+    app.urlSchemes().register("myapp", "My App", List.of(exe));
+}</code></pre></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="rule pad-top" aria-labelledby="fit-title">
+        <div class="wrap">
+            <div class="kicker">Why they suit each other</div>
+            <h2 class="t" id="fit-title">Jolt keeps the app small. jpack keeps it current.</h2>
+            <div class="feat">
+                <div><i class="mdi mdi-feather ic" aria-hidden="true"></i><h3>Small stays small</h3><p>A Jolt app has no bundled browser, so with its own Java runtime it is about 32 MB. jpack builds that runtime for you with <code>jlink</code>, picks the modules with <code>jdeps</code>, and from then on an update moves only the part that changed.</p></div>
+                <div><i class="mdi mdi-rocket-launch-outline ic" aria-hidden="true"></i><h3>Java can move on</h3><p>Jolt follows current Java. When you move to a newer JDK, build with it and publish: installed apps download the new runtime as just another part and swap it in with the app, even from a launcher that is still running on the old one.</p></div>
+                <div><i class="mdi mdi-application-outline ic" aria-hidden="true"></i><h3>Looks like your app</h3><p>On Windows the stub and a renamed copy of <code>javaw.exe</code> carry your icon and name, so the task manager, taskbar and Explorer say "Notes" and not "Java Platform SE binary". On Linux an AppImage updates by replacing its own file and fetching only the blocks that changed.</p></div>
+            </div>
+        </div>
+    </section>
+
+    <section class="rule pad-top" aria-labelledby="start-title">
+        <div class="wrap">
+            <div class="kicker">Try it</div>
+            <h2 class="t" id="start-title">Add the plugin, build, upload.</h2>
+            <p class="lead">The plugin carries the stubs for Windows x64 and Linux x64 inside its jar, so you do not need Rust. Your app's jar must be runnable with its dependencies (a shaded jar), or set <code>includeDependencies</code> to copy them next to it.</p>
+            <div class="pair">
+                <div class="code" data-lang="xml" data-file="pom.xml"><pre><code>&lt;plugin&gt;
+  &lt;groupId&gt;io.github.b077as&lt;/groupId&gt;
+  &lt;artifactId&gt;jpack-maven-plugin&lt;/artifactId&gt;
+  &lt;version&gt;<span th:text="${site.jpackVersion}">0.1.3</span>&lt;/version&gt;
+  &lt;executions&gt;
+    &lt;execution&gt;
+      &lt;goals&gt;&lt;goal&gt;package&lt;/goal&gt;&lt;/goals&gt;
+    &lt;/execution&gt;
+  &lt;/executions&gt;
+  &lt;configuration&gt;
+    &lt;mainClass&gt;my.app.Main&lt;/mainClass&gt;
+    &lt;updateUrl&gt;https://github.com/owner/repo/releases/latest/download&lt;/updateUrl&gt;
+  &lt;/configuration&gt;
+&lt;/plugin&gt;</code></pre></div>
+                <div class="code" data-lang="text" data-file="mvn package"><pre><code>target/jpack/
+  image/windows-x64/   the install folder: MyApp.exe, jpack.json, runtime/, app/
+  dist/                MyApp-1.0.0-windows-x64.zip   (or .tar.gz, or an AppImage on Linux)
+  release/             jpack-windows-x64.json + one file per part   &lt;- upload all of these</code></pre></div>
+            </div>
+            <p class="note">Wrap <code>image/</code> in an installer (Inno Setup, WiX, a <code>.deb</code>) or hand out the archive. Publishing an update means attaching every file of <code>release/</code> to a GitHub release. Installed copies pick it up on their next check. The optional <code>jpack-api</code> library, with no dependencies and Java 17 or newer, is what the code above uses. <a class="textlink" style="margin:0 0 0 6px" th:href="@{/docs/packaging}">Packaging in the docs <i class="mdi mdi-arrow-right" aria-hidden="true"></i></a></p>
+        </div>
+    </section>
+
+    <section class="rule pad-top" aria-labelledby="safe-title">
+        <div class="wrap">
+            <div class="kicker">Safety</div>
+            <h2 class="t" id="safe-title">What jpack refuses to do.</h2>
+            <table>
+                <thead><tr><th scope="col">Rule</th><th scope="col">What it means</th></tr></thead>
+                <tbody>
+                <tr><th scope="row">https only</th><td>The update address and every file address must be <code>https://</code>. Plain <code>http://</code> is accepted only for <code>localhost</code>, to test locally.</td></tr>
+                <tr><th scope="row">Every part is verified</th><td>Checked against the SHA-256 in the manifest before it is unpacked. A mismatch discards the download.</td></tr>
+                <tr><th scope="row">Paths stay inside</th><td>A part name or a path that would land outside the install folder makes the part unusable.</td></tr>
+                <tr><th scope="row">The channel is local</th><td>The stub listens on <code>127.0.0.1</code>. Each program it starts gets its own one-time token, and nothing else can ask it to download or restart.</td></tr>
+                <tr><th scope="row">A swap never half-happens</th><td>Nothing installed is touched until a release is complete and verified. A swap that cannot finish is undone and retried later.</td></tr>
+                <tr><th scope="row">Bad releases roll back</th><td>A release that crashes on its first start is rolled back and not offered again. Publishing an earlier release again rolls everyone back to it.</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="rule pad-top" aria-labelledby="get-title">
+        <div class="wrap">
+            <div class="kicker">Get it</div>
+            <h2 class="t" id="get-title">Open source, Apache 2.0.</h2>
+            <p class="lead">Windows x64 and Linux x64. jpack is early software (version 0.x): file formats and settings can still change between versions, and its changelog says when they do.</p>
+            <div class="dl">
+                <a th:href="${site.jpackMavenCentralUrl}" rel="noopener"><b><i class="mdi mdi-package-variant-closed" aria-hidden="true"></i>Maven plugin</b><span>io.github.b077as:jpack-maven-plugin</span></a>
+                <a th:href="${site.jpackGithubUrl}" rel="noopener"><b><i class="mdi mdi-github" aria-hidden="true"></i>Source and README</b><span>github.com/B077AS/jpack</span></a>
+                <a th:href="${site.jpackGithubUrl + '/blob/master/CHANGELOG.md'}" rel="noopener"><b><i class="mdi mdi-download-outline" aria-hidden="true"></i>jpack changelog</b><span>every release, newest first</span></a>
+                <a th:href="@{/docs/packaging}"><b><i class="mdi mdi-application-outline" aria-hidden="true"></i>Packaging a Jolt app</b><span>from jars to a double-clickable app</span></a>
+            </div>
+        </div>
+    </section>
+
+</th:block>
+</body>
+</html>
