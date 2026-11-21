@@ -11,6 +11,7 @@
         <div class="links" id="navlinks">
             <a th:href="@{/docs/getting-started}" th:classappend="${nav == 'docs'} ? 'on'">Docs</a>
             <a th:href="@{/parsel}" th:classappend="${nav == 'parsel'} ? 'on'">Parsel</a>
+            <a th:href="@{/jpack}" th:classappend="${nav == 'jpack'} ? 'on'">jpack</a>
             <a th:href="@{/changelog}" th:classappend="${nav == 'changelog'} ? 'on'">Changelog</a>
             <a class="drawer-only" th:href="${site.githubUrl}" target="_blank" rel="noopener">
                 <i class="mdi mdi-github" aria-hidden="true"></i>GitHub
@@ -49,6 +50,7 @@
                     <a th:href="@{/docs/getting-started}">Documentation</a>
                     <a th:href="@{/#features}">Features</a>
                     <a th:href="@{/#compare}">Compare</a>
+                    <a th:href="@{/privacy}">Privacy</a>
                 </div>
             </div>
             <div>
@@ -56,6 +58,7 @@
                 <div class="flinks">
                     <a th:href="@{/parsel}">Parsel case study</a>
                     <a th:href="${site.parselReleasesUrl}" rel="noopener"><i class="mdi mdi-download-outline" aria-hidden="true"></i>Download Parsel</a>
+                    <a th:href="@{/jpack}">jpack, updates for your app</a>
                 </div>
             </div>
             <div>
@@ -63,6 +66,7 @@
                 <div class="flinks">
                     <a th:href="${site.githubUrl}" rel="noopener"><i class="mdi mdi-github" aria-hidden="true"></i>Jolt on GitHub</a>
                     <a th:href="${site.parselGithubUrl}" rel="noopener"><i class="mdi mdi-github" aria-hidden="true"></i>Parsel on GitHub</a>
+                    <a th:href="${site.jpackGithubUrl}" rel="noopener"><i class="mdi mdi-github" aria-hidden="true"></i>jpack on GitHub</a>
                     <a th:href="${site.mavenCentralUrl}" rel="noopener"><i class="mdi mdi-package-variant-closed" aria-hidden="true"></i>Maven Central</a>
                     <a th:href="${site.portfolioUrl}">williamsolari.com</a>
                 </div>

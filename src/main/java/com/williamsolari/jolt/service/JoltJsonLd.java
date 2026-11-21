@@ -66,6 +66,16 @@ public class JoltJsonLd {
         return render("parsel", values);
     }
 
+    public String jpack(String description) {
+        Map<String, String> values = common();
+        values.put("description", description);
+        values.put("url", site.url("/jpack"));
+        values.put("jpackGithub", site.getJpackGithubUrl());
+        values.put("jpackCentral", site.getJpackMavenCentralUrl());
+        values.put("version", site.isJpackVersionKnown() ? site.getJpackVersion() : null);
+        return render("jpack", values);
+    }
+
     private Map<String, String> common() {
         Map<String, String> values = new HashMap<>();
         values.put("home", site.url("/"));

@@ -42,6 +42,18 @@ window.hide(); window.show(); window.minimize(); window.isMinimized();</code></p
     <li><code>AppOptions.of(id).withQuietNativeLogs(true)</code> hides GTK's known harmless warnings on Linux.</li>
 </ul>
 
+<h3 id="fixed-size">A window that cannot be resized</h3>
+<p>Available since <strong>0.4.2</strong>. A login box, a small tool or a dialog looks wrong when the user can stretch it. <code>withResizable(false)</code> keeps the window at the size it was created with:</p>
+<div class="code" data-lang="java"><pre><code>WebWindow window = app.createWindow(WindowOptions.defaults()
+        .withSize(420, 560)
+        .withResizable(false));</code></pre></div>
+<ul>
+    <li>There is no sizing border and no maximize box. <code>maximized</code>, <code>minWidth</code> and <code>minHeight</code> are ignored, <code>window.maximize()</code> does nothing, and Size and Maximize in the system menu (<kbd>Alt</kbd>+<kbd>Space</kbd>) are refused. Minimize and <a th:href="@{/docs/window-options#fullscreen}">full screen</a> still work.</li>
+    <li>A <a th:href="@{/docs/window-options#frameless}">frameless</a> window gets no resize handles, and the <a th:href="@{/docs/window-options#titlebar}">title bar kit</a> leaves out its maximize button. <code>&lt;html&gt;</code> gets a <code>data-jolt-not-resizable</code> attribute, so a title bar of your own can hide its maximize button with CSS.</li>
+    <li><code>WindowOptions</code> gained a component <code>resizable</code> (last, default <code>true</code>). Only code that calls its canonical constructor directly must pass it. The <code>with...</code> methods are unaffected. In a <a th:href="@{/docs/spring-boot}">Spring Boot</a> app the setting is <code>jolt.window.resizable=false</code>.</li>
+    <li>Tested on Windows, and on Linux under X11 and Wayland. Not checked: how a fixed-size window looks on Windows 10.</li>
+</ul>
+
 <h2 id="frameless">4. Frameless windows</h2>
 <p>Available since <strong>0.3.0</strong>. <code>WindowOptions.defaults().withFrameless(true)</code> removes the operating system's title bar and border, so the page draws its own. That gives you full control of the look, at the price of providing the title bar's behaviour yourself:</p>
 <div class="code" data-lang="html"><pre><code>&lt;header data-jolt-drag&gt;                       &lt;!-- drag here to move the window; double-click maximizes or restores --&gt;

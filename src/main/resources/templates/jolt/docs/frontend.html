@@ -52,7 +52,7 @@ if (devUrl != null) {
 </ul>
 
 <h2 id="framework">Any framework</h2>
-<p>React, Vue, Svelte and htmx all work, because to Jolt the page is just a page. A small typed wrapper around <code>jolt.postMessage</code> (for example a <code>call&lt;T&gt;(method, params)</code> function with one function per Java handler) keeps the rest of the frontend free of the bridge; the <code>call</code> function on the <a th:href="@{/docs/messaging}">messaging page</a> is the starting point. <a th:href="@{/parsel}">Parsel</a> is a complete app built this way: a Vue page for the interface, with Java behind it for IMAP and SMTP.</p>
+<p>React, Vue, Svelte and htmx all work, because to Jolt the page is just a page. For calling Java, <code>jolt.call</code> from the <a th:href="@{/docs/rpc}">RPC page</a> is already a promise-returning function in every page. With TypeScript, <code>rpc.writeTypeScript(...)</code> writes the types of your Java methods so the rest of the frontend gets autocomplete and compile errors for them, with no hand-written wrapper. <a th:href="@{/parsel}">Parsel</a> is a complete app built this way: a Vue page for the interface, with Java behind it for IMAP and SMTP.</p>
 
 <h2 id="background">Avoiding the white flash</h2>
 <p>A new window shows its background colour until the page paints. Match your page's colour so there is no white flash on a dark app, and optionally start the window hidden and show it when the page says it is ready:</p>
@@ -63,7 +63,7 @@ WebWindow window = app.createWindow(options);
 window.onMessage(m -&gt; { if (m.equals("ready")) window.show(); });</code></pre></div>
 <div class="code" data-lang="js"><pre><code>// last line of your start-up code
 jolt.postMessage("ready");</code></pre></div>
-<p>If you use the <a th:href="@{/docs/messaging}"><code>Rpc</code> class</a>, you could also call <code>show()</code> from the handler of your first call.</p>
+<p>If you use <a th:href="@{/docs/rpc}"><code>Rpc</code></a>, you could also call <code>show()</code> from the handler of your first call. (In a <a th:href="@{/docs/spring-boot}">Spring Boot</a> app the starter does this for you: the window stays hidden until the page has loaded.)</p>
 
 <h2 id="devtools">Developer tools</h2>
 <p><code>WindowOptions.defaults().withDevTools(true)</code>, then right-click and choose Inspect, or call <code>window.openDevTools()</code>. You get the console, network and elements panels of the underlying browser. Turn them off for release builds if you do not want users poking around.</p>

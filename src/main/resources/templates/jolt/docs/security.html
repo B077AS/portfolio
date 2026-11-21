@@ -7,7 +7,7 @@
     <li>An <strong>origin</strong> is the scheme, host and port of an address: <code>http://localhost:5173</code>, <code>https://example.com</code>.</li>
     <li>Content you show with <code>loadHtml</code> or <code>loadResources</code> is yours and is trusted automatically.</li>
     <li>Everything else is untrusted: a link to another website, a redirect, a frame, a page opened with <code>loadUrl</code>. It is blocked unless you add its origin to the trusted list.</li>
-    <li>Only trusted pages can send messages to <code>onMessage</code>.</li>
+    <li>Only trusted pages can send messages to <code>onMessage</code>, and only trusted pages, from the top-level document, can make <a th:href="@{/docs/rpc#limits}">RPC calls</a> with <code>jolt.call</code>.</li>
 </ul>
 <p>That keeps the usual accident from happening: a link in some email or a bug sends your window to a web page you did not write, and that page starts calling your Java functions.</p>
 

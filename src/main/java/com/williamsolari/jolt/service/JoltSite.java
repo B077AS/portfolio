@@ -1,24 +1,14 @@
 package com.williamsolari.jolt.service;
 
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.time.Duration;
-import java.time.Instant;
 import java.util.List;
 import java.util.Locale;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.regex.Pattern;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import com.google.gson.JsonParser;
 import com.williamsolari.core.web.SiteHost;
 
+import lombok.AccessLevel;
 import lombok.Getter;
 
 /**
@@ -29,12 +19,6 @@ import lombok.Getter;
 @Getter
 public class JoltSite implements SiteHost {
 
-    private static final Logger log = LoggerFactory.getLogger(JoltSite.class);
-    private static final Duration REFRESH_EVERY = Duration.ofHours(1);
-    private static final Duration RETRY_EVERY = Duration.ofMinutes(2);
-    private static final Pattern VERSION = Pattern.compile("^v?(\\d+\\.\\d+\\.\\d+)$");
-    private static final HttpClient HTTP = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build();
-
     /** Request host names (no port) that belong to the Jolt site. */
     private final List<String> hosts;
     /** Public origin used for canonical URLs, Open Graph tags and the sitemap. No trailing slash. */
@@ -43,15 +27,17 @@ public class JoltSite implements SiteHost {
     private final String parselGithubUrl;
     private final String parselReleasesUrl;
     private final String mavenCentralUrl;
+    private final String jpackGithubUrl;
+    private final String jpackMavenCentralUrl;
     /** The main website (the portfolio), linked from the Jolt pages and used as the author URL in structured data. */
     private final String portfolioUrl;
 
-    private final String versionUrl;
-    /** Latest released version, from GitHub's latest release tag. Null until GitHub has answered once. */
-    private volatile String version;
-    private volatile java.util.concurrent.CompletableFuture<Void> lookup;
-    private volatile Instant lastCheck = Instant.EPOCH;
-    private final AtomicBoolean refreshing = new AtomicBoolean();
+    /** Latest released Jolt version, from GitHub's latest release tag. */
+    @Getter(AccessLevel.NONE)
+    private final LatestRelease joltRelease;
+    /** Latest released jpack version, the same way. */
+    @Getter(AccessLevel.NONE)
+    private final LatestRelease jpackRelease;
 
     public JoltSite(@Value("${site.jolt.hosts}") List<String> hosts,
                     @Value("${site.jolt.base-url}") String baseUrl,
@@ -60,75 +46,46 @@ public class JoltSite implements SiteHost {
                     @Value("${site.jolt.parsel-github-url}") String parselGithubUrl,
                     @Value("${site.jolt.parsel-releases-url}") String parselReleasesUrl,
                     @Value("${site.jolt.maven-central-url}") String mavenCentralUrl,
+                    @Value("${site.jolt.jpack-version-url:}") String jpackVersionUrl,
+                    @Value("${site.jolt.jpack-github-url}") String jpackGithubUrl,
+                    @Value("${site.jolt.jpack-maven-central-url}") String jpackMavenCentralUrl,
                     @Value("${site.portfolio-url}") String portfolioUrl) {
         this.hosts = hosts.stream().map(h -> h.trim().toLowerCase(Locale.ROOT)).toList();
         this.baseUrl = baseUrl.endsWith("/") ? baseUrl.substring(0, baseUrl.length() - 1) : baseUrl;
-        this.versionUrl = versionUrl;
         this.githubUrl = githubUrl;
         this.parselGithubUrl = parselGithubUrl;
         this.parselReleasesUrl = parselReleasesUrl;
         this.mavenCentralUrl = mavenCentralUrl;
+        this.jpackGithubUrl = jpackGithubUrl;
+        this.jpackMavenCentralUrl = jpackMavenCentralUrl;
         this.portfolioUrl = portfolioUrl;
-        refresh(); // start the first lookup right away
+        this.joltRelease = new LatestRelease("Jolt", versionUrl);
+        this.jpackRelease = new LatestRelease("jpack", jpackVersionUrl);
     }
 
     /**
-     * The latest released Jolt version, read from GitHub. A refresh runs in the background at most once an hour (every
-     * two minutes while no version is known yet) and the current value is returned. Only while GitHub has never
-     * answered does this wait, briefly, for the first lookup; if that fails it returns "latest" (see {@link #isVersionKnown()}).
+     * The latest released Jolt version, read from GitHub. A refresh runs in the background at most once an hour. Only while
+     * GitHub has never answered does this wait, briefly, for the first lookup; if that fails it returns "latest" (see
+     * {@link #isVersionKnown()}).
      */
     public String getVersion() {
-        refresh();
-        if (version == null && lookup != null) {
-            try {
-                lookup.get(9, java.util.concurrent.TimeUnit.SECONDS);
-            } catch (Exception ignored) {
-                // logged by the lookup itself
-            }
-        }
+        String version = joltRelease.version();
         return version == null ? "latest" : version;
     }
 
     /** Whether GitHub has told us the version yet; templates hide the version badge until it has. */
     public boolean isVersionKnown() {
-        refresh();
-        return version != null;
+        return joltRelease.isKnown();
     }
 
-    private void refresh() {
-        Duration every = version == null ? RETRY_EVERY : REFRESH_EVERY;
-        if (!versionUrl.isBlank()
-                && Duration.between(lastCheck, Instant.now()).compareTo(every) > 0
-                && refreshing.compareAndSet(false, true)) {
-            lastCheck = Instant.now(); // also after a failure, so an unreachable GitHub is retried later, not per request
-            HttpRequest request = HttpRequest.newBuilder(URI.create(versionUrl))
-                    .header("Accept", "application/vnd.github+json")
-                    .header("User-Agent", "williamsolari.com")
-                    .timeout(Duration.ofSeconds(8))
-                    .build();
-            lookup = HTTP.sendAsync(request, HttpResponse.BodyHandlers.ofString())
-                    .thenAccept(this::apply)
-                    .whenComplete((ok, error) -> {
-                        if (error != null) {
-                            log.warn("Could not read the latest Jolt version from {}: {}", versionUrl, error.toString());
-                        }
-                        refreshing.set(false);
-                    });
-        }
+    /** The latest released jpack version, like {@link #getVersion()}: "latest" until GitHub has answered. */
+    public String getJpackVersion() {
+        String version = jpackRelease.version();
+        return version == null ? "latest" : version;
     }
 
-    private void apply(HttpResponse<String> response) {
-        if (response.statusCode() != 200) {
-            log.warn("GitHub answered {} for the latest Jolt release", response.statusCode());
-            return;
-        }
-        String tag = JsonParser.parseString(response.body()).getAsJsonObject().get("tag_name").getAsString();
-        var matcher = VERSION.matcher(tag);
-        if (matcher.matches()) {
-            version = matcher.group(1);
-        } else {
-            log.warn("Ignoring unexpected Jolt release tag '{}'", tag);
-        }
+    public boolean isJpackVersionKnown() {
+        return jpackRelease.isKnown();
     }
 
     @Override

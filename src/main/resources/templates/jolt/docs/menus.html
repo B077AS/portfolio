@@ -1,0 +1,109 @@
+<th:block xmlns:th="http://www.thymeleaf.org" th:fragment="body">
+
+<p>Available since <strong>0.4.2</strong>. Four things that make a web page feel like a desktop program: a <strong>menu bar</strong> with keyboard shortcuts, a <strong>right-click menu</strong> that knows what was clicked, a <strong>global hotkey</strong> that works while another program has the focus, and <strong>printing</strong> the page to a PDF. All of them are built in Java, so the page needs no code. This page covers them in that order.</p>
+
+<h2 id="shortcuts">1. Menus and shortcuts</h2>
+<p>A <code>Menu</code> is built in Java, like a <a th:href="@{/docs/tray}">tray menu</a>: actions, checkboxes, separators and submenus. A <code>Shortcut</code> is a key combination written the usual way:</p>
+<div class="code" data-lang="java"><pre><code>Shortcut.parse("Ctrl+Shift+N")</code></pre></div>
+<ul>
+    <li>Modifiers: <code>Ctrl</code>, <code>Shift</code>, <code>Alt</code>, <code>Meta</code>.</li>
+    <li>Keys: <code>A</code> to <code>Z</code>, <code>0</code> to <code>9</code>, <code>F1</code> to <code>F24</code>, <code>Enter</code>, <code>Space</code>, <code>Tab</code>, <code>Escape</code>, the arrows, <code>Home</code>, <code>End</code>, <code>PageUp</code>, <code>PageDown</code>, <code>Insert</code>, <code>Delete</code>, and punctuation such as <code>,</code> or <code>Comma</code>.</li>
+    <li>Anywhere a menu item takes a shortcut you can pass the text directly, as the next section does.</li>
+</ul>
+
+<h2 id="menubar">2. A menu bar</h2>
+<p>Give the window a native bar with <code>setMenuBar</code>:</p>
+<div class="code" data-lang="java"><pre><code>window.setMenuBar(Menu.of(
+        Menu.submenu("&amp;File",                                           // &amp; marks the letter that opens it with Alt; &amp;&amp; is a real &amp;
+                Menu.action("&amp;New window", "Ctrl+N", () -&gt; newWindow()),
+                Menu.action("&amp;Open...", "Ctrl+O", () -&gt; open()),
+                Menu.separator(),
+                Menu.action("E&amp;xit", "Alt+F4", app::quit)),
+        Menu.submenu("&amp;View",
+                Menu.check("&amp;Dense list", dense, "Ctrl+D", on -&gt; setDense(on)),   // the mark flips at once; on is the new state
+                Menu.action("&amp;Reload", "F5", () -&gt; window.eval("location.reload()")))));</code></pre></div>
+<ul>
+    <li><strong>Menus are immutable.</strong> To tick a box or grey out an entry, build the menu again and call <code>setMenuBar</code> again. <code>setMenuBar(null)</code> removes the bar.</li>
+    <li>The window <strong>grows by the height of the bar</strong>, so the page area keeps the size you asked for.</li>
+    <li><strong>Accelerators win over the page.</strong> While the page has the keyboard focus, the bar's shortcuts are handled before the page sees the key, so <kbd>Ctrl</kbd>+<kbd>N</kbd> does not also reach the page.</li>
+    <li>A <strong>frameless</strong> window has no place for a native bar, and <code>supportsMenuBar()</code> is <code>false</code> for it. Draw the menu in the page, or use a context menu.</li>
+    <li>On Windows the bar is drawn by the system, so it stays light in a dark app. Jolt does not hide it in full screen (not tested).</li>
+</ul>
+
+<h2 id="context">3. A context menu</h2>
+<p>By default a window has no right-click menu (or the web view's own one, if you created it with developer tools). <code>setContextMenu</code> shows a menu of yours instead. The provider is told what is under the pointer and returns a <code>Menu</code>, or <code>null</code> for none:</p>
+<div class="code" data-lang="java"><pre><code>window.setContextMenu(info -&gt; {
+    if (info.isLink()) {
+        return Menu.of(
+                Menu.action("Open link", () -&gt; app.openExternal(URI.create(info.linkUrl()))),
+                Menu.action("Copy link", () -&gt; app.clipboard().writeText(info.linkUrl())));
+    }
+    if (info.editable()) {
+        return Menu.of(
+                Menu.action("Cut",   "Ctrl+X", () -&gt; window.edit(EditCommand.CUT)),
+                Menu.action("Copy",  "Ctrl+C", () -&gt; window.edit(EditCommand.COPY)),
+                Menu.action("Paste", "Ctrl+V", () -&gt; window.edit(EditCommand.PASTE)));
+    }
+    return null;
+});</code></pre></div>
+<table>
+    <thead><tr><th scope="col">In <code>info</code></th><th scope="col">Meaning</th></tr></thead>
+    <tbody>
+    <tr><td><code>x</code>, <code>y</code></td><td>The position, in logical pixels.</td></tr>
+    <tr><td><code>pageUrl</code></td><td>The address of the page.</td></tr>
+    <tr><td><code>linkUrl</code>, <code>isLink()</code></td><td>The link under the pointer.</td></tr>
+    <tr><td><code>sourceUrl</code></td><td>The image, audio or video under the pointer.</td></tr>
+    <tr><td><code>editable</code></td><td>The pointer is on a text field.</td></tr>
+    <tr><td><code>hasSelection</code>, <code>selectedText</code></td><td>Whether text is selected, and which. On Linux <code>selectedText</code> is empty: the system only says whether something is selected.</td></tr>
+    </tbody>
+</table>
+<ul>
+    <li>The <strong>web view works out what was clicked itself</strong>, so a page cannot claim a link is somewhere it is not.</li>
+    <li><code>window.edit(EditCommand)</code> runs the commands a text field's menu offers (cut, copy, paste, undo, redo, select all) on whatever has the focus.</li>
+    <li>Pass <code>null</code> to <code>setContextMenu</code> to go back to the old behaviour. A page that draws its own menu in the DOM keeps working either way.</li>
+    <li>On Windows, WebView2 raises the right-click event only while its default menus are enabled, so Jolt enables them while a provider is set. Your menu always replaces theirs.</li>
+</ul>
+
+<h2 id="hotkey">4. A global hotkey</h2>
+<p>A hotkey works whichever program has the focus: "press <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>M</kbd> to bring the app back" or "to start a quick capture".</p>
+<div class="code" data-lang="java"><pre><code>if (app.supportsGlobalHotkeys()) {
+    app.registerHotkey(Shortcut.parse("Ctrl+Alt+M"), main::focus)       // runs on the UI thread
+       .whenComplete((hotkey, error) -&gt; {
+           if (error != null) log.warn("Ctrl+Alt+M is taken: {}", error.getMessage());
+           // else keep `hotkey`, and call hotkey.close() to give the keys back
+       });
+}</code></pre></div>
+<ul>
+    <li>It <strong>fails</strong> (the future completes with a <code>JoltException</code>) when another program already holds the combination. Offer the user a way to pick another one.</li>
+    <li>A combination with <strong>no Ctrl, Alt or Meta</strong> is refused with <code>IllegalArgumentException</code>, because it would take a plain letter away from every program. Function keys are the exception.</li>
+    <li><strong>Windows only for now.</strong> On Linux <code>supportsGlobalHotkeys()</code> is <code>false</code> and <code>registerHotkey</code> throws <code>UnsupportedOperationException</code>: X11 would need key grabs, and Wayland offers nothing outside the desktop portals. Always check first.</li>
+</ul>
+
+<h2 id="print">5. Print and PDF</h2>
+<p>Turn the shown page into a PDF, or open the print dialog:</p>
+<div class="code" data-lang="java"><pre><code>window.printToPdf(PrintOptions.defaults().withLandscape(true).withMargins(15))   // A4 or Letter by the user's country
+      .thenAccept(pdf -&gt; Files.write(Path.of("report.pdf"), pdf));               // the bytes of a PDF, no dialog
+
+window.print();                                                                  // the web view's print dialog, like window.print()</code></pre></div>
+<ul>
+    <li>The page is laid out for the paper, like a print, so <code>@media print</code> and <code>@page</code> rules in your CSS apply. That is how you hide buttons and sidebars from the PDF.</li>
+    <li><code>PrintOptions</code> has <code>landscape</code>, <code>scale</code>, the paper (<code>Paper</code>, or any size in millimetres), margins, <code>backgrounds</code> and <code>headerAndFooter</code> (Windows only).</li>
+    <li>On Linux the page size, orientation and margins are honoured, and WebKit decides about the rest.</li>
+    <li><code>printToPdf</code> fails with <code>WindowClosedException</code> if the window closes first. Write the file off the UI thread if it is large.</li>
+    <li><code>print()</code> opens a dialog, so it is the one call here that automated tests cannot cover.</li>
+</ul>
+
+<h2 id="platforms">Where each one works</h2>
+<table>
+    <thead><tr><th scope="col">Feature</th><th scope="col">Windows</th><th scope="col">Linux</th><th scope="col">Ask first with</th></tr></thead>
+    <tbody>
+    <tr><td>Menu bar</td><td>Yes</td><td>Yes</td><td><code>supportsMenuBar()</code> (false when frameless)</td></tr>
+    <tr><td>Context menu, <code>edit</code></td><td>Yes</td><td>Yes</td><td></td></tr>
+    <tr><td>Global hotkey</td><td>Yes</td><td>No</td><td><code>app.supportsGlobalHotkeys()</code></td></tr>
+    <tr><td><code>printToPdf</code></td><td>Yes</td><td>Yes (fewer options)</td><td></td></tr>
+    </tbody>
+</table>
+<p>The menu bar, context menu, editing commands and PDF are tested on Windows, and on Linux under X11 and Wayland. Not tested: how the Windows menu looks, a context menu chosen with the mouse (the tests open the menu and close it from code) and <code>print()</code>.</p>
+<p>Next: <a th:href="@{/docs/tray}">the tray icon, close to tray and autostart</a>.</p>
+
+</th:block>

@@ -3,7 +3,7 @@
     "slug": "komm",
     "name": "Komm",
     "tagline": "Self-hosted voice, video & text chat",
-    "description": "A self-hosted voice, video, and text chat platform built end-to-end across five repositories. Engineered the WebRTC audio pipeline using AEC3 echo cancellation, RNNoise noise suppression, and Silero VAD for voice activity detection. Designed an mTLS trust model securing communication across every service.",
+    "description": "A self-hosted voice, video, and text chat platform built end-to-end across three repositories. Engineered the WebRTC audio pipeline using AEC3 echo cancellation, RNNoise noise suppression, and Silero VAD for voice activity detection. Designed an mTLS trust model securing communication across every service.",
     "tech": ["Java", "JavaFX", "Spring Boot", "WebRTC", "mTLS", "Windows", "Linux"],
     "icon": "mdi-microphone",
     "featured": true,
@@ -11,9 +11,7 @@
     "repos": [
       { "label": "komm (client)", "url": "https://github.com/B077AS/komm" },
       { "label": "komm-server", "url": "https://github.com/B077AS/komm-server" },
-      { "label": "komm-server-launcher", "url": "https://github.com/B077AS/komm-server-launcher" },
-      { "label": "komm-hub", "url": "https://github.com/B077AS/komm-hub" },
-      { "label": "komm-launcher", "url": "https://github.com/B077AS/komm-launcher" }
+      { "label": "komm-hub", "url": "https://github.com/B077AS/komm-hub" }
     ]
   },
   {
@@ -27,6 +25,18 @@
     "primaryLink": { "label": "jolt.williamsolari.com", "url": "https://jolt.williamsolari.com" },
     "repos": [
       { "label": "jolt", "url": "https://github.com/B077AS/jolt" }
+    ]
+  },
+  {
+    "slug": "jpack",
+    "name": "jpack",
+    "tagline": "Updates for Java desktop apps",
+    "description": "Automatic updates for Java desktop apps, including the bundled Java runtime. A small Rust stub downloads only the parts that changed, verifies them, swaps them in atomically and rolls back a release that cannot start. Comes with a Maven plugin and a Java library, built to fit Jolt. Published on Maven Central, for Windows and Linux.",
+    "tech": ["Rust", "Java", "Maven Plugin", "jlink", "AppImage", "Maven Central", "Windows", "Linux"],
+    "icon": "mdi-update",
+    "primaryLink": { "label": "jolt.williamsolari.com/jpack", "url": "https://jolt.williamsolari.com/jpack" },
+    "repos": [
+      { "label": "jpack", "url": "https://github.com/B077AS/jpack" }
     ]
   },
   {

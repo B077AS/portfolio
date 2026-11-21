@@ -55,7 +55,8 @@ Router router = Router.create()
         store.remove(Integer.parseInt(request.param("id")));
         return AppResponse.status(204);
     })
-    .onError((request, error) -&gt; AppResponse.text("Oops: " + error.getMessage()).withStatus(400));
+    .onException(IllegalArgumentException.class,
+            (request, error) -&gt; AppResponse.text("Oops: " + error.getMessage()).withStatus(400));
 
 window.loadResources(AppResources.classpath("ui"), router);</code></pre></div>
 <p>The page then reads like any web app:</p>
@@ -73,7 +74,7 @@ await fetch('/api/notes/1', { method: 'DELETE' });           // 204</code></pre>
     <li>Patterns: <code>{id}</code> captures one segment, <code>{*rest}</code> the rest. A plain segment beats <code>{id}</code>, which beats <code>{*rest}</code>. A route registered twice with the same shape is rejected when you register it.</li>
     <li>Methods: <code>get</code>, <code>post</code>, <code>put</code>, <code>patch</code>, <code>delete</code>.</li>
     <li>A request no route matches falls through to your files. A wrong method on a known path gets 405 with <code>Allow</code>.</li>
-    <li><code>onError</code> turns an exception from a route into a response. Without it an exception becomes a bare 500 and the details go to the log, never to the page.</li>
+    <li><code>onException(Type.class, handler)</code> turns an exception from a route into a response. Section 6 has the details. Without a handler an exception becomes a bare 500 and the details go to the log, never to the page.</li>
     <li>Register routes before <code>loadResources</code>.</li>
 </ul>
 
@@ -108,8 +109,18 @@ window.loadResources(AppResources.classpath("ui"), router,
     .group("/admin", admin -&gt; admin
         .before(request -&gt; loggedIn(request) ? null : AppResponse.redirect("/login"))
         .get("/users", request -&gt; AppResponse.html(pages.users())))
-    .onError((request, error) -&gt; AppResponse.html(pages.error(error)).withStatus(500));</code></pre></div>
+    .onException(NoteNotFoundException.class, (request, error) -&gt; AppResponse.html(pages.notFound()).withStatus(404))
+    .onException(Exception.class, (request, error) -&gt; AppResponse.html(pages.error()).withStatus(500))
+    .onError((request, error) -&gt; log.warn("{} {} failed", request.method(), request.path(), error));</code></pre></div>
 <p>A <code>before</code> filter returns <code>null</code> to let the request go on, or a response to answer it right there.</p>
+<p><strong>Errors work like <a th:href="@{/docs/rpc#errors}">RPC errors</a>.</strong> This changed in 0.5.0:</p>
+<ul>
+    <li><code>onException(Type.class, (request, error) -&gt; response)</code> is routed by type. The <strong>most specific type wins</strong>, as with <code>catch</code> clauses, and <code>Exception.class</code> or <code>Throwable.class</code> catches the rest. Register as many as you need.</li>
+    <li>A handled exception is an <strong>expected failure</strong>: it is logged at <code>DEBUG</code> only and not given to the listener, unless the response you return has a 5xx status.</li>
+    <li><code>onError(BiConsumer&lt;AppRequest, Throwable&gt;)</code> is now a <strong>listener</strong> for the unexpected ones: an exception nobody handled, or one handled with a 5xx. It returns nothing. Use it to log or report.</li>
+    <li>An unhandled exception still gets a bare 500 and is logged. A handler that throws or returns <code>null</code> is logged, and the exception is treated as unhandled.</li>
+</ul>
+<div class="callout"><strong>Upgrading from 0.4.x:</strong> <code>onError((request, error) -&gt; response)</code> no longer exists. The same behaviour is <code>onException(Exception.class, (request, error) -&gt; response)</code>.</div>
 
 <h2 id="threads">7. Threads and safety</h2>
 <ul>

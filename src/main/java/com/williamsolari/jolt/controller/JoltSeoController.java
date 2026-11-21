@@ -43,7 +43,9 @@ public class JoltSeoController {
             entry(xml, site.url(p.path()), p.updated().toString());
         }
         entry(xml, site.url("/parsel"), lastmod);
+        entry(xml, site.url("/jpack"), lastmod);
         entry(xml, site.url("/changelog"), lastmod);
+        entry(xml, site.url("/privacy"), lastmod);
         return xml.append("</urlset>\n").toString();
     }
 

@@ -52,8 +52,8 @@
                 <div><i class="mdi mdi-feather ic" aria-hidden="true"></i><h3>Tiny</h3><p>No bundled browser. Jolt uses WebView2 on Windows and WebKitGTK on Linux, so a packaged app with its own Java runtime is about 32 MB.</p></div>
                 <div><i class="mdi mdi-hammer-wrench ic" aria-hidden="true"></i><h3>No native build step</h3><p>Built on Java 25's Foreign Function &amp; Memory API. The only binary shipped is Microsoft's WebView2Loader.dll.</p></div>
                 <div><i class="mdi mdi-code-tags ic" aria-hidden="true"></i><h3>Any frontend</h3><p>Plain HTML, React, Vue, Svelte, htmx. Anything a browser can show, with hot reload from your dev server.</p></div>
-                <div><i class="mdi mdi-swap-horizontal ic" aria-hidden="true"></i><h3>Router and requests</h3><p>Serve files from the jar and answer fetch, forms and htmx requests from Java, in-process and without a socket.</p></div>
-                <div><i class="mdi mdi-application-outline ic" aria-hidden="true"></i><h3>Real desktop features</h3><p>File dialogs, notifications, tray icon, pop-out windows, frameless windows, close to tray, autostart.</p></div>
+                <div><i class="mdi mdi-swap-horizontal ic" aria-hidden="true"></i><h3>Call Java from the page</h3><p>Built-in RPC: <code>jolt.call</code> returns promises, with streaming results, progress, cancellation and generated TypeScript types. Or serve files and answer fetch, forms and htmx from Java, with no socket.</p></div>
+                <div><i class="mdi mdi-application-outline ic" aria-hidden="true"></i><h3>Real desktop features</h3><p>File dialogs, notifications, menu bar, context menus, global hotkeys, PDF export, tray icon, pop-out windows, frameless windows, autostart.</p></div>
                 <div><i class="mdi mdi-shield-lock-outline ic" aria-hidden="true"></i><h3>Secure by default</h3><p>Only your own pages can reach your Java code. A SecurityPolicy decides which origins are trusted.</p></div>
             </div>
         </div>
@@ -84,7 +84,7 @@ try {
   jolt.onMessage(m => out.textContent = m);
 &lt;/script&gt;</code></pre></div>
             </div>
-            <p class="note">Messages are plain strings, and <code class="i">window.jolt</code> is injected into every page. <a class="textlink" style="margin:0 0 0 6px" th:href="@{/docs/getting-started}">Getting started <i class="mdi mdi-arrow-right" aria-hidden="true"></i></a></p>
+            <p class="note">Messages are plain strings, and <code class="i">window.jolt</code> is injected into every page. For request and response, <code class="i">jolt.call('notes.add', { text })</code> calls a Java function and gives you a promise. <a class="textlink" style="margin:0 0 0 6px" th:href="@{/docs/getting-started}">Getting started <i class="mdi mdi-arrow-right" aria-hidden="true"></i></a></p>
         </div>
     </section>
 
@@ -100,6 +100,16 @@ try {
                 </div>
                 <div th:replace="~{jolt/fragments/fragments :: gallery(${homeShots})}"></div>
             </div>
+        </div>
+    </section>
+
+    <section class="rule pad-top" aria-labelledby="jpack-title">
+        <div class="wrap">
+            <div class="kicker">Ship it</div>
+            <h2 class="t" id="jpack-title">jpack: ship once, update for good.</h2>
+            <p class="lead">Jolt apps bundle their own Java runtime, so a fix should not mean a new installer. jpack, Jolt's companion, builds the install folder and keeps every installed copy current: it downloads only the parts that changed, verifies them, swaps them in while nothing is running, and rolls back a release that cannot start. The jars and the Java runtime alike.</p>
+            <div class="pills"><span class="pill">Maven plugin</span><span class="pill">Background updates</span><span class="pill">Launcher window in Jolt</span><span class="pill">GitHub releases as the server</span></div>
+            <a class="textlink" th:href="@{/jpack}">See how jpack fits Jolt <i class="mdi mdi-arrow-right" aria-hidden="true"></i></a>
         </div>
     </section>
 

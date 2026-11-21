@@ -26,7 +26,7 @@
 
   &lt;properties&gt;
     &lt;maven.compiler.release&gt;25&lt;/maven.compiler.release&gt;
-    &lt;jolt.version&gt;<span th:text="${site.version}">0.4.1</span>&lt;/jolt.version&gt;
+    &lt;jolt.version&gt;<span th:text="${site.version}">0.5.0</span>&lt;/jolt.version&gt;
   &lt;/properties&gt;
 
   &lt;dependencies&gt;
@@ -48,13 +48,14 @@
   &lt;/dependencies&gt;
 &lt;/project&gt;</code></pre></div>
 <p>Gradle:</p>
-<div class="code" data-lang="java" data-file="build.gradle.kts"><pre><code>implementation("io.github.b077as:jolt-core:<span th:text="${site.version}">0.4.1</span>")
-implementation("io.github.b077as:jolt-win32:<span th:text="${site.version}">0.4.1</span>")
-implementation("io.github.b077as:jolt-linux:<span th:text="${site.version}">0.4.1</span>")</code></pre></div>
+<div class="code" data-lang="java" data-file="build.gradle.kts"><pre><code>implementation("io.github.b077as:jolt-core:<span th:text="${site.version}">0.5.0</span>")
+implementation("io.github.b077as:jolt-win32:<span th:text="${site.version}">0.5.0</span>")
+implementation("io.github.b077as:jolt-linux:<span th:text="${site.version}">0.5.0</span>")</code></pre></div>
 <p>What each one is:</p>
 <ul>
     <li><code>jolt-core</code> is the API you write code against: <code>Application</code>, <code>WebWindow</code> and friends.</li>
     <li><code>jolt-win32</code> and <code>jolt-linux</code> are the two backends. Jolt picks the one that matches the operating system at start-up and ignores the other.</li>
+    <li>Two optional modules come later: <code>jolt-credentials</code> keeps passwords in the system keystore (<a th:href="@{/docs/credentials}">Saving passwords</a>), and <code>jolt-spring-boot-starter</code> runs a Spring Boot 4 application in a window (<a th:href="@{/docs/spring-boot}">Spring Boot</a>). You do not need either for this page.</li>
 </ul>
 
 <h2 id="first-window">Step 2: your first window</h2>
@@ -118,7 +119,7 @@ java --enable-native-access=ALL-UNNAMED -cp "target\classes;$(Get-Content cp.txt
 <p>The pages are in order of difficulty. Read down the sidebar and stop when you have what you need.</p>
 <ol>
     <li><a th:href="@{/docs/concepts}">How Jolt works</a>: the few ideas everything else builds on.</li>
-    <li><a th:href="@{/docs/messaging}">Messaging</a> and <a th:href="@{/docs/frontend}">the frontend</a>: the bridge, then real HTML, CSS and JS files.</li>
+    <li><a th:href="@{/docs/messaging}">Messaging</a>, <a th:href="@{/docs/rpc}">RPC</a> and <a th:href="@{/docs/frontend}">the frontend</a>: the bridge, calling Java functions from the page, then real HTML, CSS and JS files.</li>
     <li><a th:href="@{/docs/tutorial}">Tutorial: a notes app</a>: everything so far in one small working app.</li>
     <li><a th:href="@{/docs/router}">Serving files and requests</a> for forms and fetch, then the desktop features (dialogs, notifications, windows, tray).</li>
 </ol>

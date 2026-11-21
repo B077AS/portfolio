@@ -60,98 +60,37 @@ window.eval("document.body.style.background = 'lightyellow'");</code></pre></div
 <p>If you need to run something on the UI thread yourself, use <code>app.dispatch(() -> ...)</code>, or <code>app.submit(() -> value)</code> for a future with the result.</p>
 
 <h2 id="rpc">6. Calling Java functions from the page</h2>
-<p>For real apps, add a small request and response layer on top of messages. The page sends <code>{"id": 1, "method": "notes.add", "params": {...}}</code> and Java answers <code>{"id": 1, "result": ...}</code> or <code>{"id": 1, "error": "..."}</code>. The <code>id</code> ties each answer to its question, so many calls can be in flight at once. Here is the complete Java half:</p>
-<div class="code" data-lang="java" data-file="Rpc.java"><pre><code>import com.google.gson.Gson;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import io.github.b077as.jolt.WebWindow;
+<p>For real apps you want request and response on top of messages: the page calls a Java function by name and gets the result as a promise, with errors that work like ordinary exceptions. Since 0.4.2 Jolt has this built in, so there is nothing to write yourself. Register functions on an <code>Rpc</code>, attach it to the window, and call them with <code>jolt.call</code>:</p>
+<div class="code" data-lang="java"><pre><code>record NewNote(String text) {}
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Function;
+Rpc rpc = Rpc.create()
+        .on("notes.list", call -&gt; store.list())
+        .on("notes.add", NewNote.class, note -&gt; store.add(note.text()));
 
-/** Lets the page call Java functions by name and get the result back. */
-public final class Rpc {
-    private final WebWindow window;
-    private final Gson gson = new Gson();
-    private final Map&lt;String, Function&lt;JsonObject, Object&gt;&gt; methods = new ConcurrentHashMap&lt;&gt;();
+rpc.attach(window);                          // before the page loads
+window.loadResources(AppResources.classpath("ui"));</code></pre></div>
+<div class="code" data-lang="js"><pre><code>const notes = await jolt.call('notes.list');
+const note = await jolt.call('notes.add', { text: 'Buy milk' });
 
-    public Rpc(WebWindow window) {
-        this.window = window;
-        window.onMessage(this::handle);                     // runs on the UI thread
-    }
-
-    public Rpc on(String name, Function&lt;JsonObject, Object&gt; method) {
-        methods.put(name, method);
-        return this;
-    }
-
-    private void handle(String text) {
-        JsonObject request = JsonParser.parseString(text).getAsJsonObject();
-        long id = request.get("id").getAsLong();
-        String name = request.get("method").getAsString();
-        JsonObject params = request.has("params") ? request.getAsJsonObject("params") : new JsonObject();
-        Thread.startVirtualThread(() -&gt; {                   // keep the UI thread free
-            JsonObject reply = new JsonObject();
-            reply.addProperty("id", id);
-            try {
-                Function&lt;JsonObject, Object&gt; method = methods.get(name);
-                if (method == null) throw new IllegalArgumentException("unknown method " + name);
-                reply.add("result", gson.toJsonTree(method.apply(params)));
-            } catch (Exception e) {
-                reply.addProperty("error", String.valueOf(e.getMessage()));
-            }
-            window.postMessage(gson.toJson(reply));          // safe from any thread
-        });
-    }
-}</code></pre></div>
-<p>And the page half, a <code>call</code> function that returns a promise:</p>
-<div class="code" data-lang="js"><pre><code>const pending = new Map();
-let nextId = 1;
-
-jolt.onMessage(raw =&gt; {
-  const reply = JSON.parse(raw);
-  const waiting = pending.get(reply.id);
-  if (!waiting) return;
-  pending.delete(reply.id);
-  if (reply.error) waiting.reject(new Error(reply.error));
-  else waiting.resolve(reply.result);
-});
-
-function call(method, params = {}) {
-  return new Promise((resolve, reject) =&gt; {
-    const id = nextId++;
-    pending.set(id, { resolve, reject });
-    jolt.postMessage(JSON.stringify({ id, method, params }));
-  });
-}</code></pre></div>
-<p>Register Java functions and call them:</p>
-<div class="code" data-lang="java"><pre><code>new Rpc(window)
-    .on("notes.list", params -&gt; store.list())
-    .on("notes.add",  params -&gt; store.add(params.get("text").getAsString()));</code></pre></div>
-<div class="code" data-lang="js"><pre><code>const note = await call('notes.add', { text: 'Buy milk' });
 try {
-  await call('notes.add', { text: '' });
+  await jolt.call('notes.get', 99);
 } catch (e) {
-  console.log(e.message);        // the text of the exception Java threw
+  console.log(e.code, e.message);          // from the RpcException Java threw
 }</code></pre></div>
 <ul>
-    <li>Anything Gson can turn into JSON is a valid result: records, lists, maps, numbers, strings.</li>
-    <li>An exception in your Java function becomes a rejected promise on the page, so ordinary <code>try/catch</code> works. Only the exception's message is sent, never a stack trace.</li>
-    <li>Validate <code>params</code> as you would any input: the page is code you wrote, but a trusted origin you list is not code you wrote.</li>
+    <li>Handlers run on their own virtual threads, so they may block, and the UI thread stays free. JSON is handled for you: records, enums, collections and the <code>java.time</code> types work with no library.</li>
+    <li>An exception becomes a rejected promise, so ordinary <code>try/catch</code> works. Only what you choose to tell the page is sent, never a stack trace.</li>
+    <li>Cancellation, progress, timeouts, streaming results, interceptors and generated TypeScript types are on their own page: <a th:href="@{/docs/rpc}">Calling Java from the page (RPC)</a>.</li>
+    <li>Validate the parameters as you would any input: a trusted origin you list is not code you wrote.</li>
 </ul>
+<div class="callout">Before 0.4.2 this page showed a small <code>Rpc</code> class to copy into your project, and a <code>call()</code> function for the page. If you copied them, you can delete both: the built-in version does the same and more. RPC messages never reach <code>onMessage</code> or <code>jolt.onMessage</code>, so your own messages are unaffected.</div>
 
 <h2 id="push">7. Java telling the page about something</h2>
-<p>Not everything is an answer to a question. When Java has news (a download finished, a new mail arrived) it can send a message the page did not ask for. Give such messages a field to tell them apart from replies, here <code>event</code>:</p>
-<div class="code" data-lang="java"><pre><code>JsonObject news = new JsonObject();
-news.addProperty("event", "download.finished");
-news.addProperty("name", "report.pdf");
-window.postMessage(gson.toJson(news));</code></pre></div>
-<div class="code" data-lang="js"><pre><code>jolt.onMessage(raw =&gt; {
-  const m = JSON.parse(raw);
-  if (m.event === 'download.finished') showToast(m.name + ' is ready');
-});</code></pre></div>
-<p>A page can have as many <code>jolt.onMessage</code> receivers as it likes, so the <code>call</code> helper's receiver (which ignores messages without a matching <code>id</code>) and an event receiver can live side by side.</p>
+<p>Not everything is an answer to a question. When Java has news (a download finished, a new mail arrived) it can push an event the page did not ask for, to every window the <code>Rpc</code> is attached to and from any thread:</p>
+<div class="code" data-lang="java"><pre><code>rpc.emit("download.finished", Map.of("name", "report.pdf"));</code></pre></div>
+<div class="code" data-lang="js"><pre><code>const stop = jolt.onEvent('download.finished', (data) =&gt; showToast(data.name + ' is ready'));
+// stop() removes the receiver again</code></pre></div>
+<p>Plain messages stay available for anything that does not fit this shape: <code>window.postMessage(text)</code> and <code>jolt.onMessage</code> from section 1 work next to RPC.</p>
 
 <h2 id="more">8. Good to know</h2>
 <ul>
@@ -161,7 +100,7 @@ window.postMessage(gson.toJson(news));</code></pre></div>
 
 <h2 id="origin">Where the messages come from</h2>
 <p>Only pages your <a th:href="@{/docs/security}">SecurityPolicy</a> trusts can reach <code>onMessage</code>, so a page you did not intend to load can never call your Java handlers.</p>
-<p>Next: <a th:href="@{/docs/frontend}">building the frontend</a> with real files.</p>
+<p>Next: <a th:href="@{/docs/rpc}">calling Java from the page (RPC)</a> in full, then <a th:href="@{/docs/frontend}">building the frontend</a> with real files.</p>
 
 
 </th:block>

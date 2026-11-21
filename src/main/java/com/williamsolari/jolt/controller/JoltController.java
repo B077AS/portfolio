@@ -43,6 +43,17 @@ public class JoltController {
             "Parsel is a clean desktop mail client for your own mailbox, built on the Jolt framework: Java for IMAP and "
                     + "SMTP, a Vue page for the interface, one process, a 33 MB installer. Windows and Linux.";
 
+    private static final String JPACK_TITLE = "jpack - Updates for Java desktop apps, made to fit Jolt";
+    private static final String JPACK_DESCRIPTION =
+            "jpack ships updates to Java desktop apps: the jars, the bundled Java runtime and any other files, downloaded in "
+                    + "the background, verified and swapped in atomically. A Maven plugin, a small native stub and a Java library "
+                    + "that fit Jolt apps. Windows and Linux.";
+
+    private static final String PRIVACY_TITLE = "Privacy - Jolt";
+    private static final String PRIVACY_DESCRIPTION =
+            "The Jolt website has no accounts, no forms, no analytics and no trackers, and sets no cookies. "
+                    + "What it stores, and what the server logs.";
+
     /** A Parsel screenshot: file name under /img and its description. */
     public record Shot(String file, String alt) {
     }
@@ -106,6 +117,18 @@ public class JoltController {
                 jsonLd.parsel(PARSEL_DESCRIPTION));
         model.addAttribute("parselShots", PARSEL_SHOTS);
         return "jolt/pages/parsel";
+    }
+
+    @GetMapping("/jpack")
+    String jpack(Model model) {
+        seo(model, "jpack", JPACK_TITLE, JPACK_DESCRIPTION, "/jpack", "website", jsonLd.jpack(JPACK_DESCRIPTION));
+        return "jolt/pages/jpack";
+    }
+
+    @GetMapping("/privacy")
+    String privacy(Model model) {
+        seo(model, "privacy", PRIVACY_TITLE, PRIVACY_DESCRIPTION, "/privacy", "website", null);
+        return "jolt/pages/privacy";
     }
 
     @GetMapping("/changelog")
